@@ -35,7 +35,14 @@ MetaProtocol 实现为一个能够在 Service Mesh 中管理任何七层协议�
 
 ## 测试 MetaProtocol Proxy
 
-运行 ```./test/test.sh ```，该命令会启动 envoy 和 dubbo 测试程序。如果执行顺利，你可以看到下面的输出：
+因为测试客户端会采用域名 ```org.apache.dubbo.samples.basic.api.demoservice``` 来访问服务器，因此需要在
+主机的 hosts 文件中加入下面一行记录：
+
+```bash
+127.0.0.1 org.apache.dubbo.samples.basic.api.demoservice
+```
+
+然后运行 ```./test/test.sh ```，该命令会启动 envoy 和 dubbo 测试程序。如果执行顺利，你可以看到类似下面的输出：
 
 ```bash
 Hello Aeraki, response from ed9006021490/172.17.0.2
