@@ -1,0 +1,17 @@
+bazel-*
+.vscode
+GPATH
+GTAGS
+GRTAGS
+*.log
+trpc.app.Greeter
+go.sum
+core
+xds
+CMakeLists.txt
+sourcefiles.txt
+.idea
+cmake-build-debug
+.DS_Store
+generate-srcs.sh
+**/*.swp

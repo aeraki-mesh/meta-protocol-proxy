@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# This file was imported from https://github.com/bazelbuild/bazel at d6fec93.
+
+# This script will be run bazel when building process starts to
+# generate key-value information that represents the status of the
+# workspace. The output should be like
+#
+# KEY1 VALUE1
+# KEY2 VALUE2
+#
+# If the script exits with non-zero code, it's considered as a failure
+# and the output will be discarded.
+
+# If this SOURCE_VERSION file exists then it must have been placed here by a
+# distribution doing a non-git, source build.
+# Distributions would be expected to echo the commit/tag as BUILD_SCM_REVISION
+if [ -f SOURCE_VERSION ]
+then
+    echo "BUILD_SCM_REVISION $(cat SOURCE_VERSION)"
+    echo "BUILD_SCM_STATUS Distribution"
+    exit 0
+fi
+
+# The code below presents an implementation that works for git repository
+git_rev=$(git rev-parse HEAD 2>&1)
+if [[ $? != 0 ]];
+then
+    # However, if this is in fact a non-git and the SOURCE_VERSION does not
+    # exist: grab ${version} from DEPRECATED.md.
+    version=`cat DEPRECATED.md | grep "## Version" | head -n 1 | cut -d' ' -f3`
+
+    # The revision should be in SHA format. If not, git_sha_rewriter.py will be
+    # unhappy. Hence, the following tries to get it from Github API.
+    commits="https://api.github.com/repos/envoyproxy/envoy/commits"
+    git_rev=`curl -s ${commits}/v${version} 2>&1 \
+        | grep sha \
+        | sed -n 's/.*"sha": "\(.*\)",/\1/p' \
+        | head -n 1`
+
+    echo "BUILD_SCM_REVISION ${git_rev}"
+    echo "BUILD_SCM_STATUS Distribution"
+    exit 0
+fi
+echo "BUILD_SCM_REVISION ${git_rev}"
+
+# Check whether there are any uncommited changes
+git diff-index --quiet HEAD --
+if [[ $? == 0 ]];
+then
+    tree_status="Clean"
+else
+    tree_status="Modified"
+fi
+echo "BUILD_SCM_STATUS ${tree_status}"
+
+#../envoy/bazel/get_workspace_status

@@ -1,0 +1,4 @@
+import %workspace%/envoy.bazelrc
+
+# Overrides Envoy build options or add specific Bazel build/test options
+build:remote --remote_timeout=7200
