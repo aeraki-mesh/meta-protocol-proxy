@@ -1,0 +1,42 @@
+admin:
+  access_log_path: ./envoy_debug.log
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 8080
+static_resources:
+  listeners:
+    name: listener_meta_protocol
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 9090
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.thrift_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.thrift_proxy.v3.ThriftProxy
+          stat_prefix: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+          transport: AUTO_TRANSPORT
+          protocol: AUTO_PROTOCOL
+          thrift_filters:
+            - name: envoy.filters.thrift.router
+          route_config:
+            routes:
+              - match:
+                  # empty string matches any request method name
+                  method_name: ""
+                route:
+                  cluster: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+  clusters:
+    name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+    type: STATIC
+    load_assignment:
+      cluster_name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 9091

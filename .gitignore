@@ -3,7 +3,6 @@ bazel-*
 GPATH
 GTAGS
 GRTAGS
-*.log
 trpc.app.Greeter
 go.sum
 core
@@ -15,3 +14,4 @@ cmake-build-debug
 .DS_Store
 generate-srcs.sh
 **/*.swp
+**/*.log
