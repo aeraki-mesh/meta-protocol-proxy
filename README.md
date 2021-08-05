@@ -6,6 +6,12 @@
 在 Service Mesh 中只能被作为 TCP 流量进行处理，无法进行高级的流量管理。此外，如果微服务采用了自定义的 RPC 协议进行通信，也无法纳入 
 Service Mesh 中进行管理。
 
+如下图所示，一个微服务应用中通常会有这些七层流量：
+* RPC： HTTP、gRPC、Dubbo、Thrift、私有 RPC 协议 ...
+* Async Message：Kafka, RabbitMQ ...
+* DB：mySQL, PostgreSQL, MongoDB ...
+![](docs/image/microservices-l7-protocols.png)
+
 ## MetaProtocol 解决方案
 
 MetaProtocol 实现为一个能够在 Service Mesh 中管理任何七层协议的通用协议框架。MetaProtocol 在 Service Mesh 中为微服务中的各种七层协议流量提供以下标准能力：
