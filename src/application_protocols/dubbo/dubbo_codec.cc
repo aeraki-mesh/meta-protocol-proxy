@@ -80,8 +80,10 @@ void DubboCodec::onError(const MetaProtocolProxy::Metadata& metadata,
   switch (error.type) {
   case MetaProtocolProxy::ErrorType::RouteNotFound:
     status = ResponseStatus::ServiceNotFound;
+    break;
   case MetaProtocolProxy::ErrorType::BadResponse:
     status = ResponseStatus::BadResponse;
+    break;
   default:
     status = ResponseStatus::ServerError;
   }
@@ -100,7 +102,7 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata,
     // TODO Add attachment to the metadata header
     metadata.put("InvocationInfo", msgMetadata.invocationInfoPtr());
   }
-  metadata.put("ProtocolTyp", msgMetadata.protocolType());
+  metadata.put("ProtocolType", msgMetadata.protocolType());
   metadata.put("ProtocolVersion", msgMetadata.protocolVersion());
   metadata.put("MessageType", msgMetadata.messageType());
   metadata.setRequestId(msgMetadata.requestId());
@@ -128,6 +130,7 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata,
     metadata.setMessageType(MetaProtocolProxy::MessageType::Error);
     break;
   case MessageType::HeartbeatRequest:
+    FALLTHRU;
   case MessageType::HeartbeatResponse:
     metadata.setMessageType(MetaProtocolProxy::MessageType::Heartbeat);
     break;
@@ -156,24 +159,29 @@ void DubboCodec::toMsgMetadata(const MetaProtocolProxy::Metadata& metadata,
   msgMetadata.setRequestId(metadata.getRequestId());
   auto ref = metadata.get("InvocationInfo");
   if (ref.has_value()) {
-    msgMetadata.setInvocationInfo(std::any_cast<RpcInvocationSharedPtr>(ref.value()));
+    const auto& invo = ref.value();
+    msgMetadata.setInvocationInfo(std::any_cast<RpcInvocationSharedPtr>(invo));
   }
 
-  ref = metadata.get("ProtocolTyp");
+  ref = metadata.get("ProtocolType");
   assert(ref.has_value());
-  msgMetadata.setProtocolType(std::any_cast<ProtocolType>(ref.value()));
+  const auto& proto_type = ref.value();
+  msgMetadata.setProtocolType(std::any_cast<ProtocolType>(proto_type));
 
   ref = metadata.get("ProtocolVersion");
   assert(ref.has_value());
-  msgMetadata.setProtocolVersion(std::any_cast<uint8_t>(ref.value()));
+  const auto& version = ref.value();
+  msgMetadata.setProtocolVersion(std::any_cast<uint8_t>(version));
 
   ref = metadata.get("MessageType");
   assert(ref.has_value());
-  msgMetadata.setMessageType(std::any_cast<MessageType>(ref.value()));
+  const auto& msg_type = ref.value();
+  msgMetadata.setMessageType(std::any_cast<MessageType>(msg_type));
 
   ref = metadata.get("Timeout");
   if (ref.has_value()) {
-    msgMetadata.setTimeout(std::any_cast<uint32_t>(ref.value()));
+    const auto& timeout = ref.value();
+    msgMetadata.setTimeout(std::any_cast<uint32_t>(timeout));
   }
   ref = metadata.get("TwoWay");
   assert(ref.has_value());
@@ -181,10 +189,12 @@ void DubboCodec::toMsgMetadata(const MetaProtocolProxy::Metadata& metadata,
 
   ref = metadata.get("SerializationType");
   assert(ref.has_value());
-  msgMetadata.setSerializationType(std::any_cast<SerializationType>(ref.value()));
+  const auto& serial_type = ref.value();
+  msgMetadata.setSerializationType(std::any_cast<SerializationType>(serial_type));
   ref = metadata.get("ResponseStatus");
   if (ref.has_value()) {
-    msgMetadata.setResponseStatus(std::any_cast<ResponseStatus>(ref.value()));
+    const auto& res_status = ref.value();
+    msgMetadata.setResponseStatus(std::any_cast<ResponseStatus>(res_status));
   }
 }
 
