@@ -7,7 +7,7 @@
 
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/application_protocols/thrift/thrift_codec.h"
-#include "source/extensions/filters/network/thrift_proxy/metadata.h"
+#include "src/application_protocols/thrift/metadata.h"
 
 namespace Envoy {
 namespace Extensions {

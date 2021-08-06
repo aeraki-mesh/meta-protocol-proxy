@@ -9,9 +9,9 @@
 
 #include "source/common/common/logger.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
-#include "source/extensions/filters/network/thrift_proxy/protocol.h"
-#include "source/extensions/filters/network/thrift_proxy/transport.h"
-#include "source/extensions/filters/network/thrift_proxy/thrift.h"
+#include "src/application_protocols/thrift/protocol.h"
+#include "src/application_protocols/thrift/transport.h"
+#include "src/application_protocols/thrift/thrift.h"
 
 namespace Envoy {
 namespace Extensions {
