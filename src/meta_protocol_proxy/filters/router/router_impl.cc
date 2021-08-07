@@ -54,8 +54,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   }
 
   cluster_ = cluster->info();
-  ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'", *callbacks_,
-                   metadata->getRequestId());
+  ENVOY_STREAM_LOG(debug, "meta protocol router: cluster {} match for request '{}'", *callbacks_,
+                   cluster_->name(), metadata->getRequestId());
 
   if (cluster_->maintenanceMode()) {
     callbacks_->sendLocalReply(

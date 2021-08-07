@@ -165,6 +165,9 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
   if (msgMetadata.hasMethodName()) {
     metadata.putString("method", msgMetadata.methodName());
   }
+  if(msgMetadata.hasSequenceId()){
+    metadata.setMessageType(msgMetadata.sequenceId());
+  }
   metadata.getOriginMessage().move(state_machine_->originalMessage(),
                                    state_machine_->originalMessage().length());
 }
