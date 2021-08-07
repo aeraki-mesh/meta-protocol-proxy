@@ -19,41 +19,6 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Thrift {
 
-/**
- * Codec for Thrift protocol.
- */
-class ThriftCodec : public MetaProtocolProxy::Codec, public Logger::Loggable<Logger::Id::filter> {
-public:
-  ThriftCodec() {
-    transport_ =
-        NamedTransportConfigFactory::getFactory(ThriftProxy::TransportType::Auto).createTransport();
-    protocol_ =
-        NamedProtocolConfigFactory::getFactory(ThriftProxy::ProtocolType::Auto).createProtocol();
-  };
-  ~ThriftCodec() override = default;
-
-  MetaProtocolProxy::DecodeStatus decode(Buffer::Instance& buffer,
-                                         MetaProtocolProxy::Metadata& metadata) override;
-  void encode(const MetaProtocolProxy::Metadata& metadata,
-              const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) override;
-  void onError(const MetaProtocolProxy::Metadata& metadata, const MetaProtocolProxy::Error& error,
-               Buffer::Instance& buffer) override;
-
-private:
-  void toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Metadata& metadata);
-
-  void toMsgMetadata(const Metadata& metadata, ThriftProxy::MessageMetadata& msgMetadata);
-
-  void complete();
-
-  ThriftProxy::TransportPtr transport_;
-  ThriftProxy::ProtocolPtr protocol_;
-  ThriftProxy::MessageMetadataSharedPtr metadata_;
-  DecoderStateMachinePtr state_machine_;
-  bool frame_started_{false};
-  bool frame_ended_{false};
-};
-
 #define ALL_PROTOCOL_STATES(FUNCTION)                                                              \
   FUNCTION(StopIteration)                                                                          \
   FUNCTION(WaitForData)                                                                            \
@@ -135,11 +100,12 @@ private:
    */
   struct Frame {
     Frame(ProtocolState state) : return_state_(state), elem_type_{}, value_type_{}, remaining_(0) {}
-    Frame(ProtocolState state, FieldType elem_type)
+    Frame(ProtocolState state, ThriftProxy::FieldType elem_type)
         : return_state_(state), elem_type_(elem_type), value_type_{}, remaining_{} {}
-    Frame(ProtocolState state, FieldType elem_type, uint32_t remaining)
+    Frame(ProtocolState state, ThriftProxy::FieldType elem_type, uint32_t remaining)
         : return_state_(state), elem_type_(elem_type), value_type_{}, remaining_(remaining) {}
-    Frame(ProtocolState state, FieldType key_type, FieldType value_type, uint32_t remaining)
+    Frame(ProtocolState state, ThriftProxy::FieldType key_type, ThriftProxy::FieldType value_type,
+          uint32_t remaining)
         : return_state_(state), elem_type_(key_type), value_type_(value_type),
           remaining_(remaining) {}
 
@@ -203,8 +169,45 @@ private:
 
 using DecoderStateMachinePtr = std::unique_ptr<DecoderStateMachine>;
 
+/**
+ * Codec for Thrift protocol.
+ */
+class ThriftCodec : public MetaProtocolProxy::Codec, public Logger::Loggable<Logger::Id::filter> {
+public:
+  ThriftCodec() {
+    transport_ =
+        ThriftProxy::NamedTransportConfigFactory::getFactory(ThriftProxy::TransportType::Auto)
+            .createTransport();
+    protocol_ = ThriftProxy::NamedProtocolConfigFactory::getFactory(ThriftProxy::ProtocolType::Auto)
+                    .createProtocol();
+  };
+  ~ThriftCodec() override = default;
+
+  MetaProtocolProxy::DecodeStatus decode(Buffer::Instance& buffer,
+                                         MetaProtocolProxy::Metadata& metadata) override;
+  void encode(const MetaProtocolProxy::Metadata& metadata,
+              const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) override;
+  void onError(const MetaProtocolProxy::Metadata& metadata, const MetaProtocolProxy::Error& error,
+               Buffer::Instance& buffer) override;
+
+private:
+  void toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Metadata& metadata);
+
+  void toMsgMetadata(const Metadata& metadata, ThriftProxy::MessageMetadata& msgMetadata);
+
+  void complete();
+
+  ThriftProxy::TransportPtr transport_;
+  ThriftProxy::ProtocolPtr protocol_;
+  ThriftProxy::MessageMetadataSharedPtr metadata_;
+  DecoderStateMachinePtr state_machine_;
+  bool frame_started_{false};
+  bool frame_ended_{false};
+};
+
 } // namespace Thrift
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

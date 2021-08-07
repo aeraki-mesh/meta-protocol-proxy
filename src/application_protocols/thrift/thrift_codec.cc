@@ -15,7 +15,7 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Thrift {
 
-MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& buffer,
+MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& data,
                                                     MetaProtocolProxy::Metadata& metadata) {
 
   ENVOY_LOG(debug, "thrift: {} bytes available", data.length());
@@ -32,22 +32,22 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& buffer,
       metadata_ = std::make_shared<ThriftProxy::MessageMetadata>();
     }
 
-    if (!transport_.decodeFrameStart(data, *metadata_)) {
-      ENVOY_LOG(debug, "thrift: need more data for {} transport start", transport_.name());
+    if (!transport_->decodeFrameStart(data, *metadata_)) {
+      ENVOY_LOG(debug, "thrift: need more data for {} transport start", transport_->name());
       return MetaProtocolProxy::DecodeStatus::WaitForData;
     }
-    ENVOY_LOG(debug, "thrift: {} transport started", transport_.name());
+    ENVOY_LOG(debug, "thrift: {} transport started", transport_->name());
 
     if (metadata_->hasProtocol()) {
-      if (protocol_.type() == ThriftProxy::ProtocolType::Auto) {
-        protocol_.setType(metadata_->protocol());
-        ENVOY_LOG(debug, "thrift: {} transport forced {} protocol", transport_.name(),
-                  protocol_.name());
-      } else if (metadata_->protocol() != protocol_.type()) {
+      if (protocol_->type() == ThriftProxy::ProtocolType::Auto) {
+        protocol_->setType(metadata_->protocol());
+        ENVOY_LOG(debug, "thrift: {} transport forced {} protocol", transport_->name(),
+                  protocol_->name());
+      } else if (metadata_->protocol() != protocol_->type()) {
         throw EnvoyException(
             fmt::format("transport reports protocol {}, but configured for {}",
                         ThriftProxy::ProtocolNames::get().fromType(metadata_->protocol()),
-                        ThriftProxy::ProtocolNames::get().fromType(protocol_.type())));
+                        ThriftProxy::ProtocolNames::get().fromType(protocol_->type())));
       }
     }
     if (metadata_->hasAppException()) {
@@ -55,16 +55,17 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& buffer,
       std::string ex_msg = metadata_->appExceptionMessage();
       // Force new metadata if we get called again.
       metadata_.reset();
-      throw EnvoyException(fmt::format("thrift AppException: type: {}, message: {}",ex_type,ex_msg);
+      throw EnvoyException(
+          fmt::format("thrift AppException: type: {}, message: {}", ex_type, ex_msg));
     }
 
     frame_started_ = true;
-    state_machine_ = std::make_unique<DecoderStateMachine>(protocol_, metadata_);
+    state_machine_ = std::make_unique<DecoderStateMachine>(*protocol_, metadata_);
   }
 
   ASSERT(state_machine_ != nullptr);
 
-  ENVOY_LOG(debug, "thrift: protocol {}, state {}, {} bytes available", protocol_.name(),
+  ENVOY_LOG(debug, "thrift: protocol {}, state {}, {} bytes available", protocol_->name(),
             ProtocolStateNameValues::name(state_machine_->currentState()), data.length());
 
   ProtocolState rv = state_machine_->run(data);
@@ -76,19 +77,20 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& buffer,
   ASSERT(rv == ProtocolState::Done);
 
   // Message complete, decode end of frame.
-  if (!transport_.decodeFrameEnd(data)) {
-    ENVOY_LOG(debug, "thrift: need more data for {} transport end", transport_.name());
+  if (!transport_->decodeFrameEnd(data)) {
+    ENVOY_LOG(debug, "thrift: need more data for {} transport end", transport_->name());
     return DecodeStatus::WaitForData;
   }
+
+  toMetadata(*metadata_, metadata);
 
   frame_ended_ = true;
   metadata_.reset();
 
-  ENVOY_LOG(debug, "thrift: {} transport ended", transport_.name());
+  ENVOY_LOG(debug, "thrift: {} transport ended", transport_->name());
 
   // Reset for next frame.
   complete();
-  toMetadata(metadata_, metadata);
   return DecodeStatus::Done;
 }
 
@@ -119,42 +121,58 @@ void ThriftCodec::encode(const MetaProtocolProxy::Metadata& metadata,
   }
 }
 
+static const std::string TApplicationException = "TApplicationException";
+static const std::string MessageField = "message";
+static const std::string TypeField = "type";
+static const std::string StopField = "";
+
 void ThriftCodec::onError(const MetaProtocolProxy::Metadata& metadata,
                           const MetaProtocolProxy::Error& error, Buffer::Instance& buffer) {
   ASSERT(buffer.length() == 0);
-  MessageMetadata msgMetadata;
-  toMsgMetadata(metadata, msgMetadata);
-  msgMetadata.setResponseStatus(ResponseStatus::Ok);
-  msgMetadata.setMessageType(MessageType::Response);
 
-  ResponseStatus status;
-  switch (error.type) {
-  case MetaProtocolProxy::ErrorType::RouteNotFound:
-    status = ResponseStatus::ServiceNotFound;
-  case MetaProtocolProxy::ErrorType::BadResponse:
-    status = ResponseStatus::BadResponse;
-  default:
-    status = ResponseStatus::ServerError;
+  ThriftProxy::MessageMetadata msgMetadata;
+  toMsgMetadata(metadata, msgMetadata);
+
+  // Handle cases where the exception occurs before the message name (e.g. some header transport
+  // errors).
+  if (!msgMetadata.hasMethodName()) {
+    msgMetadata.setMethodName("");
   }
-  msgMetadata.setResponseStatus(status);
-  if (!protocol_->encode(buffer, msgMetadata, error.message,
-                         RpcResponseType::ResponseWithException)) {
-    throw EnvoyException("failed to encode heartbeat message");
+  if (!msgMetadata.hasSequenceId()) {
+    msgMetadata.setSequenceId(0);
   }
+
+  msgMetadata.setMessageType(ThriftProxy::MessageType::Exception);
+
+  protocol_->writeMessageBegin(buffer, msgMetadata);
+  protocol_->writeStructBegin(buffer, TApplicationException);
+
+  protocol_->writeFieldBegin(buffer, MessageField, ThriftProxy::FieldType::String, 1);
+  protocol_->writeString(buffer, error.message);
+  protocol_->writeFieldEnd(buffer);
+
+  protocol_->writeFieldBegin(buffer, TypeField, ThriftProxy::FieldType::I32, 2);
+  protocol_->writeInt32(buffer, static_cast<int32_t>(ThriftProxy::AppExceptionType::InternalError));
+  protocol_->writeFieldEnd(buffer);
+
+  protocol_->writeFieldBegin(buffer, StopField, ThriftProxy::FieldType::Stop, 0);
+
+  protocol_->writeStructEnd(buffer);
+  protocol_->writeMessageEnd(buffer);
 }
 
 void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Metadata& metadata) {
   if (msgMetadata.hasMethodName()) {
-    metadata.putString("method", msgMetadata.hasMethodName());
+    metadata.putString("method", msgMetadata.methodName());
   }
 }
 
 void ThriftCodec::toMsgMetadata(const Metadata& metadata,
                                 ThriftProxy::MessageMetadata& msgMetadata) {
   auto method = metadata.getString("method");
-  if (method != "") { // TODO we should use a more appropriate method to tell if metadata contains a
-                      // specific key
-    msgMetadata.setMethodName();
+  // TODO we should use a more appropriate method to tell if metadata contains a specific key
+  if (method != "") {
+    msgMetadata.setMethodName(method);
   }
 }
 
@@ -181,14 +199,12 @@ ProtocolState DecoderStateMachine::messageBegin(Buffer::Instance& buffer) {
   stack_.clear();
   stack_.emplace_back(Frame(ProtocolState::MessageEnd));
 
-  const auto status = handler_.messageBegin(metadata_);
-
   if (passthrough_enabled_) {
     body_bytes_ = metadata_->frameSize() - (total - buffer.length());
-    return {ProtocolState::PassthroughData, status};
+    return ProtocolState::PassthroughData;
   }
 
-  return protocolState::StructBegin;
+  return ProtocolState::StructBegin;
 }
 
 // MessageEnd -> Done
@@ -223,13 +239,13 @@ ProtocolState DecoderStateMachine::structEnd(Buffer::Instance& buffer) {
 // FieldBegin -> StructEnd (stop field)
 ProtocolState DecoderStateMachine::fieldBegin(Buffer::Instance& buffer) {
   std::string name;
-  FieldType field_type;
+  ThriftProxy::FieldType field_type;
   int16_t field_id;
   if (!proto_.readFieldBegin(buffer, name, field_type, field_id)) {
     return ProtocolState::WaitForData;
   }
 
-  if (field_type == FieldType::Stop) {
+  if (field_type == ThriftProxy::FieldType::Stop) {
     return ProtocolState::StructEnd;
   }
 
@@ -259,7 +275,7 @@ ProtocolState DecoderStateMachine::fieldEnd(Buffer::Instance& buffer) {
 
 // ListBegin -> ListValue
 ProtocolState DecoderStateMachine::listBegin(Buffer::Instance& buffer) {
-  FieldType elem_type;
+  ThriftProxy::FieldType elem_type;
   uint32_t size;
   if (!proto_.readListBegin(buffer, elem_type, size)) {
     return ProtocolState::WaitForData;
@@ -297,7 +313,7 @@ ProtocolState DecoderStateMachine::listEnd(Buffer::Instance& buffer) {
 
 // MapBegin -> MapKey
 ProtocolState DecoderStateMachine::mapBegin(Buffer::Instance& buffer) {
-  FieldType key_type, value_type;
+  ThriftProxy::FieldType key_type, value_type;
   uint32_t size;
   if (!proto_.readMapBegin(buffer, key_type, value_type, size)) {
     return ProtocolState::WaitForData;
@@ -314,7 +330,7 @@ ProtocolState DecoderStateMachine::mapKey(Buffer::Instance& buffer) {
   ASSERT(!stack_.empty());
   Frame& frame = stack_.back();
   if (frame.remaining_ == 0) {
-    return popReturnState(), FilterStatus::Continue;
+    return popReturnState();
   }
 
   return handleValue(buffer, frame.elem_type_, ProtocolState::MapValue);
@@ -345,7 +361,7 @@ ProtocolState DecoderStateMachine::mapEnd(Buffer::Instance& buffer) {
 
 // SetBegin -> SetValue
 ProtocolState DecoderStateMachine::setBegin(Buffer::Instance& buffer) {
-  FieldType elem_type;
+  ThriftProxy::FieldType elem_type;
   uint32_t size;
   if (!proto_.readSetBegin(buffer, elem_type, size)) {
     return ProtocolState::WaitForData;
@@ -381,68 +397,69 @@ ProtocolState DecoderStateMachine::setEnd(Buffer::Instance& buffer) {
   return popReturnState();
 }
 
-ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer, FieldType elem_type,
+ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
+                                               ThriftProxy::FieldType elem_type,
                                                ProtocolState return_state) {
   switch (elem_type) {
-  case FieldType::Bool: {
+  case ThriftProxy::FieldType::Bool: {
     bool value{};
     if (proto_.readBool(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::Byte: {
+  case ThriftProxy::FieldType::Byte: {
     uint8_t value{};
     if (proto_.readByte(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::I16: {
+  case ThriftProxy::FieldType::I16: {
     int16_t value{};
     if (proto_.readInt16(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::I32: {
+  case ThriftProxy::FieldType::I32: {
     int32_t value{};
     if (proto_.readInt32(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::I64: {
+  case ThriftProxy::FieldType::I64: {
     int64_t value{};
     if (proto_.readInt64(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::Double: {
+  case ThriftProxy::FieldType::Double: {
     double value{};
     if (proto_.readDouble(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::String: {
+  case ThriftProxy::FieldType::String: {
     std::string value;
     if (proto_.readString(buffer, value)) {
       return return_state;
     }
     break;
   }
-  case FieldType::Struct:
+  case ThriftProxy::FieldType::Struct:
     stack_.emplace_back(Frame(return_state));
     return ProtocolState::StructBegin;
-  case FieldType::Map:
+  case ThriftProxy::FieldType::Map:
     stack_.emplace_back(Frame(return_state));
     return ProtocolState::MapBegin;
-  case FieldType::List:
+  case ThriftProxy::FieldType::List:
     stack_.emplace_back(Frame(return_state));
     return ProtocolState::ListBegin;
-  case FieldType::Set:
+  case ThriftProxy::FieldType::Set:
     stack_.emplace_back(Frame(return_state));
     return ProtocolState::SetBegin;
   default:

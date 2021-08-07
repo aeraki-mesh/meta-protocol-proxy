@@ -44,6 +44,8 @@ envoy_cc_library(
     "transport.h",
     ],
     deps = [
+        "@envoy//envoy/registry",
+	"@envoy//source/common/config:utility_lib",
         "@envoy//envoy/buffer:buffer_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/buffer:buffer_lib",

@@ -13,21 +13,24 @@ static_resources:
         port_value: 9090
     filter_chains:
     - filters:
-      - name: envoy.filters.network.thrift_proxy
+      - name: aeraki.meta_protocol_proxy
         typed_config:
-          "@type": type.googleapis.com/envoy.extensions.filters.network.thrift_proxy.v3.ThriftProxy
-          stat_prefix: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
-          transport: AUTO_TRANSPORT
-          protocol: AUTO_PROTOCOL
-          thrift_filters:
-            - name: envoy.filters.thrift.router
-          route_config:
+          '@type': type.googleapis.com/envoy.extensions.filters.network.meta_protocol_proxy.v1alpha.MetaProtocolProxy
+          application_protocol: thrift
+          codec:
+            name: aeraki.meta_protocol.codec.thrift
+          metaProtocolFilters:
+            - name: aeraki.meta_protocol.filters.router
+          routeConfig:
             routes:
-              - match:
-                  # empty string matches any request method name
-                  method_name: ""
+              - name: default
+                match:
+                  metadata:
+                    - name: method
+                      exact_match: sayHello
                 route:
                   cluster: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+          statPrefix: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
   clusters:
     name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
     type: STATIC
@@ -40,3 +43,4 @@ static_resources:
               socket_address:
                 address: 127.0.0.1
                 port_value: 9091
+
