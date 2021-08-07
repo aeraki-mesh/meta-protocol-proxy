@@ -173,7 +173,7 @@ private:
   uint32_t body_bytes_{};
   bool passthrough_enabled_{false}; // TODO enable passthrough in the codec config
   Buffer::OwnedImpl origin_message_;
-}
+};
 
 using DecoderStateMachinePtr = std::unique_ptr<DecoderStateMachine>;
 

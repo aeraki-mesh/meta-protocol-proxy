@@ -204,7 +204,7 @@ ProtocolState DecoderStateMachine::messageBegin(Buffer::Instance& buffer) {
     return ProtocolState::PassthroughData;
   }
 
-  proto_->writeMessageBegin(origin_message_, *metadata_);
+  proto_.writeMessageBegin(origin_message_, *metadata_);
   return ProtocolState::StructBegin;
 }
 
@@ -214,7 +214,7 @@ ProtocolState DecoderStateMachine::messageEnd(Buffer::Instance& buffer) {
     return ProtocolState::WaitForData;
   }
 
-  proto_->writeMessageEnd(origin_message_);
+  proto_.writeMessageEnd(origin_message_);
   return ProtocolState::Done;
 }
 
@@ -225,7 +225,7 @@ ProtocolState DecoderStateMachine::structBegin(Buffer::Instance& buffer) {
     return ProtocolState::WaitForData;
   }
 
-  proto_->writeStructBegin(origin_message_, name);
+  proto_.writeStructBegin(origin_message_, name);
   return ProtocolState::FieldBegin;
 }
 
@@ -235,8 +235,8 @@ ProtocolState DecoderStateMachine::structEnd(Buffer::Instance& buffer) {
     return ProtocolState::WaitForData;
   }
 
-  proto_->writeFieldBegin(origin_message_, "", FieldType::Stop, 0);
-  proto_->writeStructEnd(origin_message_);
+  proto_.writeFieldBegin(origin_message_, "", FieldType::Stop, 0);
+  proto_.writeStructEnd(origin_message_);
   return popReturnState();
 }
 
@@ -256,7 +256,7 @@ ProtocolState DecoderStateMachine::fieldBegin(Buffer::Instance& buffer) {
 
   stack_.emplace_back(Frame(ProtocolState::FieldEnd, field_type));
 
-  proto_->writeFieldBegin(origin_message_, name, field_type, field_id);
+  proto_.writeFieldBegin(origin_message_, name, field_type, field_id);
   return ProtocolState::FieldValue;
 }
 
@@ -276,7 +276,7 @@ ProtocolState DecoderStateMachine::fieldEnd(Buffer::Instance& buffer) {
 
   popReturnState();
 
-  proto_->writeFieldEnd(origin_message_);
+  proto_.writeFieldEnd(origin_message_);
   return ProtocolState::FieldBegin;
 }
 
@@ -290,7 +290,7 @@ ProtocolState DecoderStateMachine::listBegin(Buffer::Instance& buffer) {
 
   stack_.emplace_back(Frame(ProtocolState::ListEnd, elem_type, size));
 
-  proto_->writeListBegin(origin_message_, elem_type, size);
+  proto_.writeListBegin(origin_message_, elem_type, size);
   return ProtocolState::ListValue;
 }
 
@@ -316,7 +316,7 @@ ProtocolState DecoderStateMachine::listEnd(Buffer::Instance& buffer) {
     return ProtocolState::WaitForData;
   }
 
-  proto_->writeListEnd(origin_message_);
+  proto_.writeListEnd(origin_message_);
   return popReturnState();
 }
 
@@ -330,7 +330,7 @@ ProtocolState DecoderStateMachine::mapBegin(Buffer::Instance& buffer) {
 
   stack_.emplace_back(Frame(ProtocolState::MapEnd, key_type, value_type, size));
 
-  proto_->writeMapBegin(origin_message_, key_type, value_type, size);
+  proto_.writeMapBegin(origin_message_, key_type, value_type, size);
   return ProtocolState::MapKey;
 }
 
@@ -366,7 +366,7 @@ ProtocolState DecoderStateMachine::mapEnd(Buffer::Instance& buffer) {
     return ProtocolState::WaitForData;
   }
 
-  proto_->writeMapEnd(origin_message_);
+  proto_.writeMapEnd(origin_message_);
   return popReturnState();
 }
 
@@ -380,7 +380,7 @@ ProtocolState DecoderStateMachine::setBegin(Buffer::Instance& buffer) {
 
   stack_.emplace_back(Frame(ProtocolState::SetEnd, elem_type, size));
 
-  proto_->writeSetBegin(origin_message_, elem_type, size);
+  proto_.writeSetBegin(origin_message_, elem_type, size);
   return ProtocolState::SetValue;
 }
 
@@ -406,7 +406,7 @@ ProtocolState DecoderStateMachine::setEnd(Buffer::Instance& buffer) {
     return ProtocolState::WaitForData;
   }
 
-  proto_->writeSetEnd(origin_message_);
+  proto_.writeSetEnd(origin_message_);
   return popReturnState();
 }
 
