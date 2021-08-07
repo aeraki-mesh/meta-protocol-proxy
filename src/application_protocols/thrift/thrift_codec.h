@@ -7,7 +7,9 @@
 #include "envoy/common/optref.h"
 #include "envoy/common/pure.h"
 
+#include "source/common/buffer/buffer_impl.h"
 #include "source/common/common/logger.h"
+
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/application_protocols/thrift/protocol.h"
 #include "src/application_protocols/thrift/transport.h"
@@ -93,6 +95,11 @@ public:
    */
   void setCurrentState(ProtocolState state) { state_ = state; }
 
+  /**
+   * @return the original message
+   */
+  Buffer::Instance& originalMessage() { return origin_message_; }
+
 private:
   /**
    * Frame encodes information about the return state for nested elements, container element types,
@@ -165,7 +172,8 @@ private:
   std::vector<Frame> stack_;
   uint32_t body_bytes_{};
   bool passthrough_enabled_{false}; // TODO enable passthrough in the codec config
-};
+  Buffer::OwnedImpl origin_message_;
+}
 
 using DecoderStateMachinePtr = std::unique_ptr<DecoderStateMachine>;
 
@@ -210,4 +218,3 @@ private:
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
