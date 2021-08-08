@@ -83,6 +83,7 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& data,
   }
 
   toMetadata(*metadata_, metadata);
+  ENVOY_LOG(debug, "thrift: origin message length {}  ", metadata.getOriginMessage().length());
 
   frame_ended_ = true;
   metadata_.reset();
@@ -166,10 +167,33 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
     metadata.putString("method", msgMetadata.methodName());
   }
   if (msgMetadata.hasSequenceId()) {
-    metadata.setMessageType(msgMetadata.sequenceId());
+    metadata.setRequestId(msgMetadata.sequenceId());
   }
-  metadata.getOriginMessage().move(state_machine_->originalMessage(),
-                                   state_machine_->originalMessage().length());
+
+  ASSERT(msgMetadata.hasMessageType());
+  switch (msgMetadata.messageType()) {
+  case ThriftProxy::MessageType::Call: {
+    metadata.setMessageType(MessageType::Request);
+    break;
+  }
+  case ThriftProxy::MessageType::Reply: {
+    metadata.setMessageType(MessageType::Response);
+    break;
+  }
+  case ThriftProxy::MessageType::Oneway: {
+    metadata.setMessageType(MessageType::Oneway);
+    break;
+  }
+  case ThriftProxy::MessageType::Exception: {
+    metadata.setMessageType(MessageType::Error);
+    break;
+  }
+  default:
+    NOT_REACHED_GCOVR_EXCL_LINE;
+  }
+
+  transport_->encodeFrame(metadata.getOriginMessage(), msgMetadata,
+                          state_machine_->originalMessage());
 }
 
 void ThriftCodec::toMsgMetadata(const Metadata& metadata,
@@ -297,8 +321,8 @@ ProtocolState DecoderStateMachine::listBegin(Buffer::Instance& buffer) {
   return ProtocolState::ListValue;
 }
 
-// ListValue -> ListValue, ListBegin, MapBegin, SetBegin, StructBegin (depending on value type), or
-// ListValue -> ListEnd
+// ListValue -> ListValue, ListBegin, MapBegin, SetBegin, StructBegin (depending on value type),
+// or ListValue -> ListEnd
 ProtocolState DecoderStateMachine::listValue(Buffer::Instance& buffer) {
   ASSERT(!stack_.empty());
   const uint32_t index = stack_.size() - 1;
@@ -420,6 +444,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::Bool: {
     bool value{};
     if (proto_.readBool(buffer, value)) {
+      proto_.writeBool(origin_message_, value);
       return return_state;
     }
     break;
@@ -427,6 +452,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::Byte: {
     uint8_t value{};
     if (proto_.readByte(buffer, value)) {
+      proto_.writeByte(origin_message_, value);
       return return_state;
     }
     break;
@@ -434,6 +460,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::I16: {
     int16_t value{};
     if (proto_.readInt16(buffer, value)) {
+      proto_.writeInt16(origin_message_, value);
       return return_state;
     }
     break;
@@ -441,6 +468,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::I32: {
     int32_t value{};
     if (proto_.readInt32(buffer, value)) {
+      proto_.writeInt32(origin_message_, value);
       return return_state;
     }
     break;
@@ -448,6 +476,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::I64: {
     int64_t value{};
     if (proto_.readInt64(buffer, value)) {
+      proto_.writeInt64(origin_message_, value);
       return return_state;
     }
     break;
@@ -455,6 +484,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::Double: {
     double value{};
     if (proto_.readDouble(buffer, value)) {
+      proto_.writeDouble(origin_message_, value);
       return return_state;
     }
     break;
@@ -462,6 +492,7 @@ ProtocolState DecoderStateMachine::handleValue(Buffer::Instance& buffer,
   case ThriftProxy::FieldType::String: {
     std::string value;
     if (proto_.readString(buffer, value)) {
+      proto_.writeString(origin_message_, value);
       return return_state;
     }
     break;
@@ -539,6 +570,8 @@ ProtocolState DecoderStateMachine::run(Buffer::Instance& buffer) {
   while (state_ != ProtocolState::Done) {
     ENVOY_LOG(trace, "thrift: state {}, {} bytes available", ProtocolStateNameValues::name(state_),
               buffer.length());
+    ENVOY_LOG(trace, "thrift: state {}, {} original message", ProtocolStateNameValues::name(state_),
+              origin_message_.length());
 
     ProtocolState nextState = handleState(buffer);
     if (nextState == ProtocolState::WaitForData) {
@@ -556,3 +589,4 @@ ProtocolState DecoderStateMachine::run(Buffer::Instance& buffer) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

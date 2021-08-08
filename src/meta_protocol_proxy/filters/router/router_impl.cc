@@ -80,7 +80,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
 
   // TODO encode mutation into the outgoing request
-  upstream_request_buffer_.move(metadata->getOriginMessage(), metadata->getMessageSize());
+  upstream_request_buffer_.move(metadata->getOriginMessage(), metadata->getOriginMessage().length());
   upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool_data, metadata);
   return upstream_request_->start();
 }
