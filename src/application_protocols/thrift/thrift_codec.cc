@@ -589,4 +589,3 @@ ProtocolState DecoderStateMachine::run(Buffer::Instance& buffer) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
