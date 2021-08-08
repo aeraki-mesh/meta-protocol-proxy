@@ -12,6 +12,7 @@ envoy_cc_binary(
     deps = [
         "//src/meta_protocol_proxy:config",
         "//src/application_protocols/dubbo:config",
+        "//src/application_protocols/thrift:config",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
 )

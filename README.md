@@ -35,6 +35,10 @@ MetaProtocol 实现为一个能够在 Service Mesh 中管理任何七层协议�
 
 ## 测试 MetaProtocol Proxy
 
+目前已经基于 MetaProtocol 实现了 [Dubbo](src/application_protocols/dubbo) 和 [Thrift](src/application_protocols/thrift
+) 两种七层协议。更多协议正在开发中。
+
+## Dubbo
 因为测试客户端会采用域名 ```org.apache.dubbo.samples.basic.api.demoservice``` 来访问服务器，因此需要在
 主机的 hosts 文件中加入下面一行记录：
 
@@ -42,7 +46,7 @@ MetaProtocol 实现为一个能够在 Service Mesh 中管理任何七层协议�
 127.0.0.1 org.apache.dubbo.samples.basic.api.demoservice
 ```
 
-然后运行 ```./test/test.sh ```，该命令会启动 envoy 和 dubbo 测试程序。如果执行顺利，你可以看到类似下面的输出：
+然后运行 ```./test/dubbo/test.sh ```，该命令会启动 envoy 和 dubbo 测试程序。如果执行顺利，你可以看到类似下面的输出：
 
 ```bash
 Hello Aeraki, response from ed9006021490/172.17.0.2
@@ -50,4 +54,16 @@ Hello Aeraki, response from ed9006021490/172.17.0.2
 Hello Aeraki, response from ed9006021490/172.17.0.2
 ```
 
-该输出表示 dubbo 客户端通过 envoy 成功调用到 dubbo 服务器端。你可以查看 [test\test.yaml](test/test.yaml) 文件，以了解 MetaProtocol 的具体配置。
+该输出表示 dubbo 客户端通过 envoy 成功调用到 dubbo 服务器端。你可以查看 [test/dubbo/test.yaml](test/dubbo/test.yaml) 文件，以了解 MetaProtocol 的具体配置。
+
+## Thrift
+
+运行 ```./test/thrift/test.sh ```，该命令会启动 envoy 和 thrift 测试程序。如果执行顺利，你可以看到类似下面的输出：
+
+```bash
+Hello Aeraki, response from ae6582f53868/172.17.0.2
+Hello Aeraki, response from ae6582f53868/172.17.0.2
+Hello Aeraki, response from ae6582f53868/172.17.0.2
+```
+
+该输出表示 thrift 客户端通过 envoy 成功调用到 thrift 服务器端。你可以查看 [test/thrift/test.yaml](test/thrift/test.yaml) 文件，以了解 MetaProtocol 的具体配置。
