@@ -48,7 +48,9 @@ class DecoderStateMachine : public Logger::Loggable<Logger::Id::dubbo> {
 public:
 
   DecoderStateMachine(Protocol& protocol)
-      : protocol_(protocol), state_(ProtocolState::OnDecodeStreamHeader) {}
+      : protocol_(protocol), state_(ProtocolState::OnDecodeStreamHeader) {
+    metadata_ = std::make_shared<MessageMetadata>();
+  }
 
   /**
    * Consumes as much data from the configured Buffer as possible and executes the decoding state
@@ -86,9 +88,9 @@ private:
   // handleState delegates to the appropriate method based on state_.
   ProtocolState handleState(Buffer::Instance& buffer);
 
-  MessageMetadata metadata_;
-  ContextSharedPtr context_;
   Protocol& protocol_;
+  MessageMetadataSharedPtr metadata_;
+  ContextSharedPtr context_;
   ProtocolState state_;
 };
 
