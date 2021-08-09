@@ -7,7 +7,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Dubbo{
+namespace Dubbo {
 
 class DubboHessian2SerializerImpl : public Serializer {
 public:

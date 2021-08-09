@@ -17,7 +17,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Dubbo{
+namespace Dubbo {
 
 /**
  * See https://dubbo.incubator.apache.org/en-us/docs/dev/implementation.html
