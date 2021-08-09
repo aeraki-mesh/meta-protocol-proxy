@@ -46,7 +46,6 @@ private:
 
 class DecoderStateMachine : public Logger::Loggable<Logger::Id::dubbo> {
 public:
-
   DecoderStateMachine(Protocol& protocol)
       : protocol_(protocol), state_(ProtocolState::OnDecodeStreamHeader) {
     metadata_ = std::make_shared<MessageMetadata>();
@@ -73,7 +72,7 @@ public:
    * return the message metadata
    * @return
    */
-  MessageMetadataSharedPtr messageMetadata() const {return metadata_;}
+  MessageMetadataSharedPtr messageMetadata() const { return metadata_; }
   /**
    * @return the message context
    */

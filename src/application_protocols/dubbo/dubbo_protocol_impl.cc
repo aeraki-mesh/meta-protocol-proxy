@@ -9,7 +9,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Dubbo{
+namespace Dubbo {
 namespace {
 
 constexpr uint16_t MagicNumber = 0xdabb;
