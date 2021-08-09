@@ -34,7 +34,7 @@ MetaProtocolProxy::DecodeStatus DubboCodec::decode(Buffer::Instance& buffer,
 
   ASSERT(state == ProtocolState::Done);
 
-  toMetadata(state_machine_->messageMetadata(), *(state_machine_->messageContext()), metadata);
+  toMetadata(*(state_machine_->messageMetadata()), *(state_machine_->messageContext()), metadata);
 
   // Reset for next request.
   complete();
@@ -224,7 +224,7 @@ ProtocolState DecoderStateMachine::onDecodeStreamHeader(Buffer::Instance& buffer
   context_ = ret.first;
   if (metadata_->messageType() == MessageType::HeartbeatRequest ||
       metadata_->messageType() == MessageType::HeartbeatResponse) {
-    if (buffer.length() < (context->headerSize() + context_->bodySize())) {
+    if (buffer.length() < (context_->headerSize() + context_->bodySize())) {
       ENVOY_LOG(debug, "dubbo decoder: need more data for {} protocol heartbeat", protocol_.name());
       return ProtocolState::WaitForData;
     }
