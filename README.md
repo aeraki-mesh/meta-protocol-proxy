@@ -1,52 +1,57 @@
+[中文](README_ZH.md)
+
 # meta-protocol-proxy
 
-## 为什么需要 MetaProtocol ?
+## Why MetaProtocol is needed?
 
-目前几乎所有的开源和商业 Service Mesh 都只支持了 HTTP 和 gRPC 两种七层协议。微服务中的其他常见协议，包括 Dubbo、Thrift、Redis、MySql 等，
-在 Service Mesh 中只能被作为 TCP 流量进行处理，无法进行高级的流量管理。此外，如果微服务采用了自定义的 RPC 协议进行通信，也无法纳入 
-Service Mesh 中进行管理。
+Almost all open source and commercial Service Meshes currently support only two Layer-7 protocols - HTTP and gRPC. 
+Other widely used protocols in microservices, including Dubbo, Thrift, Redis, MySql, etc. can only be handled as plain TCP traffic 
+, hence advanced traffic management capabilities promised by Service Mesh are not available for those protocols. In addition, 
+some microservices are using proprietary RPC protocols for inter-service communication, we need to manage these protocols as well.
 
-如下图所示，一个微服务应用中通常会有这些七层流量：
-* RPC： HTTP、gRPC、Dubbo、Thrift、私有 RPC 协议 ...
+As shown in the figure below, we usually have these layer-7 protocols in a typical microservice application
+
+* RPC： HTTP、gRPC、Dubbo、Thrift、proprietary RPC ...
 * Async Message：Kafka, RabbitMQ ...
 * DB：mySQL, PostgreSQL, MongoDB ...
 ![](docs/image/microservices-l7-protocols.png)
 
-## MetaProtocol 解决方案
+## What MetaProtocol provides?
 
-MetaProtocol 实现为一个能够在 Service Mesh 中管理任何七层协议的通用协议框架。MetaProtocol 在 Service Mesh 中为微服务中的各种七层协议流量提供以下标准能力：
-* 数据面：MetaProtocol Proxy 提供服务发现、负载均衡、熔断、路由、权限控制、限流、故障注入等公共的基础能力。
+MetaProtocol is aimed to support any layer-7 protocols in Service Mesh. 
+* Data plane：MetaProtocol Proxy provides common capabilities for Layer-7 protocols, such as load balancing, circuit breaker, load balancing, routing, rate limiting, fault injection, and auth.
   ![](docs/image/meta-protocol-proxy.png)
-* 控制面：[Aeraki](https://github.com/aeraki-framework/aeraki) 提供控制面管理，为数据面下发 MetaProtocol Proxy 配置和 RDS 配置，实现流量拆分、灰度/蓝绿发布、地域感知负载均衡、
-  流量镜像、基于角色的权限控制等高级路由和服务治理能力。
+* Control plane：[Aeraki](https://github.com/aeraki-framework/aeraki) provides a centralized control plane for MetaProtocol Proxy. 
+  Aeraki sends the configuration and dynamic routing rules to the MetaProtocol Proxies in the data plane. It also has high-level CRDs to 
+  provide a user-friendly interface to operation teams. Advanced traffic management such as traffic splitting, canary deployment, traffic mirroring, and RBAC can be achieved by these CRDs.
   ![](docs/image/aeraki-meta-protocol.png)
 
-要将一个七层协议纳入 Service Mesh 中进行管控，只需基于 MetaProtocol Proxy 数据面进行少量二次开发，实现
-[协议编解码的接口](src/meta_protocol_proxy/codec/codec.h#L118)即可。
+To add a new protocol into the service mesh, the only thing you need to do is implementing the [codec interface](src/meta_protocol_proxy/codec/codec.h#L118).
 
-除了 MetaProtocol Proxy 自带的通用能力之外，还提供基于 C++、Lua、WASM 的 L7 filter 插件机制，允许用户在 MetaProtocol 基础上创建自定义七层 filter，加入特殊定制逻辑。
+If you have special requirements which can't be meet by the built-in capabilities, MetaProtocol Proxy also has a filter chain mechanism, 
+allowing users to write their own layer-7 filters to add custom logic into MetaProtocol Proxy.
 
-## 构建 MetaProtocol Proxy
+## Build MetaProtocol Proxy
 
-参考 [Building Envoy with Bazel](https://github.com/envoyproxy/envoy/blob/main/bazel/README.md) 安装构建所需的软件。
+Follow this guide [Building Envoy with Bazel](https://github.com/envoyproxy/envoy/blob/main/bazel/README.md) to install the required software.
 
-运行 ```./build.sh```，如果构建顺利完成，生成的二进制文件路径为 bazel-bin/envoy ，该二进制文件中包含了 MetaProtocol Proxy 和
-基于 MetaProtocol Proxy 实现的 Dubbo 协议。
+Run  ```./build.sh```, if the build completes successfully, the generated binary will be at ```bazel-bin/envoy```, which contains 
+the MetaProtocol Proxy and the codecs of the application protocols.
 
-## 测试 MetaProtocol Proxy
+## Test MetaProtocol Proxy
 
-目前已经基于 MetaProtocol 实现了 [Dubbo](src/application_protocols/dubbo) 和 [Thrift](src/application_protocols/thrift
-) 两种七层协议。更多协议正在开发中。
+Two layer-7 protocols, Dubbo](src/application_protocols/dubbo) and [Thrift](src/application_protocols/thrift
+), have been implemented based on MetaProtocol. More protocols are under development.
 
-## Dubbo
-因为测试客户端会采用域名 ```org.apache.dubbo.samples.basic.api.demoservice``` 来访问服务器，因此需要在
-主机的 hosts 文件中加入下面一行记录：
+### Dubbo
+Since the dubbo test client will use dns name ```org.apache.dubbo.samples.basic.api.demoservice``` to access th dubbo test server, we need to
+add the below line to hte hosts file：
 
 ```bash
 127.0.0.1 org.apache.dubbo.samples.basic.api.demoservice
 ```
 
-然后运行 ```./test/dubbo/test.sh ```，该命令会启动 envoy 和 dubbo 测试程序。如果执行顺利，你可以看到类似下面的输出：
+Run ```./test/dubbo/test.sh ```, this script will run the envoy, dubbo test client and dubbo test server。You'll expect to see the below output:
 
 ```bash
 Hello Aeraki, response from ed9006021490/172.17.0.2
@@ -54,11 +59,12 @@ Hello Aeraki, response from ed9006021490/172.17.0.2
 Hello Aeraki, response from ed9006021490/172.17.0.2
 ```
 
-该输出表示 dubbo 客户端通过 envoy 成功调用到 dubbo 服务器端。你可以查看 [test/dubbo/test.yaml](test/dubbo/test.yaml) 文件，以了解 MetaProtocol 的具体配置。
+This output means that the dubbo test client has successful reached the dubbo test server through envoy MetaProtocol proxy. 
+To understand how it works, you can look into [test/dubbo/test.yaml](test/dubbo/test.yaml) and play with the MetaProtocol configuration.
 
-## Thrift
+### Thrift
 
-运行 ```./test/thrift/test.sh ```，该命令会启动 envoy 和 thrift 测试程序。如果执行顺利，你可以看到类似下面的输出：
+Run ```./test/thrift/test.sh ```, this script will run the envoy, thrift test client and thrift test server。You'll expect to see the below output:
 
 ```bash
 Hello Aeraki, response from ae6582f53868/172.17.0.2
@@ -66,4 +72,5 @@ Hello Aeraki, response from ae6582f53868/172.17.0.2
 Hello Aeraki, response from ae6582f53868/172.17.0.2
 ```
 
-该输出表示 thrift 客户端通过 envoy 成功调用到 thrift 服务器端。你可以查看 [test/thrift/test.yaml](test/thrift/test.yaml) 文件，以了解 MetaProtocol 的具体配置。
+This output means that the thrift test client has successfully reached the thrift test server through envoy MetaProtocol proxy. 
+To understand how it works, you can look into [test/thrift/test.yaml](test/thrift/test.yaml) and play with the MetaProtocol configuration. 
