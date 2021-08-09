@@ -79,8 +79,6 @@ namespace Dubbo {
     int64_t request_id_ = 0;
   };
 
-  using MessageMetadataSharedPtr = std::shared_ptr<MessageMetadata>;
-
 } // namespace Dubbo
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
