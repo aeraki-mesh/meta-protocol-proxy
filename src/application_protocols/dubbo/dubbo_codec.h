@@ -73,7 +73,7 @@ public:
    * return the message metadata
    * @return
    */
-  MessageMetadataPtr messageMetadata() const {return metadata_;}
+  MessageMetadataSharedPtr messageMetadata() const {return metadata_;}
   /**
    * @return the message context
    */
