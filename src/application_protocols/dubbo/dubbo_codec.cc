@@ -23,7 +23,7 @@ MetaProtocolProxy::DecodeStatus DubboCodec::decode(Buffer::Instance& buffer,
     start();
   }
 
-  ENVOY_LOG(debug, "dubbo decoder: protocol {}, state {}, {} bytes available", protocol_.name(),
+  ENVOY_LOG(debug, "dubbo decoder: protocol {}, state {}, {} bytes available", protocol_->name(),
             ProtocolStateNameValues::name(state_machine_->currentState()), buffer.length());
 
   ProtocolState state = state_machine_->run(buffer);
@@ -42,7 +42,7 @@ MetaProtocolProxy::DecodeStatus DubboCodec::decode(Buffer::Instance& buffer,
 }
 
 void DubboCodec::start() {
-  state_machine_ = std::make_unique<DecoderStateMachine>(protocol_);
+  state_machine_ = std::make_unique<DecoderStateMachine>(*protocol_);
   decode_started_ = true;
 }
 
@@ -224,13 +224,13 @@ ProtocolState DecoderStateMachine::onDecodeStreamHeader(Buffer::Instance& buffer
   context_ = ret.first;
   if (metadata_->messageType() == MessageType::HeartbeatRequest ||
       metadata_->messageType() == MessageType::HeartbeatResponse) {
-    if (buffer.length() < (context->headerSize() + context->bodySize())) {
+    if (buffer.length() < (context->headerSize() + context_->bodySize())) {
       ENVOY_LOG(debug, "dubbo decoder: need more data for {} protocol heartbeat", protocol_.name());
       return ProtocolState::WaitForData;
     }
 
     ENVOY_LOG(debug, "dubbo decoder: this is the {} heartbeat message", protocol_.name());
-    context_->originMessage().move(buffer, (context->headerSize() + context->bodySize()));
+    context_->originMessage().move(buffer, (context_->headerSize() + context_->bodySize()));
     return ProtocolState::Done;
   }
 
@@ -249,7 +249,7 @@ ProtocolState DecoderStateMachine::onDecodeStreamData(Buffer::Instance& buffer) 
   context_->originMessage().move(buffer, context_->bodySize());
 
   ENVOY_LOG(debug, "dubbo decoder: ends the deserialization of the message");
-  return {ProtocolState::Done};
+  return ProtocolState::Done;
 }
 
 ProtocolState DecoderStateMachine::handleState(Buffer::Instance& buffer) {
