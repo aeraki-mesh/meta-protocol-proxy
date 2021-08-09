@@ -60,7 +60,7 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& data,
     }
 
     frame_started_ = true;
-    state_machine_ = std::make_unique<DecoderStateMachine>(*protocol_, metadata_);
+    state_machine_ = std::make_unique<DecoderStateMachine>(*protocol_, *metadata_);
   }
 
   ASSERT(state_machine_ != nullptr);
@@ -219,7 +219,7 @@ ProtocolState DecoderStateMachine::passthroughData(Buffer::Instance& buffer) {
 // MessageBegin -> StructBegin
 ProtocolState DecoderStateMachine::messageBegin(Buffer::Instance& buffer) {
   const auto total = buffer.length();
-  if (!proto_.readMessageBegin(buffer, *metadata_)) {
+  if (!proto_.readMessageBegin(buffer, metadata_)) {
     return ProtocolState::WaitForData;
   }
 
@@ -227,11 +227,11 @@ ProtocolState DecoderStateMachine::messageBegin(Buffer::Instance& buffer) {
   stack_.emplace_back(Frame(ProtocolState::MessageEnd));
 
   if (passthrough_enabled_) {
-    body_bytes_ = metadata_->frameSize() - (total - buffer.length());
+    body_bytes_ = metadata_.frameSize() - (total - buffer.length());
     return ProtocolState::PassthroughData;
   }
 
-  proto_.writeMessageBegin(origin_message_, *metadata_);
+  proto_.writeMessageBegin(origin_message_, metadata_);
   return ProtocolState::StructBegin;
 }
 

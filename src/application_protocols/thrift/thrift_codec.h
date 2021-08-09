@@ -70,7 +70,7 @@ private:
  */
 class DecoderStateMachine : public Logger::Loggable<Logger::Id::thrift> {
 public:
-  DecoderStateMachine(ThriftProxy::Protocol& proto, ThriftProxy::MessageMetadataSharedPtr& metadata)
+  DecoderStateMachine(ThriftProxy::Protocol& proto, ThriftProxy::MessageMetadata& metadata)
       : proto_(proto), metadata_(metadata), state_(ProtocolState::MessageBegin) {}
 
   /**
@@ -167,7 +167,7 @@ private:
   ProtocolState popReturnState();
 
   ThriftProxy::Protocol& proto_;
-  ThriftProxy::MessageMetadataSharedPtr metadata_;
+  ThriftProxy::MessageMetadata& metadata_;
   ProtocolState state_;
   std::vector<Frame> stack_;
   uint32_t body_bytes_{};
