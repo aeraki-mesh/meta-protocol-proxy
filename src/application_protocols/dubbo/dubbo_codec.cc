@@ -17,16 +17,16 @@ namespace Dubbo {
 
 MetaProtocolProxy::DecodeStatus DubboCodec::decode(Buffer::Instance& buffer,
                                                    MetaProtocolProxy::Metadata& metadata) {
-  ENVOY_LOG(debug, "dubbo decoder: {} bytes available", data.length());
+  ENVOY_LOG(debug, "dubbo decoder: {} bytes available", buffer.length());
 
   if (!decode_started_) {
     start();
   }
 
   ENVOY_LOG(debug, "dubbo decoder: protocol {}, state {}, {} bytes available", protocol_.name(),
-            ProtocolStateNameValues::name(state_machine_->currentState()), data.length());
+            ProtocolStateNameValues::name(state_machine_->currentState()), buffer.length());
 
-  ProtocolState state = state_machine_->run(data);
+  ProtocolState state = state_machine_->run(buffer);
   if (state == ProtocolState::WaitForData) {
     ENVOY_LOG(debug, "dubbo decoder: wait for data");
     return DecodeStatus::WaitForData;
@@ -222,8 +222,8 @@ ProtocolState DecoderStateMachine::onDecodeStreamHeader(Buffer::Instance& buffer
   }
 
   context_ = ret.first;
-  if (metadata->messageType() == MessageType::HeartbeatRequest ||
-      metadata->messageType() == MessageType::HeartbeatResponse) {
+  if (metadata_->messageType() == MessageType::HeartbeatRequest ||
+      metadata_->messageType() == MessageType::HeartbeatResponse) {
     if (buffer.length() < (context->headerSize() + context->bodySize())) {
       ENVOY_LOG(debug, "dubbo decoder: need more data for {} protocol heartbeat", protocol_.name());
       return ProtocolState::WaitForData;
@@ -234,7 +234,7 @@ ProtocolState DecoderStateMachine::onDecodeStreamHeader(Buffer::Instance& buffer
     return ProtocolState::Done;
   }
 
-  context_->originMessage().move(buffer, context->headerSize());
+  context_->originMessage().move(buffer, context_->headerSize());
 
   return ProtocolState::OnDecodeStreamData;
 }
