@@ -40,7 +40,7 @@ the MetaProtocol Proxy and the codecs of the application protocols.
 
 ## Test MetaProtocol Proxy
 
-Two layer-7 protocols, Dubbo](src/application_protocols/dubbo) and [Thrift](src/application_protocols/thrift
+Two layer-7 protocols, [Dubbo](src/application_protocols/dubbo) and [Thrift](src/application_protocols/thrift
 ), have been implemented based on MetaProtocol. More protocols are under development.
 
 ### Dubbo
