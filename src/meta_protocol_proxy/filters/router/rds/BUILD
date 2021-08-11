@@ -1,15 +1,19 @@
-load(
-    "//bazel:envoy_build_system.bzl",
-    "envoy_cc_library",
-    "envoy_package",
+package(default_visibility =  [
+        "//src/meta_protocol_proxy:__pkg__",
+        "//src/meta_protocol_proxy/filters:__pkg__",
+    ],
 )
 
-licenses(["notice"])  # Apache 2
+load(
+    "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_cc_library",
+)
 
-envoy_package()
+load("@envoy_api//bazel:api_build_system.bzl", "api_proto_package")
 
 envoy_cc_library(
     name = "metadatamatchcriteria_lib",
+    repository = "@envoy",
     srcs = ["metadatamatchcriteria_impl.cc"],
     hdrs = ["metadatamatchcriteria_impl.h"],
     deps = [
@@ -19,6 +23,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "tls_context_match_criteria_lib",
+    repository = "@envoy",
     srcs = ["tls_context_match_criteria_impl.cc"],
     hdrs = ["tls_context_match_criteria_impl.h"],
     deps = [
@@ -29,8 +34,9 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "config_lib",
+    repository = "@envoy",
     srcs = ["config_impl.cc"],
-    hdrs = ["config_impl.h"],
+    hdrs = ["config_impl.h","http_utility.h","filter_utility.h"],
     external_deps = ["abseil_optional"],
     deps = [
         ":config_utility_lib",
@@ -60,10 +66,8 @@ envoy_cc_library(
         "@envoy//source/common/http:header_utility_lib",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/http:path_utility_lib",
-        "@envoy//source/common/http:utility_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/tracing:http_tracer_lib",
-        "@envoy//source/extensions/filters/http/common:utility_lib",
         "@envoy_api//envoy/config/core/v3:pkg_cc_proto",
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
         "@envoy_api//envoy/type/matcher/v3:pkg_cc_proto",
@@ -73,6 +77,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "config_utility_lib",
+    repository = "@envoy",
     srcs = ["config_utility.cc"],
     hdrs = ["config_utility.h"],
     deps = [
@@ -92,6 +97,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "context_lib",
+    repository = "@envoy",
     srcs = ["context_impl.cc"],
     hdrs = ["context_impl.h"],
     deps = [
@@ -103,6 +109,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "debug_config_lib",
+    repository = "@envoy",
     srcs = ["debug_config.cc"],
     hdrs = ["debug_config.h"],
     deps = [
@@ -114,6 +121,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "route_config_update_impl_lib",
+    repository = "@envoy",
     srcs = ["route_config_update_receiver_impl.cc"],
     hdrs = ["route_config_update_receiver_impl.h"],
     deps = [
@@ -131,6 +139,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "vhds_lib",
+    repository = "@envoy",
     srcs = ["vhds.cc"],
     hdrs = ["vhds.h"],
     deps = [
@@ -160,6 +169,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "rds_lib",
+    repository = "@envoy",
     srcs = ["rds_impl.cc"],
     hdrs = ["rds_impl.h"],
     deps = [
@@ -199,6 +209,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "scoped_config_lib",
+    repository = "@envoy",
     srcs = ["scoped_config_impl.cc"],
     hdrs = ["scoped_config_impl.h"],
     external_deps = [
@@ -216,6 +227,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "scoped_rds_lib",
+    repository = "@envoy",
     srcs = ["scoped_rds.cc"],
     hdrs = ["scoped_rds.h"],
     deps = [
@@ -247,6 +259,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "retry_state_lib",
+    repository = "@envoy",
     srcs = ["retry_state_impl.cc"],
     hdrs = ["retry_state_impl.h"],
     external_deps = ["abseil_optional"],
@@ -271,6 +284,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "router_lib",
+    repository = "@envoy",
     srcs = [
         "router.cc",
         "upstream_request.cc",
@@ -333,6 +347,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "router_ratelimit_lib",
+    repository = "@envoy",
     srcs = ["router_ratelimit.cc"],
     hdrs = ["router_ratelimit.h"],
     deps = [
@@ -353,6 +368,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "shadow_writer_lib",
+    repository = "@envoy",
     srcs = ["shadow_writer_impl.cc"],
     hdrs = ["shadow_writer_impl.h"],
     deps = [
@@ -365,6 +381,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "header_parser_lib",
+    repository = "@envoy",
     srcs = ["header_parser.cc"],
     hdrs = ["header_parser.h"],
     deps = [
@@ -379,6 +396,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "header_formatter_lib",
+    repository = "@envoy",
     srcs = ["header_formatter.cc"],
     hdrs = ["header_formatter.h"],
     external_deps = ["abseil_optional"],
@@ -397,6 +415,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "reset_header_parser_lib",
+    repository = "@envoy",
     srcs = ["reset_header_parser.cc"],
     hdrs = ["reset_header_parser.h"],
     deps = [
@@ -411,6 +430,7 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "string_accessor_lib",
+    repository = "@envoy",
     hdrs = ["string_accessor_impl.h"],
     deps = [
         "@envoy//envoy/router:string_accessor_interface",
@@ -419,9 +439,11 @@ envoy_cc_library(
 
 envoy_cc_library(
     name = "delegating_route_lib",
+    repository = "@envoy",
     srcs = ["delegating_route_impl.cc"],
     hdrs = ["delegating_route_impl.h"],
     deps = [
         "@envoy//envoy/router:router_interface",
     ],
 )
+

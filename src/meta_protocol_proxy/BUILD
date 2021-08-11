@@ -1,11 +1,9 @@
-licenses(["notice"])  # Apache 2
+package(default_visibility = ["//visibility:public"])
 
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
 )
-
-package(default_visibility = ["//visibility:public"])
 
 envoy_cc_library(
     name = "config",
@@ -26,7 +24,8 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/filters/router:config",
         "//src/meta_protocol_proxy/filters/router:route_matcher",
         "//src/meta_protocol_proxy/filters/router:router_lib",
-	    "//src/meta_protocol_proxy/codec:factory_lib",
+	"//src/meta_protocol_proxy/filters/router/rds:config_lib",
+	"//src/meta_protocol_proxy/codec:factory_lib",
     ],
 )
 
