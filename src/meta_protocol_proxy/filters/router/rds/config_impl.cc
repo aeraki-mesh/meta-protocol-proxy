@@ -30,14 +30,14 @@
 #include "source/common/config/well_known_names.h"
 #include "source/common/http/headers.h"
 #include "source/common/http/path_utility.h"
-#include "source/common/http/utility.h"
 #include "source/common/protobuf/protobuf.h"
 #include "source/common/protobuf/utility.h"
 #include "src/meta_protocol_proxy/filters/router/rds/reset_header_parser.h"
 #include "src/meta_protocol_proxy/filters/router/rds/retry_state_impl.h"
 #include "source/common/runtime/runtime_features.h"
 #include "source/common/tracing/http_tracer_impl.h"
-#include "source/extensions/filters/http/common/utility.h"
+#include "src/meta_protocol_proxy/filters/router/rds/http_utility.h"
+#include "src/meta_protocol_proxy/filters/router/rds/filter_utility.h"
 
 #include "absl/strings/match.h"
 

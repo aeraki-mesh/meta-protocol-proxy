@@ -39,6 +39,7 @@ class LoadBalancerContext;
 class ThreadLocalCluster;
 } // namespace Upstream
 
+namespace MetaProtocolProxy {
 namespace Router {
 
 /**
