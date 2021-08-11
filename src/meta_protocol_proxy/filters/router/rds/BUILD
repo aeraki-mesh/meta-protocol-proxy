@@ -79,7 +79,7 @@ envoy_cc_library(
     name = "config_utility_lib",
     repository = "@envoy",
     srcs = ["config_utility.cc"],
-    hdrs = ["config_utility.h"],
+    hdrs = ["config_utility.h", "http_utility.h"],
     deps = [
         "@envoy//envoy/http:codes_interface",
         "@envoy//envoy/upstream:resource_manager_interface",
@@ -261,7 +261,7 @@ envoy_cc_library(
     name = "retry_state_lib",
     repository = "@envoy",
     srcs = ["retry_state_impl.cc"],
-    hdrs = ["retry_state_impl.h"],
+    hdrs = ["retry_state_impl.h", "http_utility.h"],
     external_deps = ["abseil_optional"],
     deps = [
         "@envoy//envoy/event:timer_interface",
@@ -349,7 +349,7 @@ envoy_cc_library(
     name = "router_ratelimit_lib",
     repository = "@envoy",
     srcs = ["router_ratelimit.cc"],
-    hdrs = ["router_ratelimit.h"],
+    hdrs = ["router_ratelimit.h","http_utility.h"],
     deps = [
         ":config_utility_lib",
         "@envoy//envoy/ratelimit:ratelimit_interface",
