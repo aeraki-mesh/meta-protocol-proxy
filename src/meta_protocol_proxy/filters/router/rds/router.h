@@ -12,7 +12,7 @@
 #include "envoy/http/codes.h"
 #include "envoy/http/filter.h"
 #include "envoy/local_info/local_info.h"
-#include "envoy/router/shadow_writer.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/shadow_writer.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/stats/scope.h"

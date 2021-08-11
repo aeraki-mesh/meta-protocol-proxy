@@ -1,7 +1,7 @@
 #pragma once
 
-#include "envoy/router/context.h"
-#include "envoy/router/router.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/context.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/router.h"
 #include "envoy/stats/stats_macros.h"
 
 namespace Envoy {

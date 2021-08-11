@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "envoy/router/string_accessor.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/string_accessor.h"
 
 #include "source/common/common/fmt.h"
 #include "source/common/common/logger.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "envoy/router/string_accessor.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/string_accessor.h"
 
 namespace Envoy {
 namespace MetaProtocolProxy {

@@ -8,8 +8,8 @@
 #include "envoy/config/core/v3/base.pb.h"
 #include "envoy/config/route/v3/route_components.pb.h"
 #include "envoy/ratelimit/ratelimit.h"
-#include "envoy/router/router.h"
-#include "envoy/router/router_ratelimit.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/router.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/router_ratelimit.h"
 
 #include "source/common/config/metadata.h"
 #include "source/common/http/header_utility.h"

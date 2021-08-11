@@ -17,7 +17,7 @@ envoy_cc_library(
     srcs = ["metadatamatchcriteria_impl.cc"],
     hdrs = ["metadatamatchcriteria_impl.h"],
     deps = [
-        "@envoy//envoy/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
     ],
 )
 
@@ -27,7 +27,7 @@ envoy_cc_library(
     srcs = ["tls_context_match_criteria_impl.cc"],
     hdrs = ["tls_context_match_criteria_impl.h"],
     deps = [
-        "@envoy//envoy/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
     ],
 )
@@ -49,7 +49,7 @@ envoy_cc_library(
         ":tls_context_match_criteria_lib",
         "@envoy//envoy/config:typed_metadata_interface",
         "@envoy//envoy/http:header_map_interface",
-        "@envoy//envoy/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
         "@envoy//envoy/runtime:runtime_interface",
         "@envoy//envoy/server:filter_config_interface",  # TODO(rodaine): break dependency on server
         "@envoy//envoy/upstream:cluster_manager_interface",
@@ -101,8 +101,8 @@ envoy_cc_library(
     srcs = ["context_impl.cc"],
     hdrs = ["context_impl.h"],
     deps = [
-        "@envoy//envoy/router:context_interface",
-        "@envoy//envoy/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:context_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
         "@envoy//envoy/stats:stats_macros",
     ],
 )
@@ -126,8 +126,8 @@ envoy_cc_library(
     hdrs = ["route_config_update_receiver_impl.h"],
     deps = [
         ":config_lib",
-        "@envoy//envoy/router:rds_interface",
-        "@envoy//envoy/router:route_config_update_info_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:rds_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:route_config_update_info_interface",
         "@envoy//envoy/server:factory_context_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:minimal_logger_lib",
@@ -147,9 +147,9 @@ envoy_cc_library(
         "@envoy//envoy/config:subscription_interface",
         "@envoy//envoy/http:codes_interface",
         "@envoy//envoy/local_info:local_info_interface",
-        "@envoy//envoy/router:rds_interface",
-        "@envoy//envoy/router:route_config_provider_manager_interface",
-        "@envoy//envoy/router:route_config_update_info_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:rds_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:route_config_provider_manager_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:route_config_update_info_interface",
         "@envoy//envoy/singleton:instance_interface",
         "@envoy//envoy/thread_local:thread_local_interface",
         "@envoy//source/common/common:assert_lib",
@@ -177,9 +177,9 @@ envoy_cc_library(
         "@envoy//envoy/config:subscription_interface",
         "@envoy//envoy/http:codes_interface",
         "@envoy//envoy/local_info:local_info_interface",
-        "@envoy//envoy/router:rds_interface",
-        "@envoy//envoy/router:route_config_provider_manager_interface",
-        "@envoy//envoy/router:route_config_update_info_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:rds_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:route_config_provider_manager_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:route_config_update_info_interface",
         "@envoy//envoy/server:admin_interface",
         "@envoy//envoy/singleton:instance_interface",
         "@envoy//envoy/thread_local:thread_local_interface",
@@ -217,8 +217,8 @@ envoy_cc_library(
     ],
     deps = [
         ":config_lib",
-        "@envoy//envoy/router:rds_interface",
-        "@envoy//envoy/router:scopes_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:rds_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:scopes_interface",
         "@envoy//envoy/thread_local:thread_local_interface",
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/filters/network/http_connection_manager/v3:pkg_cc_proto",
@@ -235,7 +235,7 @@ envoy_cc_library(
         ":scoped_config_lib",
         "@envoy//envoy/config:config_provider_interface",
         "@envoy//envoy/config:subscription_interface",
-        "@envoy//envoy/router:route_config_provider_manager_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:route_config_provider_manager_interface",
         "@envoy//envoy/stats:stats_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:cleanup_lib",
@@ -267,7 +267,7 @@ envoy_cc_library(
         "@envoy//envoy/event:timer_interface",
         "@envoy//envoy/http:codec_interface",
         "@envoy//envoy/http:header_map_interface",
-        "@envoy//envoy/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
         "@envoy//envoy/runtime:runtime_interface",
         "@envoy//envoy/upstream:upstream_interface",
         "@envoy//source/common/common:assert_lib",
@@ -307,7 +307,7 @@ envoy_cc_library(
         "@envoy//envoy/http:conn_pool_interface",
         "@envoy//envoy/http:filter_interface",
         "@envoy//envoy/local_info:local_info_interface",
-        "@envoy//envoy/router:shadow_writer_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:shadow_writer_interface",
         "@envoy//envoy/runtime:runtime_interface",
         "@envoy//envoy/server:filter_config_interface",
         "@envoy//envoy/stats:stats_interface",
@@ -353,8 +353,8 @@ envoy_cc_library(
     deps = [
         ":config_utility_lib",
         "@envoy//envoy/ratelimit:ratelimit_interface",
-        "@envoy//envoy/router:router_interface",
-        "@envoy//envoy/router:router_ratelimit_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_ratelimit_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/config:metadata_lib",
@@ -372,7 +372,7 @@ envoy_cc_library(
     srcs = ["shadow_writer_impl.cc"],
     hdrs = ["shadow_writer_impl.h"],
     deps = [
-        "@envoy//envoy/router:shadow_writer_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:shadow_writer_interface",
         "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/http:headers_lib",
@@ -401,7 +401,7 @@ envoy_cc_library(
     hdrs = ["header_formatter.h"],
     external_deps = ["abseil_optional"],
     deps = [
-        "@envoy//envoy/router:string_accessor_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:string_accessor_interface",
         "@envoy//envoy/stream_info:filter_state_interface",
         "@envoy//envoy/stream_info:stream_info_interface",
         "@envoy//source/common/common:minimal_logger_lib",
@@ -421,7 +421,7 @@ envoy_cc_library(
     deps = [
         "@envoy//envoy/common:time_interface",
         "@envoy//envoy/http:header_map_interface",
-        "@envoy//envoy/router:router_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:router_interface",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
@@ -433,7 +433,7 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["string_accessor_impl.h"],
     deps = [
-        "@envoy//envoy/router:string_accessor_interface",
+        "//src/meta_protocol_proxy/filters/rds/router:string_accessor_interface",
     ],
 )
 

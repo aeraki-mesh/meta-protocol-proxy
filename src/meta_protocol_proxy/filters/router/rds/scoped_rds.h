@@ -9,7 +9,7 @@
 #include "envoy/config/route/v3/scoped_route.pb.validate.h"
 #include "envoy/config/subscription.h"
 #include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
-#include "envoy/router/route_config_provider_manager.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/route_config_provider_manager.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 #include "envoy/stats/scope.h"
 

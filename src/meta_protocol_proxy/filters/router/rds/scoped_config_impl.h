@@ -5,9 +5,9 @@
 
 #include "envoy/config/route/v3/scoped_route.pb.h"
 #include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
-#include "envoy/router/rds.h"
-#include "envoy/router/router.h"
-#include "envoy/router/scopes.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/rds.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/router.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/scopes.h"
 #include "envoy/thread_local/thread_local.h"
 
 #include "source/common/common/hash.h"

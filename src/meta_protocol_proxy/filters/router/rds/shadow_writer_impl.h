@@ -3,7 +3,7 @@
 #include <chrono>
 #include <string>
 
-#include "envoy/router/shadow_writer.h"
+#include "src/meta_protocol_proxy/filters/router/rds/router/shadow_writer.h"
 #include "envoy/upstream/cluster_manager.h"
 
 namespace Envoy {
