@@ -13,7 +13,7 @@
 #include "source/common/common/matchers.h"
 #include "source/common/common/utility.h"
 #include "source/common/http/headers.h"
-#include "source/common/http/utility.h"
+#include "src/meta_protocol_proxy/filters/router/rds/http_utility.h"
 #include "source/common/protobuf/utility.h"
 
 #include "absl/types/optional.h"

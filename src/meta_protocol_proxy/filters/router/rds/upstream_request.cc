@@ -26,7 +26,7 @@
 #include "source/common/http/header_map_impl.h"
 #include "source/common/http/headers.h"
 #include "source/common/http/message_impl.h"
-#include "source/common/http/utility.h"
+#include "src/meta_protocol_proxy/filters/router/rds/http_utility.h"
 #include "source/common/network/application_protocol.h"
 #include "source/common/network/transport_socket_options_impl.h"
 #include "source/common/network/upstream_server_name.h"

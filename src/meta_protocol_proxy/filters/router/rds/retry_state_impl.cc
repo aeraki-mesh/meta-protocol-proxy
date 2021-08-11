@@ -12,7 +12,7 @@
 #include "source/common/grpc/common.h"
 #include "source/common/http/codes.h"
 #include "source/common/http/headers.h"
-#include "source/common/http/utility.h"
+#include "src/meta_protocol_proxy/filters/router/rds/http_utility.h"
 
 namespace Envoy {
 namespace MetaProtocolProxy {

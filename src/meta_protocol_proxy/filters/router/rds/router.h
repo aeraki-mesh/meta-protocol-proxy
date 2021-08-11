@@ -27,7 +27,7 @@
 #include "source/common/common/linked_object.h"
 #include "source/common/common/logger.h"
 #include "source/common/config/well_known_names.h"
-#include "source/common/http/utility.h"
+#include "src/meta_protocol_proxy/filters/router/rds/http_utility.h"
 #include "src/meta_protocol_proxy/filters/router/rds/config_impl.h"
 #include "src/meta_protocol_proxy/filters/router/rds/context_impl.h"
 #include "src/meta_protocol_proxy/filters/router/rds/upstream_request.h"
