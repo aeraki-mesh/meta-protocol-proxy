@@ -29,7 +29,7 @@ public:
    * @param version_info supplies RouteConfiguration version.
    * @return bool whether RouteConfiguration has been updated.
    */
-  virtual bool onRdsUpdate(const envoy::config::route::v3::RouteConfiguration& rc,
+  virtual bool onRdsUpdate(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& rc,
                            const std::string& version_info) PURE;
 
   using VirtualHostRefVector =
@@ -79,9 +79,9 @@ public:
   virtual absl::optional<RouteConfigProvider::ConfigInfo> configInfo() const PURE;
 
   /**
-   * @return envoy::config::route::v3::RouteConfiguration& current RouteConfiguration.
+   * @return envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& current RouteConfiguration.
    */
-  virtual const envoy::config::route::v3::RouteConfiguration& protobufConfiguration() PURE;
+  virtual const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& protobufConfiguration() PURE;
 
   /**
    * @return Router::ConfigConstSharedPtr a parsed and validated copy of current RouteConfiguration.

@@ -4,7 +4,7 @@
 #include <typeinfo>
 
 #include "envoy/config/route/v3/scoped_route.pb.h"
-#include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/rds.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/router.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/scopes.h"

@@ -8,7 +8,7 @@
 #include "envoy/config/route/v3/scoped_route.pb.h"
 #include "envoy/config/route/v3/scoped_route.pb.validate.h"
 #include "envoy/config/subscription.h"
-#include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/route_config_provider_manager.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 #include "envoy/stats/scope.h"
@@ -139,7 +139,7 @@ private:
   struct RdsRouteConfigProviderHelper {
     RdsRouteConfigProviderHelper(
         ScopedRdsConfigSubscription& parent, std::string scope_name,
-        envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+        envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
         Init::Manager& init_manager);
 
     RdsRouteConfigProviderHelper(ScopedRdsConfigSubscription& parent, std::string scope_name);
@@ -165,7 +165,7 @@ private:
 
     // Initialize route provider and register for rds update.
     void initRdsConfigProvider(
-        envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+        envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
         Init::Manager& init_manager);
 
     ScopedRdsConfigSubscription& parent_;

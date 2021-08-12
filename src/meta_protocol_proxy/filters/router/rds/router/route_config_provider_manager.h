@@ -5,7 +5,7 @@
 
 #include "envoy/config/route/v3/route.pb.h"
 #include "envoy/event/dispatcher.h"
-#include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/json/json_object.h"
 #include "envoy/local_info/local_info.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/rds.h"
@@ -42,7 +42,7 @@ public:
    * subscription.
    */
   virtual RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
       const OptionalHttpFilters& optional_http_filters,
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       Init::Manager& init_manager) PURE;
@@ -56,7 +56,7 @@ public:
    * @param validator is the message validator for route config.
    */
   virtual RouteConfigProviderPtr
-  createStaticRouteConfigProvider(const envoy::config::route::v3::RouteConfiguration& route_config,
+  createStaticRouteConfigProvider(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config,
                                   const OptionalHttpFilters& optional_http_filters,
                                   Server::Configuration::ServerFactoryContext& factory_context,
                                   ProtobufMessage::ValidationVisitor& validator) PURE;

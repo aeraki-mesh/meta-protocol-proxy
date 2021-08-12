@@ -11,7 +11,7 @@
 #include "envoy/config/route/v3/route.pb.h"
 #include "envoy/config/route/v3/route.pb.validate.h"
 #include "envoy/config/subscription.h"
-#include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/http/codes.h"
 #include "envoy/local_info/local_info.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/rds.h"
@@ -68,7 +68,7 @@ class RouteConfigProviderManagerImpl;
  */
 class StaticRouteConfigProviderImpl : public RouteConfigProvider {
 public:
-  StaticRouteConfigProviderImpl(const envoy::config::route::v3::RouteConfiguration& config,
+  StaticRouteConfigProviderImpl(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
                                 const OptionalHttpFilters& http_filters,
                                 Server::Configuration::ServerFactoryContext& factory_context,
                                 ProtobufMessage::ValidationVisitor& validator,
@@ -82,7 +82,7 @@ public:
   }
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
-  void validateConfig(const envoy::config::route::v3::RouteConfiguration&) const override {}
+  void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&) const override {}
   void requestVirtualHostsUpdate(const std::string&, Event::Dispatcher&,
                                  std::weak_ptr<Http::RouteConfigUpdatedCallback>) override {
     NOT_IMPLEMENTED_GCOVR_EXCL_LINE;
@@ -90,7 +90,7 @@ public:
 
 private:
   ConfigConstSharedPtr config_;
-  envoy::config::route::v3::RouteConfiguration route_config_proto_;
+  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration route_config_proto_;
   SystemTime last_updated_;
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
 };
@@ -117,7 +117,7 @@ class RdsRouteConfigProviderImpl;
  * RDS config providers.
  */
 class RdsRouteConfigSubscription
-    : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>,
+    : Envoy::Config::SubscriptionBase<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>,
       Logger::Loggable<Logger::Id::router> {
 public:
   ~RdsRouteConfigSubscription() override;
@@ -144,7 +144,7 @@ private:
   }
 
   RdsRouteConfigSubscription(
-      const envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
       const uint64_t manager_identifier,
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       const OptionalHttpFilters& optional_http_filters,
@@ -210,7 +210,7 @@ public:
   void requestVirtualHostsUpdate(
       const std::string& for_domain, Event::Dispatcher& thread_local_dispatcher,
       std::weak_ptr<Http::RouteConfigUpdatedCallback> route_config_updated_cb) override;
-  void validateConfig(const envoy::config::route::v3::RouteConfiguration& config) const override;
+  void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config) const override;
 
 private:
   struct ThreadLocalConfig : public ThreadLocal::ThreadLocalObject {
@@ -248,13 +248,13 @@ public:
 
   // RouteConfigProviderManager
   RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
       const OptionalHttpFilters& optional_http_filters,
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       Init::Manager& init_manager) override;
 
   RouteConfigProviderPtr
-  createStaticRouteConfigProvider(const envoy::config::route::v3::RouteConfiguration& route_config,
+  createStaticRouteConfigProvider(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config,
                                   const OptionalHttpFilters& optional_http_filters,
                                   Server::Configuration::ServerFactoryContext& factory_context,
                                   ProtobufMessage::ValidationVisitor& validator) override;

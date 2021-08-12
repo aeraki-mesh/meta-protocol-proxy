@@ -8,7 +8,7 @@
 #include "envoy/admin/v3/config_dump.pb.h"
 #include "envoy/api/v2/route.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
-#include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
 #include "source/common/common/assert.h"
@@ -54,7 +54,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
 }
 
 StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
-    const envoy::config::route::v3::RouteConfiguration& config,
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
     const OptionalHttpFilters& optional_http_filters,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor& validator,
@@ -71,11 +71,11 @@ StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
 
 // TODO(htuch): If support for multiple clusters is added per #1170 cluster_name_
 RdsRouteConfigSubscription::RdsRouteConfigSubscription(
-    const envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     const uint64_t manager_identifier, Server::Configuration::ServerFactoryContext& factory_context,
     const std::string& stat_prefix, const OptionalHttpFilters& optional_http_filters,
     Envoy::Router::RouteConfigProviderManagerImpl& route_config_provider_manager)
-    : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>(
+    : Envoy::Config::SubscriptionBase<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>(
           rds.config_source().resource_api_version(),
           factory_context.messageValidationContext().dynamicValidationVisitor(), "name"),
       route_config_name_(rds.route_config_name()),
@@ -120,7 +120,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
   if (!validateUpdateSize(resources.size())) {
     return;
   }
-  const auto& route_config = dynamic_cast<const envoy::config::route::v3::RouteConfiguration&>(
+  const auto& route_config = dynamic_cast<const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&>(
       resources[0].get().resource());
   if (route_config.name() != route_config_name_) {
     throw EnvoyException(fmt::format("Unexpected RDS configuration (expecting {}): {}",
@@ -301,7 +301,7 @@ void RdsRouteConfigProviderImpl::onConfigUpdate() {
 }
 
 void RdsRouteConfigProviderImpl::validateConfig(
-    const envoy::config::route::v3::RouteConfiguration& config) const {
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config) const {
   // TODO(lizan): consider cache the config here until onConfigUpdate.
   ConfigImpl validation_config(config, optional_http_filters_, factory_context_, validator_, false);
 }
@@ -338,7 +338,7 @@ RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& ad
 }
 
 Router::RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
-    const envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     const OptionalHttpFilters& optional_http_filters,
     Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
     Init::Manager& init_manager) {
@@ -371,7 +371,7 @@ Router::RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRo
 }
 
 RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigProvider(
-    const envoy::config::route::v3::RouteConfiguration& route_config,
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config,
     const OptionalHttpFilters& optional_http_filters,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor& validator) {

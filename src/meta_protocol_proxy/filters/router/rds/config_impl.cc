@@ -1320,7 +1320,7 @@ const VirtualHostImpl* RouteMatcher::findWildcardVirtualHost(
   return nullptr;
 }
 
-RouteMatcher::RouteMatcher(const envoy::config::route::v3::RouteConfiguration& route_config,
+RouteMatcher::RouteMatcher(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config,
                            const OptionalHttpFilters& optional_http_filters,
                            const ConfigImpl& global_route_config,
                            Server::Configuration::ServerFactoryContext& factory_context,
@@ -1487,7 +1487,7 @@ VirtualHostImpl::virtualClusterFromEntries(const Http::HeaderMap& headers) const
   return nullptr;
 }
 
-ConfigImpl::ConfigImpl(const envoy::config::route::v3::RouteConfiguration& config,
+ConfigImpl::ConfigImpl(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
                        const OptionalHttpFilters& optional_http_filters,
                        Server::Configuration::ServerFactoryContext& factory_context,
                        ProtobufMessage::ValidationVisitor& validator,

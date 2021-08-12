@@ -6,7 +6,7 @@
 #include "envoy/api/v2/scoped_route.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
 #include "envoy/config/route/v3/scoped_route.pb.h"
-#include "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
 #include "source/common/common/assert.h"
@@ -144,7 +144,7 @@ ScopedRdsConfigSubscription::ScopedRdsConfigSubscription(
 // Initialize RdsRouteConfigProvider by default.
 ScopedRdsConfigSubscription::RdsRouteConfigProviderHelper::RdsRouteConfigProviderHelper(
     ScopedRdsConfigSubscription& parent, std::string scope_name,
-    envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+    envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     Init::Manager& init_manager)
     : parent_(parent), scope_name_(scope_name), on_demand_(false) {
   initRdsConfigProvider(rds, init_manager);
@@ -191,7 +191,7 @@ void ScopedRdsConfigSubscription::RdsRouteConfigProviderHelper::runOnDemandUpdat
 }
 
 void ScopedRdsConfigSubscription::RdsRouteConfigProviderHelper::initRdsConfigProvider(
-    envoy::extensions::filters::network::http_connection_manager::v3::Rds& rds,
+    envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     Init::Manager& init_manager) {
   route_provider_ = std::dynamic_pointer_cast<RdsRouteConfigProviderImpl>(
       parent_.route_config_provider_manager_.createRdsRouteConfigProvider(
@@ -223,7 +223,7 @@ void ScopedRdsConfigSubscription::RdsRouteConfigProviderHelper::maybeInitRdsConf
         srds_init_mgr->initialize(noop_watcher);
       });
   // Create route provider.
-  envoy::extensions::filters::network::http_connection_manager::v3::Rds rds;
+  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds rds;
   rds.mutable_config_source()->MergeFrom(parent_.rds_config_source_);
   rds.set_route_config_name(
       parent_.scoped_route_map_[scope_name_]->configProto().route_configuration_name());
@@ -242,7 +242,7 @@ bool ScopedRdsConfigSubscription::addOrUpdateScopes(
     const std::vector<Envoy::Config::DecodedResourceRef>& resources, Init::Manager& init_manager,
     const std::string& version_info) {
   bool any_applied = false;
-  envoy::extensions::filters::network::http_connection_manager::v3::Rds rds;
+  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds rds;
   rds.mutable_config_source()->MergeFrom(rds_config_source_);
   std::vector<ScopedRouteInfoConstSharedPtr> updated_scopes;
   for (const auto& resource : resources) {
@@ -348,7 +348,7 @@ void ScopedRdsConfigSubscription::onConfigUpdate(
   std::unique_ptr<Cleanup> srds_initialization_continuation;
   ASSERT(localInitManager().state() > Init::Manager::State::Uninitialized);
   const auto type_urls =
-      Envoy::Config::getAllVersionTypeUrls<envoy::config::route::v3::RouteConfiguration>();
+      Envoy::Config::getAllVersionTypeUrls<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>();
   // Pause RDS to not send a burst of RDS requests until we start all the new subscriptions.
   // In the case that localInitManager is uninitialized, RDS is already paused
   // either by Server init or LDS init.

@@ -1022,7 +1022,7 @@ public:
  */
 class RouteMatcher {
 public:
-  RouteMatcher(const envoy::config::route::v3::RouteConfiguration& config,
+  RouteMatcher(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
                const OptionalHttpFilters& optional_http_filters,
                const ConfigImpl& global_http_config,
                Server::Configuration::ServerFactoryContext& factory_context,
@@ -1063,7 +1063,7 @@ private:
  */
 class ConfigImpl : public Config {
 public:
-  ConfigImpl(const envoy::config::route::v3::RouteConfiguration& config,
+  ConfigImpl(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
              const OptionalHttpFilters& optional_http_filters,
              Server::Configuration::ServerFactoryContext& factory_context,
              ProtobufMessage::ValidationVisitor& validator, bool validate_clusters_default);
