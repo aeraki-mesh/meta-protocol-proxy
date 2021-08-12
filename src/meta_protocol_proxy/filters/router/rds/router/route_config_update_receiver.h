@@ -43,10 +43,10 @@ public:
    * @param version_info supplies RouteConfiguration version.
    * @return bool whether RouteConfiguration has been updated.
    */
-  virtual bool onVhdsUpdate(const VirtualHostRefVector& added_vhosts,
+  /*virtual bool onVhdsUpdate(const VirtualHostRefVector& added_vhosts,
                             const std::set<std::string>& added_resource_ids,
                             const Protobuf::RepeatedPtrField<std::string>& removed_resources,
-                            const std::string& version_info) PURE;
+                            const std::string& version_info) PURE;*/
 
   /**
    * @return std::string& the name of RouteConfiguration.
@@ -64,7 +64,7 @@ public:
   // TODO(dmitri-d): Consider splitting RouteConfigUpdateReceiver into a RouteConfig state and a
   // last update state. The latter could be passed to callbacks as a parameter, which would make the
   // intent and the lifecycle of the "last update state" less muddled.
-  virtual bool vhdsConfigurationChanged() const PURE;
+  //virtual bool vhdsConfigurationChanged() const PURE;
 
   /**
    * @return uint64_t the hash value of RouteConfiguration.
@@ -98,7 +98,7 @@ public:
    * @return the union of all resource names and aliases (if any) received with the last VHDS
    * update.
    */
-  virtual const std::set<std::string>& resourceIdsInLastVhdsUpdate() PURE;
+  //virtual const std::set<std::string>& resourceIdsInLastVhdsUpdate() PURE;
 };
 
 using RouteConfigUpdatePtr = std::unique_ptr<RouteConfigUpdateReceiver>;

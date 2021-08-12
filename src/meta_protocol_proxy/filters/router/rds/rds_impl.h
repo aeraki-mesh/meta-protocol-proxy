@@ -32,7 +32,7 @@
 #include "source/common/init/watcher_impl.h"
 #include "source/common/protobuf/utility.h"
 #include "src/meta_protocol_proxy/filters/router/rds/route_config_update_receiver_impl.h"
-#include "src/meta_protocol_proxy/filters/router/rds/vhds.h"
+//#include "src/meta_protocol_proxy/filters/router/rds/vhds.h"
 
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
@@ -83,10 +83,10 @@ public:
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
   void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&) const override {}
-  void requestVirtualHostsUpdate(const std::string&, Event::Dispatcher&,
+  /*void requestVirtualHostsUpdate(const std::string&, Event::Dispatcher&,
                                  std::weak_ptr<Http::RouteConfigUpdatedCallback>) override {
     NOT_IMPLEMENTED_GCOVR_EXCL_LINE;
-  }
+  }*/
 
 private:
   ConfigConstSharedPtr config_;
@@ -124,10 +124,10 @@ public:
 
   absl::optional<RouteConfigProvider*>& routeConfigProvider() { return route_config_provider_opt_; }
   RouteConfigUpdatePtr& routeConfigUpdate() { return config_update_info_; }
-  void updateOnDemand(const std::string& aliases);
-  void maybeCreateInitManager(const std::string& version_info,
-                              std::unique_ptr<Init::ManagerImpl>& init_manager,
-                              std::unique_ptr<Cleanup>& resume_rds);
+  //void updateOnDemand(const std::string& aliases);
+  //void maybeCreateInitManager(const std::string& version_info,
+  //                            std::unique_ptr<Init::ManagerImpl>& init_manager,
+  //                            std::unique_ptr<Cleanup>& resume_rds);
 
 private:
   // Config::SubscriptionCallbacks
@@ -171,7 +171,7 @@ private:
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
   const uint64_t manager_identifier_;
   absl::optional<RouteConfigProvider*> route_config_provider_opt_;
-  VhdsSubscriptionPtr vhds_subscription_;
+  //VhdsSubscriptionPtr vhds_subscription_;
   RouteConfigUpdatePtr config_update_info_;
   Common::CallbackManager<> update_callback_manager_;
   const OptionalHttpFilters optional_http_filters_;
@@ -207,9 +207,9 @@ public:
   }
   SystemTime lastUpdated() const override { return config_update_info_->lastUpdated(); }
   void onConfigUpdate() override;
-  void requestVirtualHostsUpdate(
+  /*void requestVirtualHostsUpdate(
       const std::string& for_domain, Event::Dispatcher& thread_local_dispatcher,
-      std::weak_ptr<Http::RouteConfigUpdatedCallback> route_config_updated_cb) override;
+      std::weak_ptr<Http::RouteConfigUpdatedCallback> route_config_updated_cb) override;*/
   void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config) const override;
 
 private:
@@ -227,7 +227,7 @@ private:
   Server::Configuration::ServerFactoryContext& factory_context_;
   ProtobufMessage::ValidationVisitor& validator_;
   ThreadLocal::TypedSlot<ThreadLocalConfig> tls_;
-  std::list<UpdateOnDemandCallback> config_update_callbacks_;
+  //std::list<UpdateOnDemandCallback> config_update_callbacks_;
   // A flag used to determine if this instance of RdsRouteConfigProviderImpl hasn't been
   // deallocated. Please also see a comment in requestVirtualHostsUpdate() method implementation.
   std::shared_ptr<bool> still_alive_{std::make_shared<bool>(true)};

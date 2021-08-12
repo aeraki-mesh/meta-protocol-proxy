@@ -10,6 +10,7 @@
 #include "source/common/common/thread.h"
 #include "source/common/protobuf/utility.h"
 #include "src/meta_protocol_proxy/filters/router/rds/config_impl.h"
+#include "api/v1alpha/route.pb.h"
 
 namespace Envoy {
 namespace MetaProtocolProxy {
@@ -23,12 +24,12 @@ bool RouteConfigUpdateReceiverImpl::onRdsUpdate(
   }
   route_config_proto_ = std::make_unique<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>(rc);
   last_config_hash_ = new_hash;
-  const uint64_t new_vhds_config_hash = rc.has_vhds() ? MessageUtil::hash(rc.vhds()) : 0ul;
-  vhds_configuration_changed_ = new_vhds_config_hash != last_vhds_config_hash_;
-  last_vhds_config_hash_ = new_vhds_config_hash;
-  initializeRdsVhosts(*route_config_proto_);
+  //const uint64_t new_vhds_config_hash = rc.has_vhds() ? MessageUtil::hash(rc.vhds()) : 0ul;
+  //vhds_configuration_changed_ = new_vhds_config_hash != last_vhds_config_hash_;
+  //last_vhds_config_hash_ = new_vhds_config_hash;
+  //initializeRdsVhosts(*route_config_proto_);
 
-  rebuildRouteConfig(rds_virtual_hosts_, *vhds_virtual_hosts_, *route_config_proto_);
+  //rebuildRouteConfig(rds_virtual_hosts_, *vhds_virtual_hosts_, *route_config_proto_);
   config_ = std::make_shared<ConfigImpl>(
       *route_config_proto_, optional_http_filters_, factory_context_,
       factory_context_.messageValidationContext().dynamicValidationVisitor(), false);
@@ -37,7 +38,7 @@ bool RouteConfigUpdateReceiverImpl::onRdsUpdate(
   return true;
 }
 
-bool RouteConfigUpdateReceiverImpl::onVhdsUpdate(
+/*bool RouteConfigUpdateReceiverImpl::onVhdsUpdate(
     const VirtualHostRefVector& added_vhosts, const std::set<std::string>& added_resource_ids,
     const Protobuf::RepeatedPtrField<std::string>& removed_resources,
     const std::string& version_info) {
@@ -60,13 +61,14 @@ bool RouteConfigUpdateReceiverImpl::onVhdsUpdate(
 
   // No exception, route_config_after_this_update is valid, can update the state.
   vhds_virtual_hosts_ = std::move(vhosts_after_this_update);
+  vhds_virtual_hosts_ = std::move(vhosts_after_this_update);
   route_config_proto_ = std::move(route_config_after_this_update);
   config_ = new_config;
   resource_ids_in_last_update_ = added_resource_ids;
   onUpdateCommon(version_info);
 
   return removed || updated || !resource_ids_in_last_update_.empty();
-}
+}*/
 
 void RouteConfigUpdateReceiverImpl::onUpdateCommon(const std::string& version_info) {
   last_config_version_ = version_info;
@@ -74,15 +76,15 @@ void RouteConfigUpdateReceiverImpl::onUpdateCommon(const std::string& version_in
   config_info_.emplace(RouteConfigProvider::ConfigInfo{*route_config_proto_, last_config_version_});
 }
 
-void RouteConfigUpdateReceiverImpl::initializeRdsVhosts(
+/*void RouteConfigUpdateReceiverImpl::initializeRdsVhosts(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_configuration) {
   rds_virtual_hosts_.clear();
   for (const auto& vhost : route_configuration.virtual_hosts()) {
     rds_virtual_hosts_.emplace(vhost.name(), vhost);
   }
-}
+}*/
 
-bool RouteConfigUpdateReceiverImpl::removeVhosts(
+/*bool RouteConfigUpdateReceiverImpl::removeVhosts(
     std::map<std::string, envoy::config::route::v3::VirtualHost>& vhosts,
     const Protobuf::RepeatedPtrField<std::string>& removed_vhost_names) {
   bool vhosts_removed = false;
@@ -94,9 +96,9 @@ bool RouteConfigUpdateReceiverImpl::removeVhosts(
     }
   }
   return vhosts_removed;
-}
+}*/
 
-bool RouteConfigUpdateReceiverImpl::updateVhosts(
+/*bool RouteConfigUpdateReceiverImpl::updateVhosts(
     std::map<std::string, envoy::config::route::v3::VirtualHost>& vhosts,
     const VirtualHostRefVector& added_vhosts) {
   bool vhosts_added = false;
@@ -109,9 +111,9 @@ bool RouteConfigUpdateReceiverImpl::updateVhosts(
     vhosts_added = true;
   }
   return vhosts_added;
-}
+}*/
 
-void RouteConfigUpdateReceiverImpl::rebuildRouteConfig(
+/*void RouteConfigUpdateReceiverImpl::rebuildRouteConfig(
     const std::map<std::string, envoy::config::route::v3::VirtualHost>& rds_vhosts,
     const std::map<std::string, envoy::config::route::v3::VirtualHost>& vhds_vhosts,
     envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config) {
@@ -122,7 +124,7 @@ void RouteConfigUpdateReceiverImpl::rebuildRouteConfig(
   for (const auto& vhost : vhds_vhosts) {
     route_config.mutable_virtual_hosts()->Add()->CopyFrom(vhost.second);
   }
-}
+}*/
 
 } // namespace Router
 } // namespace MetaProtocolProxy
