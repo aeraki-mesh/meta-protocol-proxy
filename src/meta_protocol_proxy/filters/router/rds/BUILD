@@ -47,6 +47,7 @@ envoy_cc_library(
         ":retry_state_lib",
         ":router_ratelimit_lib",
         ":tls_context_match_criteria_lib",
+	"//api/v1alpha:pkg_cc_proto",
         "@envoy//envoy/config:typed_metadata_interface",
         "@envoy//envoy/http:header_map_interface",
         "//src/meta_protocol_proxy/filters/router/rds/router:router_interface",
