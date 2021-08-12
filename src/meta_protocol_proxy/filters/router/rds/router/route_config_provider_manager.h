@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "envoy/config/route/v3/route.pb.h"
+#include "api/v1alpha/route.pb.h"
 #include "envoy/event/dispatcher.h"
 #include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/json/json_object.h"

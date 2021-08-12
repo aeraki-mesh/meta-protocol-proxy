@@ -8,7 +8,7 @@
 
 #include "envoy/admin/v3/config_dump.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
-#include "envoy/config/route/v3/route.pb.h"
+#include "api/v1alpha/route.pb.h"
 #include "envoy/config/route/v3/route.pb.validate.h"
 #include "envoy/config/subscription.h"
 #include "api/v1alpha/meta_protocol_proxy.pb.h"

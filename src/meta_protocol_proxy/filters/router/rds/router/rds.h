@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "envoy/config/route/v3/route.pb.h"
+#include "api/v1alpha/route.pb.h"
 #include "envoy/http/filter.h"
 #include "src/meta_protocol_proxy/filters/router/rds/router/router.h"
 

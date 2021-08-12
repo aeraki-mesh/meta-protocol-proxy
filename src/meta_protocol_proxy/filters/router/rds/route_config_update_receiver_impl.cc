@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "envoy/config/route/v3/route.pb.h"
+#include "api/v1alpha/route.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
 #include "source/common/common/assert.h"
