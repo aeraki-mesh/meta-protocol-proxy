@@ -10,7 +10,7 @@
 #include "src/meta_protocol_proxy/codec/codec.h"
 
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
-#include "src/meta_protocol_proxy/filters/router/route.h"
+#include "src/meta_protocol_proxy/route/route.h"
 
 namespace Envoy {
 namespace Extensions {
