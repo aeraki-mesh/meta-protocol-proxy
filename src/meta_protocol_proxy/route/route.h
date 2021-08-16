@@ -51,7 +51,7 @@ using RouteConstSharedPtr = std::shared_ptr<const Route>;
 using RouteSharedPtr = std::shared_ptr<Route>;
 
 /**
- * The router configuration.
+ * The route configuration.
  */
 class Config {
 public:
