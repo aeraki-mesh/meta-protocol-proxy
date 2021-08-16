@@ -13,7 +13,7 @@
 
 #include "src/meta_protocol_proxy/filters/router/rds.h"
 #include "src/meta_protocol_proxy/filters/router/route_config_update_receiver.h"
-#include "src/meta_protocol_proxy/filters/router/rds/config_impl.h"
+#include "src/meta_protocol_proxy/filters/router/config_impl.h"
 
 namespace Envoy {
 namespace Extensions {
