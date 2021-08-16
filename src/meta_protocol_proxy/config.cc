@@ -37,7 +37,7 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
     Server::Configuration::FactoryContext& context) {
   Utility::Singletons singletons = Utility::createSingletons(context);
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
-      proto_config, context, singletons.route_config_provider_manager_));
+      proto_config, context, *singletons.route_config_provider_manager_));
 
   return [filter_config, &context](Network::FilterManager& filter_manager) -> void {
     filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
