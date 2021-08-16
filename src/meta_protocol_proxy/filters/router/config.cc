@@ -2,7 +2,7 @@
 
 #include "envoy/registry/registry.h"
 
-#include "src/meta_protocol_proxy/filters/router/router_impl.h"
+#include "src/meta_protocol_proxy/filters/router/router.h"
 
 namespace Envoy {
 namespace Extensions {

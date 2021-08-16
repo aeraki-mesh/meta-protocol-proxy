@@ -214,8 +214,8 @@ envoy_cc_library(
 envoy_cc_library(
     name = "router_lib",
     repository = "@envoy",
-    srcs = ["router_impl.cc"],
-    hdrs = ["router_impl.h"],
+    srcs = ["router.cc"],
+    hdrs = ["router.h"],
     deps = [
         ":router_interface",
         "@envoy//envoy/tcp:conn_pool_interface",
