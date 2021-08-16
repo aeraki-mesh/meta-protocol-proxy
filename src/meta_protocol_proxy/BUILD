@@ -13,11 +13,13 @@ envoy_cc_library(
     deps = [
         ":conn_manager_lib",
         ":codec_impl_lib",
+        "//src/meta_protocol_proxy/filters/router:route_config_provider_manager_interface",
         "//src/meta_protocol_proxy/filters:factory_base_lib",
         "//src/meta_protocol_proxy/filters/router:config",
         "//src/meta_protocol_proxy/filters/router:route_matcher",
         "//src/meta_protocol_proxy/filters/router:router_lib",
         "//src/meta_protocol_proxy/codec:factory_lib",
+        "//src/meta_protocol_proxy/filters/router:route_config_lib",
         "//src/meta_protocol_proxy/filters/router:route_config_lib",
         "@envoy//envoy/registry",
         "@envoy//envoy/stats:stats_interface",
