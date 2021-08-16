@@ -14,7 +14,7 @@
 #include "source/common/http/header_utility.h"
 #include "source/common/protobuf/protobuf.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
-#include "src/meta_protocol_proxy/filters/router/route.h"
+#include "src/meta_protocol_proxy/filters/router/route_matcher.h"
 #include "src/meta_protocol_proxy/filters/router/router.h"
 
 #include "absl/types/optional.h"

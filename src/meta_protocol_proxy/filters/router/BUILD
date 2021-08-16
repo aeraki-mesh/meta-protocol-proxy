@@ -164,7 +164,7 @@ envoy_cc_library(
 envoy_cc_library(
     name = "route_matcher_interface",
     repository = "@envoy",
-    hdrs = ["route.h"],
+    hdrs = ["route_matcher.h"],
     deps = [
         ":router_interface",
         "@envoy//envoy/config:typed_config_interface",
