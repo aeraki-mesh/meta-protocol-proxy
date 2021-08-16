@@ -16,6 +16,7 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["router.h"],
     deps = [
+        "//src/meta_protocol_proxy/codec:codec_interface",
         "@envoy//envoy/router:router_interface",
     ],
 )
