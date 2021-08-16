@@ -17,7 +17,7 @@
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/stats.h"
-#include "src/meta_protocol_proxy/filters/router/rds.h"
+#include "src/meta_protocol_proxy/route/rds.h"
 
 namespace Envoy {
 namespace Extensions {
