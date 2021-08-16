@@ -20,7 +20,6 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/filters/router:router_lib",
         "//src/meta_protocol_proxy/codec:factory_lib",
         "//src/meta_protocol_proxy/filters/router:route_config_lib",
-        "//src/meta_protocol_proxy/filters/router:route_config_lib",
         "@envoy//envoy/registry",
         "@envoy//envoy/stats:stats_interface",
         "@envoy//envoy/stats:stats_macros",
