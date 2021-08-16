@@ -71,6 +71,7 @@ envoy_cc_library(
     hdrs = ["config_impl.h"],
     external_deps = ["abseil_optional"],
     deps = [
+        ":route_matcher_interface",
 	    "//api/v1alpha:pkg_cc_proto",
 	    "//src/meta_protocol_proxy/filters/router:router_interface",
         "@envoy//envoy/config:typed_metadata_interface",
