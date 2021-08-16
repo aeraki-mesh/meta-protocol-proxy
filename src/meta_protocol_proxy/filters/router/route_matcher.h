@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "src/meta_protocol_proxy/filters/router/router.h"
+#include "src/meta_protocol_proxy/filters/router/route.h"
 
 namespace Envoy {
 namespace Extensions {

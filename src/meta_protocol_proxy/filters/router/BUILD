@@ -14,7 +14,7 @@ load("@envoy_api//bazel:api_build_system.bzl", "api_proto_package")
 envoy_cc_library(
     name = "router_interface",
     repository = "@envoy",
-    hdrs = ["router.h"],
+    hdrs = ["route.h"],
     deps = [
         "//src/meta_protocol_proxy/codec:codec_interface",
         "@envoy//envoy/router:router_interface",

@@ -12,7 +12,7 @@
 #include "source/common/upstream/load_balancer_impl.h"
 
 #include "src/meta_protocol_proxy/filters/filter.h"
-#include "src/meta_protocol_proxy/filters/router/router.h"
+#include "src/meta_protocol_proxy/filters/router/route.h"
 
 namespace Envoy {
 namespace Extensions {

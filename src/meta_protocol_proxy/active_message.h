@@ -13,7 +13,7 @@
 #include "src/meta_protocol_proxy/decoder.h"
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
-#include "src/meta_protocol_proxy/filters/router/router.h"
+#include "src/meta_protocol_proxy/filters/router/route.h"
 #include "src/meta_protocol_proxy/stats.h"
 
 #include "absl/types/optional.h"
