@@ -26,8 +26,7 @@ Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryCont
   Router::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
       context.singletonManager().getTyped<Router::RouteConfigProviderManager>(
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
-            return std::make_shared<
-                Envoy::MetaProtocolProxy::Router::RouteConfigProviderManagerImpl>(context.admin());
+            return std::make_shared<Router::RouteConfigProviderManagerImpl>(context.admin());
           });
 }
 
