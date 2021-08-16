@@ -19,9 +19,6 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-using RouteConfigurations =
-    envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration;
-
 enum class RouteMatcherType : uint8_t {
   Default,
 };

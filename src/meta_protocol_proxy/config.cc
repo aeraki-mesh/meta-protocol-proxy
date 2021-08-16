@@ -8,7 +8,7 @@
 #include "src/meta_protocol_proxy/codec/factory.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/factory_base.h"
-#include "src/meta_protocol_proxy/filters/router/route_matcher.h"
+#include "src/meta_protocol_proxy/filters/router/route_matcher_impl.h"
 #include "src/meta_protocol_proxy/stats.h"
 #include "envoy/registry/registry.h"
 #include "src/meta_protocol_proxy/filters/router/route_config_provider_manager.h"

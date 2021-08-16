@@ -8,7 +8,7 @@
 #include "source/extensions/filters/network/common/factory_base.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
-#include "src/meta_protocol_proxy/filters/router/route_matcher.h"
+#include "src/meta_protocol_proxy/filters/router/route_matcher_impl.h"
 #include "src/meta_protocol_proxy/filters/router/router_impl.h"
 #include "source/extensions/filters/network/well_known_names.h"
 #include "src/meta_protocol_proxy/filters/router/route_config_provider_manager.h"

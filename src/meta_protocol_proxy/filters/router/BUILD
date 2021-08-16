@@ -178,8 +178,8 @@ envoy_cc_library(
 envoy_cc_library(
     name = "route_matcher",
     repository = "@envoy",
-    srcs = ["route_matcher.cc"],
-    hdrs = ["route_matcher.h"],
+    srcs = ["route_matcher_impl.cc"],
+    hdrs = ["route_matcher_impl.h"],
     deps = [
         ":route_matcher_interface",
         ":router_interface",
