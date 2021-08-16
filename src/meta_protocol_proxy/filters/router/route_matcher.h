@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "envoy/server/filter_config.h"
-
 #include "src/meta_protocol_proxy/filters/router/router.h"
 
 namespace Envoy {
