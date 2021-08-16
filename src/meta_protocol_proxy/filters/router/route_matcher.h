@@ -103,7 +103,8 @@ class RouteMatcherImpl : public RouteMatcher, public Logger::Loggable<Logger::Id
 public:
   using RouteConfig =
       envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration;
-  RouteMatcherImpl(const RouteConfig& config, Server::Configuration::FactoryContext& context);
+
+  RouteMatcherImpl(const RouteConfig& config, Server::Configuration::ServerFactoryContext& context);
 
   RouteConstSharedPtr route(const Metadata& metadata,
                             uint64_t random_value) const override;
