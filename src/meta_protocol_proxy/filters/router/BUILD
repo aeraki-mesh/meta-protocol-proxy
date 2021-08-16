@@ -72,6 +72,7 @@ envoy_cc_library(
     external_deps = ["abseil_optional"],
     deps = [
         ":route_matcher_interface",
+        ":route_matcher",
 	    "//api/v1alpha:pkg_cc_proto",
 	    "//src/meta_protocol_proxy/filters/router:router_interface",
         "@envoy//envoy/config:typed_metadata_interface",

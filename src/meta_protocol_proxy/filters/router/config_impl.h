@@ -69,9 +69,7 @@ private:
  */
 class NullConfigImpl : public Config {
 public:
-  RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override {
-    return nullptr;
-  }
+  RouteConstSharedPtr route(const Metadata&, uint64_t) const override { return nullptr; }
 
 private:
   const std::string name_;
