@@ -6,6 +6,7 @@
 
 #include "envoy/type/v3/range.pb.h"
 #include "envoy/config/route/v3/route_components.pb.h"
+#include "envoy/server/factory_context.h"
 
 #include "api/v1alpha/route.pb.h"
 
