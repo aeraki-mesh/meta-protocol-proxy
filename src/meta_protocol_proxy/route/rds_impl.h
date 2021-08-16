@@ -35,10 +35,10 @@
 #include "api/v1alpha/route.pb.validate.h"
 #include "api/v1alpha/meta_protocol_proxy.pb.h"
 
-#include "src/meta_protocol_proxy/filters/router/rds.h"
-#include "src/meta_protocol_proxy/filters/router/route_config_provider_manager.h"
-#include "src/meta_protocol_proxy/filters/router/route_config_update_receiver.h"
-#include "src/meta_protocol_proxy/filters/router/route_config_update_receiver_impl.h"
+#include "src/meta_protocol_proxy/route/rds.h"
+#include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
+#include "src/meta_protocol_proxy/route/route_config_update_receiver.h"
+#include "src/meta_protocol_proxy/route/route_config_update_receiver_impl.h"
 
 namespace Envoy {
 namespace Extensions {

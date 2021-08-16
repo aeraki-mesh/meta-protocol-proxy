@@ -14,7 +14,7 @@
 #include "api/v1alpha/route.pb.h"
 #include "api/v1alpha/meta_protocol_proxy.pb.h"
 
-#include "src/meta_protocol_proxy/filters/router/rds.h"
+#include "src/meta_protocol_proxy/route/rds.h"
 
 namespace Envoy {
 namespace Extensions {

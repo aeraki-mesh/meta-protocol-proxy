@@ -7,8 +7,8 @@
 
 #include "api/v1alpha/route.pb.h"
 
-#include "src/meta_protocol_proxy/filters/router/route.h"
-#include "src/meta_protocol_proxy/filters/router/route_matcher.h"
+#include "src/meta_protocol_proxy/route/route.h"
+#include "src/meta_protocol_proxy/route/route_matcher.h"
 
 namespace Envoy {
 namespace Extensions {

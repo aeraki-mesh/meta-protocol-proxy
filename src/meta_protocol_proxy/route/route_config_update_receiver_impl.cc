@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/route_config_update_receiver_impl.h"
+#include "src/meta_protocol_proxy/route/route_config_update_receiver_impl.h"
 
 #include <string>
 
@@ -11,7 +11,7 @@
 
 #include "api/v1alpha/route.pb.h"
 
-#include "src/meta_protocol_proxy/filters/router/config_impl.h"
+#include "src/meta_protocol_proxy/route/config_impl.h"
 
 namespace Envoy {
 namespace Extensions {

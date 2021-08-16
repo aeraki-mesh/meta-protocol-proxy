@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/rds_impl.h"
+#include "src/meta_protocol_proxy/route/rds_impl.h"
 
 #include <chrono>
 #include <cstdint>
@@ -20,7 +20,7 @@
 
 #include "api/v1alpha/meta_protocol_proxy.pb.h"
 
-#include "src/meta_protocol_proxy/filters/router/config_impl.h"
+#include "src/meta_protocol_proxy/route/config_impl.h"
 
 namespace Envoy {
 namespace Extensions {
