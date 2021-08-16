@@ -54,7 +54,7 @@ StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
         config,
     Server::Configuration::ServerFactoryContext& factory_context,
-    ProtobufMessage::ValidationVisitor& validator,
+    ProtobufMessage::ValidationVisitor& , //TODO Remove validator parameter
     RouteConfigProviderManagerImpl& route_config_provider_manager)
     : config_(new ConfigImpl(config, factory_context)), route_config_proto_{config},
       last_updated_(factory_context.timeSource().systemTime()),
@@ -248,7 +248,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
         rds, manager_identifier, factory_context, stat_prefix, optional_http_filters, *this));
     init_manager.add(subscription->parent_init_target_);
     RdsRouteConfigProviderImplSharedPtr new_provider{new RdsRouteConfigProviderImpl(
-        std::move(subscription), factory_context, optional_http_filters)};
+        std::move(subscription), factory_context)};
     dynamic_route_config_providers_.insert(
         {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
     return new_provider;
@@ -270,7 +270,7 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor& validator) {
   auto provider = std::make_unique<StaticRouteConfigProviderImpl>(
-      route_config, optional_http_filters, factory_context, validator, *this);
+      route_config, factory_context, validator, *this); //TODO remove validator
   static_route_config_providers_.insert(provider.get());
   return provider;
 }

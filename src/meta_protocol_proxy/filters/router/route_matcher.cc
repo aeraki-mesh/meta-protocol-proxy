@@ -77,7 +77,7 @@ RouteConstSharedPtr RouteEntryImpl::matches(const Metadata& metadata,
 }
 
 RouteMatcherImpl::RouteMatcherImpl(const RouteConfig& config,
-                                   Server::Configuration::ServerFactoryContext&) {
+                                   Server::Configuration::ServerFactoryContext&) { //TODO remove ServerFactoryContext parameter
   using envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteMatch;
 
   for (const auto& route : config.routes()) {
