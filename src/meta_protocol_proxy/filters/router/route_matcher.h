@@ -1,6 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <string>
+
+#include "envoy/config/typed_config.h"
+#include "envoy/router/router.h"
+#include "envoy/server/filter_config.h"
+
+#include "api/v1alpha/route.pb.h"
 
 #include "src/meta_protocol_proxy/filters/router/router.h"
 
