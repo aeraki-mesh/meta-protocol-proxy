@@ -77,7 +77,7 @@ public:
   ~StaticRouteConfigProviderImpl() override;
 
   // RouteConfigProvider
-  ConfigConstSharedPtr config() override { return config_; }
+  ConfigConstSharedPtr config() override { return nullptr; }
   absl::optional<ConfigInfo> configInfo() const override {
     return ConfigInfo{route_config_proto_, ""};
   }
