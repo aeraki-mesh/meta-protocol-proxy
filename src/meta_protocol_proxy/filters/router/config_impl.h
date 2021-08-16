@@ -4,7 +4,7 @@
 #include <string>
 
 #include "envoy/server/factory_context.h"
-         "
+
 #include "api/v1alpha/route.pb.h"
 
 #include "src/meta_protocol_proxy/filters/router/router.h"
