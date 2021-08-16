@@ -14,7 +14,7 @@ envoy_cc_library(
         "@envoy//envoy/network:connection_interface",
         "@envoy//envoy/stream_info:stream_info_interface",
         "//src/meta_protocol_proxy:decoder_events_lib",
-        "//src/meta_protocol_proxy/filters/router:router_interface",
+        "//src/meta_protocol_proxy/route:route_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
     ],
 )
