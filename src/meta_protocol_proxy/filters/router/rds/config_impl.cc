@@ -1497,7 +1497,7 @@ ConfigImpl::ConfigImpl(
     : name_(config.name()) {
   route_matcher_ = std::make_unique<
       Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteMatcherImpl>(
-      config.route_config(), context);
+      config, context);
 }
 
 Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteConstSharedPtr

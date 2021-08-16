@@ -17,13 +17,16 @@ option (udpa.annotations.file_status).package_version_status = ACTIVE;
 
 // [#next-free-field: 3]
 message RouteConfiguration {
+  //The name of the route configuration. For example, it might match route_config_name in envoy.extensions.filters.network.meta_protocol_proxy.v1alpha.Rds.
+  string name = 1;
+
   // The list of routes that will be matched, in order, against incoming requests. The first route
   // that matches will be used.
   repeated Route routes = 2;
 }
 
 message Route {
-  // The name of the route configuration. Reserved for future use in asynchronous route discovery.
+  // Name for the route.
   string name = 1;
 
   // Route matching parameters.
