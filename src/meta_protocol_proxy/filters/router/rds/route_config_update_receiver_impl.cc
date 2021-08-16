@@ -31,8 +31,7 @@ bool RouteConfigUpdateReceiverImpl::onRdsUpdate(
 
   //rebuildRouteConfig(rds_virtual_hosts_, *vhds_virtual_hosts_, *route_config_proto_);
   config_ = std::make_shared<ConfigImpl>(
-      *route_config_proto_, optional_http_filters_, factory_context_,
-      factory_context_.messageValidationContext().dynamicValidationVisitor(), false);
+      *route_config_proto_,  factory_context_);
 
   onUpdateCommon(version_info);
   return true;

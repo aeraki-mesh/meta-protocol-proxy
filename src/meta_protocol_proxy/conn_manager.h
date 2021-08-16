@@ -10,12 +10,14 @@
 #include "envoy/stats/timespan.h"
 
 #include "source/common/common/logger.h"
+
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/meta_protocol_proxy/active_message.h"
 #include "src/meta_protocol_proxy/decoder.h"
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/stats.h"
+#include "src/meta_protocol_proxy/filters/router/rds.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -34,6 +36,12 @@ public:
   virtual CodecPtr createCodec() PURE;
   virtual Router::Config& routerConfig() PURE;
   virtual std::string applicationProtocol() PURE;
+  /**
+ * @return Router::RouteConfigProvider* the configuration provider used to acquire a route
+ *         config for each request flow. Pointer ownership is _not_ transferred to the caller of
+ *         this function.
+ */
+  virtual Router::RouteConfigProvider* routeConfigProvider() PURE;
 };
 
 // class ActiveMessagePtr;

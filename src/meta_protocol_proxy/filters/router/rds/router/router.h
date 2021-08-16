@@ -31,6 +31,8 @@
 
 #include "absl/types/optional.h"
 
+#include "src/meta_protocol_proxy/codec/codec.h"
+
 namespace Envoy {
 
 namespace Upstream {
@@ -1078,7 +1080,7 @@ public:
   }
 };
 
-using RouteConstSharedPtr = std::shared_ptr<const Route>;
+// using RouteConstSharedPtr = std::shared_ptr<const Route>;
 
 /**
  * RouteCallback, returns one of these enums to the route matcher to indicate
@@ -1133,10 +1135,10 @@ public:
    *        allows stable choices between calls if desired.
    * @return the route or nullptr if there is no matching route for the request.
    */
-  virtual RouteConstSharedPtr route(const Http::RequestHeaderMap& headers,
+  /*virtual RouteConstSharedPtr route(const Http::RequestHeaderMap& headers,
                                     const StreamInfo::StreamInfo& stream_info,
                                     uint64_t random_value) const PURE;
-
+  */
   /**
    * Based on the incoming HTTP request headers, determine the target route (containing either a
    * route entry or a direct response entry) for the request.
@@ -1152,39 +1154,49 @@ public:
    * @return the route accepted by the callback or nullptr if no match found or none of route is
    * accepted by the callback.
    */
-  virtual RouteConstSharedPtr route(const RouteCallback& cb, const Http::RequestHeaderMap& headers,
-                                    const StreamInfo::StreamInfo& stream_info,
-                                    uint64_t random_value) const PURE;
+  // virtual RouteConstSharedPtr route(const RouteCallback& cb, const Http::RequestHeaderMap&
+  // headers,
+  //                                  const StreamInfo::StreamInfo& stream_info,
+  //                                  uint64_t random_value) const PURE;
+  /**
+   * Based on the incoming request metadata, determine the target route for the request.
+   * @param metadata MessageMetadata for the message to route
+   * @param random_value uint64_t used to select cluster affinity
+   * @return the route or nullptr if there is no matching route for the request.
+   */
+  virtual Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteConstSharedPtr
+  route(const Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Metadata& metadata,
+        uint64_t random_value) const PURE;
 
   /**
    * Return a list of headers that will be cleaned from any requests that are not from an internal
    * (RFC1918) source.
    */
-  virtual const std::list<Http::LowerCaseString>& internalOnlyHeaders() const PURE;
+  // virtual const std::list<Http::LowerCaseString>& internalOnlyHeaders() const PURE;
 
   /**
    * @return const std::string the RouteConfiguration name.
    */
-  virtual const std::string& name() const PURE;
+  // virtual const std::string& name() const PURE;
 
   /**
    * @return whether router configuration uses VHDS.
    */
-  virtual bool usesVhds() const PURE;
+  // virtual bool usesVhds() const PURE;
 
   /**
    * @return bool whether most specific header mutations should take precedence. The default
    * evaluation order is route level, then virtual host level and finally global connection
    * manager level.
    */
-  virtual bool mostSpecificHeaderMutationsWins() const PURE;
+  // virtual bool mostSpecificHeaderMutationsWins() const PURE;
 
   /**
    * @return uint32_t The maximum bytes of the response direct response body size. The default value
    * is 4096.
    * TODO(dio): To allow overrides at different levels (e.g. per-route, virtual host, etc).
    */
-  virtual uint32_t maxDirectResponseBodySizeBytes() const PURE;
+  // virtual uint32_t maxDirectResponseBodySizeBytes() const PURE;
 };
 
 using ConfigConstSharedPtr = std::shared_ptr<const Config>;

@@ -1022,11 +1022,12 @@ public:
  */
 class RouteMatcher {
 public:
-  RouteMatcher(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
-               const OptionalHttpFilters& optional_http_filters,
-               const ConfigImpl& global_http_config,
-               Server::Configuration::ServerFactoryContext& factory_context,
-               ProtobufMessage::ValidationVisitor& validator, bool validate_clusters);
+  RouteMatcher(
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+          config,
+      const OptionalHttpFilters& optional_http_filters, const ConfigImpl& global_http_config,
+      Server::Configuration::ServerFactoryContext& factory_context,
+      ProtobufMessage::ValidationVisitor& validator, bool validate_clusters);
 
   RouteConstSharedPtr route(const RouteCallback& cb, const Http::RequestHeaderMap& headers,
                             const StreamInfo::StreamInfo& stream_info, uint64_t random_value) const;
@@ -1063,55 +1064,19 @@ private:
  */
 class ConfigImpl : public Config {
 public:
-  ConfigImpl(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
-             const OptionalHttpFilters& optional_http_filters,
-             Server::Configuration::ServerFactoryContext& factory_context,
-             ProtobufMessage::ValidationVisitor& validator, bool validate_clusters_default);
+  ConfigImpl(
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+          config,
+      Server::Configuration::ServerFactoryContext& context);
 
-  const HeaderParser& requestHeaderParser() const { return *request_headers_parser_; };
-  const HeaderParser& responseHeaderParser() const { return *response_headers_parser_; };
-
-  bool virtualHostExists(const Http::RequestHeaderMap& headers) const {
-    return route_matcher_->findVirtualHost(headers) != nullptr;
-  }
-
-  // Router::Config
-  RouteConstSharedPtr route(const Http::RequestHeaderMap& headers,
-                            const StreamInfo::StreamInfo& stream_info,
-                            uint64_t random_value) const override {
-    return route(nullptr, headers, stream_info, random_value);
-  }
-
-  RouteConstSharedPtr route(const RouteCallback& cb, const Http::RequestHeaderMap& headers,
-                            const StreamInfo::StreamInfo& stream_info,
-                            uint64_t random_value) const override;
-
-  const std::list<Http::LowerCaseString>& internalOnlyHeaders() const override {
-    return internal_only_headers_;
-  }
-
-  const std::string& name() const override { return name_; }
-
-  bool usesVhds() const override { return uses_vhds_; }
-
-  bool mostSpecificHeaderMutationsWins() const override {
-    return most_specific_header_mutations_wins_;
-  }
-
-  uint32_t maxDirectResponseBodySizeBytes() const override {
-    return max_direct_response_body_size_bytes_;
-  }
+  Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteConstSharedPtr
+  route(const Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Metadata& metadata,
+        uint64_t random_value) const override;
 
 private:
-  std::unique_ptr<RouteMatcher> route_matcher_;
-  std::list<Http::LowerCaseString> internal_only_headers_;
-  HeaderParserPtr request_headers_parser_;
-  HeaderParserPtr response_headers_parser_;
+  std::unique_ptr<Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteMatcher>
+      route_matcher_;
   const std::string name_;
-  Stats::SymbolTable& symbol_table_;
-  const bool uses_vhds_;
-  const bool most_specific_header_mutations_wins_;
-  const uint32_t max_direct_response_body_size_bytes_;
 };
 
 /**
@@ -1120,17 +1085,23 @@ private:
 class NullConfigImpl : public Config {
 public:
   // Router::Config
-  RouteConstSharedPtr route(const Http::RequestHeaderMap&, const StreamInfo::StreamInfo&,
+  /*RouteConstSharedPtr route(const Http::RequestHeaderMap&, const StreamInfo::StreamInfo&,
                             uint64_t) const override {
     return nullptr;
-  }
+  }*/
 
-  RouteConstSharedPtr route(const RouteCallback&, const Http::RequestHeaderMap&,
+  /*RouteConstSharedPtr route(const RouteCallback&, const Http::RequestHeaderMap&,
                             const StreamInfo::StreamInfo&, uint64_t) const override {
+    return nullptr;
+  }*/
+
+  Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteConstSharedPtr
+  route(const Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Metadata& metadata,
+        uint64_t random_value) const override {
     return nullptr;
   }
 
-  const std::list<Http::LowerCaseString>& internalOnlyHeaders() const override {
+  /*const std::list<Http::LowerCaseString>& internalOnlyHeaders() const override {
     return internal_only_headers_;
   }
 
@@ -1138,9 +1109,10 @@ public:
   bool usesVhds() const override { return false; }
   bool mostSpecificHeaderMutationsWins() const override { return false; }
   uint32_t maxDirectResponseBodySizeBytes() const override { return 0; }
+   */
 
 private:
-  std::list<Http::LowerCaseString> internal_only_headers_;
+  // std::list<Http::LowerCaseString> internal_only_headers_;
   const std::string name_;
 };
 

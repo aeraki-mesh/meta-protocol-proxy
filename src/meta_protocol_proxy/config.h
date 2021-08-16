@@ -11,6 +11,7 @@
 #include "src/meta_protocol_proxy/filters/router/route_matcher.h"
 #include "src/meta_protocol_proxy/filters/router/router_impl.h"
 #include "source/extensions/filters/network/well_known_names.h"
+#include "src/meta_protocol_proxy/filters/router/route_config_provider_manager.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -35,6 +36,24 @@ private:
       Server::Configuration::FactoryContext& context) override;
 };
 
+/**
+ * Utility class for shared logic between meta protocol connection manager factories.
+ */
+class Utility {
+public:
+  struct Singletons {
+    Router::RouteConfigProviderManagerSharedPtr route_config_provider_manager_;
+  };
+
+  /**
+   * Create/get singletons needed for config creation.
+   *
+   * @param context supplies the context used to create the singletons.
+   * @return Singletons struct containing all the singletons.
+   */
+  static Singletons createSingletons(Server::Configuration::FactoryContext& context);
+};
+
 class ConfigImpl : public Config,
                    public Router::Config,
                    public FilterChainFactory,
@@ -46,15 +65,19 @@ public:
       envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
   using CodecConfig = envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Codec;
 
-  ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context);
+  ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
+             Router::RouteConfigProviderManager& route_config_provider_manager);
   ~ConfigImpl() override = default;
 
   // FilterChainFactory
   void createFilterChain(FilterChainFactoryCallbacks& callbacks) override;
 
+  Router::RouteConfigProvider* routeConfigProvider() override {
+    return route_config_provider_.get();
+  }
+
   // Router::Config
-  Router::RouteConstSharedPtr route(const Metadata& metadata,
-                                    uint64_t random_value) const override;
+  Router::RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
 
   // Config
   MetaProtocolProxyStats& stats() override { return stats_; }
@@ -69,10 +92,12 @@ private:
   Server::Configuration::FactoryContext& context_;
   const std::string stats_prefix_;
   MetaProtocolProxyStats stats_;
-  Router::RouteMatcherPtr route_matcher_;
+  // Router::RouteMatcherPtr route_matcher_;
   std::string application_protocol_;
   CodecConfig codecConfig_;
   std::list<FilterFactoryCb> filter_factories_;
+  Router::RouteConfigProviderSharedPtr route_config_provider_;
+  Router::RouteConfigProviderManager& route_config_provider_manager_;
 };
 
 } // namespace MetaProtocolProxy

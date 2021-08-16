@@ -38,6 +38,8 @@
 #include "source/common/tracing/http_tracer_impl.h"
 #include "src/meta_protocol_proxy/filters/router/rds/http_utility.h"
 #include "src/meta_protocol_proxy/filters/router/rds/filter_utility.h"
+#include "src/meta_protocol_proxy/filters/router/route.h"
+#include "src/meta_protocol_proxy/filters/router/route_matcher.h"
 
 #include "absl/strings/match.h"
 
@@ -1320,11 +1322,12 @@ const VirtualHostImpl* RouteMatcher::findWildcardVirtualHost(
   return nullptr;
 }
 
-RouteMatcher::RouteMatcher(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config,
-                           const OptionalHttpFilters& optional_http_filters,
-                           const ConfigImpl& global_route_config,
-                           Server::Configuration::ServerFactoryContext& factory_context,
-                           ProtobufMessage::ValidationVisitor& validator, bool validate_clusters)
+RouteMatcher::RouteMatcher(
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+        route_config,
+    const OptionalHttpFilters& optional_http_filters, const ConfigImpl& global_route_config,
+    Server::Configuration::ServerFactoryContext& factory_context,
+    ProtobufMessage::ValidationVisitor& validator, bool validate_clusters)
     : vhost_scope_(factory_context.scope().scopeFromStatName(
           factory_context.routerContext().virtualClusterStatNames().vhost_)) {
   absl::optional<Upstream::ClusterManager::ClusterInfoMaps> validation_clusters;
@@ -1487,36 +1490,20 @@ VirtualHostImpl::virtualClusterFromEntries(const Http::HeaderMap& headers) const
   return nullptr;
 }
 
-ConfigImpl::ConfigImpl(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
-                       const OptionalHttpFilters& optional_http_filters,
-                       Server::Configuration::ServerFactoryContext& factory_context,
-                       ProtobufMessage::ValidationVisitor& validator,
-                       bool validate_clusters_default)
-    : name_(config.name()), symbol_table_(factory_context.scope().symbolTable()),
-      uses_vhds_(config.has_vhds()),
-      most_specific_header_mutations_wins_(config.most_specific_header_mutations_wins()),
-      max_direct_response_body_size_bytes_(
-          PROTOBUF_GET_WRAPPED_OR_DEFAULT(config, max_direct_response_body_size_bytes,
-                                          DEFAULT_MAX_DIRECT_RESPONSE_BODY_SIZE_BYTES)) {
-  route_matcher_ = std::make_unique<RouteMatcher>(
-      config, optional_http_filters, *this, factory_context, validator,
-      PROTOBUF_GET_WRAPPED_OR_DEFAULT(config, validate_clusters, validate_clusters_default));
-
-  for (const std::string& header : config.internal_only_headers()) {
-    internal_only_headers_.push_back(Http::LowerCaseString(header));
-  }
-
-  request_headers_parser_ =
-      HeaderParser::configure(config.request_headers_to_add(), config.request_headers_to_remove());
-  response_headers_parser_ = HeaderParser::configure(config.response_headers_to_add(),
-                                                     config.response_headers_to_remove());
+ConfigImpl::ConfigImpl(
+    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+        config,
+    Server::Configuration::ServerFactoryContext& context)
+    : name_(config.name()) {
+  route_matcher_ = std::make_unique<
+      Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteMatcherImpl>(
+      config.route_config(), context);
 }
 
-RouteConstSharedPtr ConfigImpl::route(const RouteCallback& cb,
-                                      const Http::RequestHeaderMap& headers,
-                                      const StreamInfo::StreamInfo& stream_info,
-                                      uint64_t random_value) const {
-  return route_matcher_->route(cb, headers, stream_info, random_value);
+Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteConstSharedPtr
+ConfigImpl::route(const Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Metadata& metadata,
+                  uint64_t random_value) const {
+  return route_matcher_->route(metadata, random_value);
 }
 
 RouteSpecificFilterConfigConstSharedPtr PerFilterConfigs::createRouteSpecificFilterConfig(

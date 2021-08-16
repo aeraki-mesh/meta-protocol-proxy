@@ -3,18 +3,22 @@
 #include <memory>
 #include <string>
 
-#include "api/v1alpha/route.pb.h"
 #include "envoy/event/dispatcher.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/json/json_object.h"
 #include "envoy/local_info/local_info.h"
-#include "src/meta_protocol_proxy/filters/router/rds.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
 #include "envoy/upstream/cluster_manager.h"
 
+#include "api/v1alpha/route.pb.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
+
+#include "src/meta_protocol_proxy/filters/router/rds.h"
+
 namespace Envoy {
+namespace Extensions {
+namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
@@ -28,12 +32,11 @@ public:
 
   /**
    * Get a RouteConfigProviderPtr for a route from RDS. Ownership of the RouteConfigProvider is the
-   * HttpConnectionManagers who calls this function. The RouteConfigProviderManager holds raw
+   * MetaProtocol ConnectionManagers who calls this function. The RouteConfigProviderManager holds raw
    * pointers to the RouteConfigProviders. Clean up of the pointers happen from the destructor of
    * the RouteConfigProvider. This method creates a RouteConfigProvider which may share the
    * underlying RDS subscription with the same (route_config_name, cluster).
    * @param rds supplies the proto configuration of an RDS-configured RouteConfigProvider.
-   * @param optional_http_filters a set of optional http filter names.
    * @param factory_context is the context to use for the route config provider.
    * @param stat_prefix supplies the stat_prefix to use for the provider stats.
    * @param init_manager the Init::Manager used to coordinate initialization of a the underlying RDS
@@ -48,7 +51,6 @@ public:
    * Get a RouteConfigSharedPtr for a statically defined route. Ownership is as described for
    * getRdsRouteConfigProvider above. This method always create a new RouteConfigProvider.
    * @param route_config supplies the RouteConfiguration for this route
-   * @param optional_http_filters a set of optional http filter names.
    * @param factory_context is the context to use for the route config provider.
    * @param validator is the message validator for route config.
    */
@@ -64,4 +66,6 @@ using RouteConfigProviderManagerSharedPtr = std::shared_ptr<RouteConfigProviderM
 
 } // namespace Router
 } // namespace MetaProtocolProxy
+} // namespace NetworkFilters
+} // namespace Extensions
 } // namespace Envoy

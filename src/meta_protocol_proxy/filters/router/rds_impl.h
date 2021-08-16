@@ -8,15 +8,9 @@
 
 #include "envoy/admin/v3/config_dump.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
-#include "api/v1alpha/route.pb.h"
-#include "envoy/config/route/v3/route.pb.validate.h"
 #include "envoy/config/subscription.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/http/codes.h"
 #include "envoy/local_info/local_info.h"
-#include "src/meta_protocol_proxy/filters/router/rds/router/rds.h"
-#include "src/meta_protocol_proxy/filters/router/rds/router/route_config_provider_manager.h"
-#include "src/meta_protocol_proxy/filters/router/rds/router/route_config_update_receiver.h"
 #include "envoy/server/admin.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
@@ -31,36 +25,43 @@
 #include "source/common/init/target_impl.h"
 #include "source/common/init/watcher_impl.h"
 #include "source/common/protobuf/utility.h"
-#include "src/meta_protocol_proxy/filters/router/rds/route_config_update_receiver_impl.h"
-//#include "src/meta_protocol_proxy/filters/router/rds/vhds.h"
+
 #include "source/common/config/subscription_base.h"
 
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
 
+#include "api/v1alpha/route.pb.h"
+#include "api/v1alpha/route.pb.validate.h"
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
+
+#include "src/meta_protocol_proxy/filters/router/rds.h"
+#include "src/meta_protocol_proxy/filters/router/route_config_provider_manager.h"
+#include "src/meta_protocol_proxy/filters/router/route_config_update_receiver.h"
+#include "src/meta_protocol_proxy/filters/router/route_config_update_receiver_impl.h"
+
 namespace Envoy {
+namespace Extensions {
+namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
-
-// For friend class declaration in RdsRouteConfigSubscription.
-class ScopedRdsConfigSubscription;
 
 /**
  * Route configuration provider utilities.
  */
-class RouteConfigProviderUtil {
-public:
-  /**
-   * @return RouteConfigProviderSharedPtr a new route configuration provider based on the supplied
-   * proto configuration. Notes the provider object could be shared among multiple listeners.
-   */
-  static RouteConfigProviderSharedPtr create(
-      const envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager&
-          config,
-      Server::Configuration::ServerFactoryContext& factory_context,
-      ProtobufMessage::ValidationVisitor& validator, Init::Manager& init_manager,
-      const std::string& stat_prefix, RouteConfigProviderManager& route_config_provider_manager);
-};
+//class RouteConfigProviderUtil {
+//public:
+//  /**
+//   * @return RouteConfigProviderSharedPtr a new route configuration provider based on the supplied
+//   * proto configuration. Notes the provider object could be shared among multiple listeners.
+//   */
+//  static RouteConfigProviderSharedPtr create(
+//      const envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager&
+//          config,
+//      Server::Configuration::ServerFactoryContext& factory_context,
+//      ProtobufMessage::ValidationVisitor& validator, Init::Manager& init_manager,
+//      const std::string& stat_prefix, RouteConfigProviderManager& route_config_provider_manager);
+//};
 
 class RouteConfigProviderManagerImpl;
 
@@ -75,8 +76,8 @@ public:
                                 RouteConfigProviderManagerImpl& route_config_provider_manager);
   ~StaticRouteConfigProviderImpl() override;
 
-  // Router::RouteConfigProvider
-  Router::ConfigConstSharedPtr config() override { return config_; }
+  // RouteConfigProvider
+  ConfigConstSharedPtr config() override { return config_; }
   absl::optional<ConfigInfo> configInfo() const override {
     return ConfigInfo{route_config_proto_, ""};
   }
@@ -124,10 +125,6 @@ public:
 
   absl::optional<RouteConfigProvider*>& routeConfigProvider() { return route_config_provider_opt_; }
   RouteConfigUpdatePtr& routeConfigUpdate() { return config_update_info_; }
-  //void updateOnDemand(const std::string& aliases);
-  //void maybeCreateInitManager(const std::string& version_info,
-  //                            std::unique_ptr<Init::ManagerImpl>& init_manager,
-  //                            std::unique_ptr<Cleanup>& resume_rds);
 
 private:
   // Config::SubscriptionCallbacks
@@ -138,10 +135,6 @@ private:
                       const std::string& system_version_info) override;
   void onConfigUpdateFailed(Envoy::Config::ConfigUpdateFailureReason reason,
                             const EnvoyException* e) override;
-
-  ABSL_MUST_USE_RESULT Common::CallbackHandlePtr addUpdateCallback(std::function<void()> callback) {
-    return update_callback_manager_.add(callback);
-  }
 
   RdsRouteConfigSubscription(
       const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
@@ -170,14 +163,9 @@ private:
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
   const uint64_t manager_identifier_;
   absl::optional<RouteConfigProvider*> route_config_provider_opt_;
-  //VhdsSubscriptionPtr vhds_subscription_;
   RouteConfigUpdatePtr config_update_info_;
-  Common::CallbackManager<> update_callback_manager_;
-  //const OptionalHttpFilters optional_http_filters_;
 
   friend class RouteConfigProviderManagerImpl;
-  // Access to addUpdateCallback
-  friend class ScopedRdsConfigSubscription;
 };
 
 using RdsRouteConfigSubscriptionSharedPtr = std::shared_ptr<RdsRouteConfigSubscription>;
@@ -199,16 +187,13 @@ public:
 
   RdsRouteConfigSubscription& subscription() { return *subscription_; }
 
-  // Router::RouteConfigProvider
-  Router::ConfigConstSharedPtr config() override;
+  //RouteConfigProvider
+  ConfigConstSharedPtr config() override;
   absl::optional<ConfigInfo> configInfo() const override {
     return config_update_info_->configInfo();
   }
   SystemTime lastUpdated() const override { return config_update_info_->lastUpdated(); }
   void onConfigUpdate() override;
-  /*void requestVirtualHostsUpdate(
-      const std::string& for_domain, Event::Dispatcher& thread_local_dispatcher,
-      std::weak_ptr<Http::RouteConfigUpdatedCallback> route_config_updated_cb) override;*/
   void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config) const override;
 
 private:
@@ -223,13 +208,10 @@ private:
   RdsRouteConfigSubscriptionSharedPtr subscription_;
   RouteConfigUpdatePtr& config_update_info_;
   Server::Configuration::ServerFactoryContext& factory_context_;
-  //ProtobufMessage::ValidationVisitor& validator_;
   ThreadLocal::TypedSlot<ThreadLocalConfig> tls_;
-  //std::list<UpdateOnDemandCallback> config_update_callbacks_;
   // A flag used to determine if this instance of RdsRouteConfigProviderImpl hasn't been
   // deallocated. Please also see a comment in requestVirtualHostsUpdate() method implementation.
   std::shared_ptr<bool> still_alive_{std::make_shared<bool>(true)};
-  //const OptionalHttpFilters optional_http_filters_;
 
   friend class RouteConfigProviderManagerImpl;
 };
@@ -272,4 +254,6 @@ using RouteConfigProviderManagerImplPtr = std::unique_ptr<RouteConfigProviderMan
 
 } // namespace Router
 } // namespace MetaProtocolProxy
+} // namespace NetworkFilters
+} // namespace Extensions
 } // namespace Envoy

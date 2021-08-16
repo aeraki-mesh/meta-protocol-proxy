@@ -19,11 +19,10 @@ namespace Router {
 
 class RouteConfigUpdateReceiverImpl : public RouteConfigUpdateReceiver {
 public:
-  RouteConfigUpdateReceiverImpl(Server::Configuration::ServerFactoryContext& factory_context,
-                                const OptionalHttpFilters& optional_http_filters)
+  RouteConfigUpdateReceiverImpl(Server::Configuration::ServerFactoryContext& factory_context)
       : factory_context_(factory_context), time_source_(factory_context.timeSource()),
         route_config_proto_(std::make_unique<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>()),
-        last_config_hash_(0ull), optional_http_filters_(optional_http_filters) {}
+        last_config_hash_(0ull){}
 
   //void initializeRdsVhosts(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_configuration);
   //bool removeVhosts(std::map<std::string, envoy::config::route::v3::VirtualHost>& vhosts,
@@ -74,7 +73,7 @@ private:
   //std::set<std::string> resource_ids_in_last_update_;
   //bool vhds_configuration_changed_;
   ConfigConstSharedPtr config_;
-  const OptionalHttpFilters& optional_http_filters_;
+  //const OptionalHttpFilters& optional_http_filters_;
 };
 
 } // namespace Router

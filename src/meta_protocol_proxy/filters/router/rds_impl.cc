@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/rds/rds_impl.h"
+#include "src/meta_protocol_proxy/filters/router/rds_impl.h"
 
 #include <chrono>
 #include <cstdint>
@@ -6,9 +6,8 @@
 #include <string>
 
 #include "envoy/admin/v3/config_dump.pb.h"
-#include "envoy/api/v2/route.pb.h"
+//#include "envoy/api/v2/route.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
 #include "source/common/common/assert.h"
@@ -18,25 +17,23 @@
 #include "source/common/config/version_converter.h"
 #include "source/common/http/header_map_impl.h"
 #include "source/common/protobuf/utility.h"
-#include "src/meta_protocol_proxy/filters/router/rds/config_impl.h"
+
+#include "api/v1alpha/meta_protocol_proxy.pb.h"
+
+#include "src/meta_protocol_proxy/filters/router/config_impl.h"
 
 namespace Envoy {
+namespace Extensions {
+namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
-
+/*
 RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
     const envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager&
         config,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor& validator, Init::Manager& init_manager,
     const std::string& stat_prefix, RouteConfigProviderManager& route_config_provider_manager) {
-  /*OptionalHttpFilters optional_http_filters;
-  auto& filters = config.http_filters();
-  for (const auto& filter : filters) {
-    if (filter.is_optional()) {
-      optional_http_filters.insert(filter.name());
-    }
-  }*/
   switch (config.route_specifier_case()) {
   case envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager::
       RouteSpecifierCase::kRouteConfig:
@@ -51,7 +48,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
   default:
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
-}
+}*/
 
 StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
@@ -73,8 +70,7 @@ StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
 RdsRouteConfigSubscription::RdsRouteConfigSubscription(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     const uint64_t manager_identifier, Server::Configuration::ServerFactoryContext& factory_context,
-    const std::string& stat_prefix,
-    Envoy::Router::RouteConfigProviderManagerImpl& route_config_provider_manager)
+    const std::string& stat_prefix, RouteConfigProviderManagerImpl& route_config_provider_manager)
     : Envoy::Config::SubscriptionBase<
           envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>(
           rds.config_source().resource_api_version(),
@@ -135,60 +131,18 @@ void RdsRouteConfigSubscription::onConfigUpdate(
   if (config_update_info_->onRdsUpdate(route_config, version_info)) {
     stats_.config_reload_.inc();
     stats_.config_reload_time_ms_.set(DateUtil::nowToMilliseconds(factory_context_.timeSource()));
-    /*if (config_update_info_->protobufConfiguration().has_vhds() &&
-        config_update_info_->vhdsConfigurationChanged()) {
-      ENVOY_LOG(
-          debug,
-          "rds: vhds configuration present/changed, (re)starting vhds: config_name={} hash={}",
-          route_config_name_, config_update_info_->configHash());
-      maybeCreateInitManager(version_info, noop_init_manager, resume_rds);
-      vhds_subscription_ = std::make_unique<VhdsSubscription>(
-          config_update_info_, factory_context_, stat_prefix_, route_config_provider_opt_,
-          config_update_info_->protobufConfiguration()
-              .vhds()
-              .config_source()
-              .resource_api_version());
-      vhds_subscription_->registerInitTargetWithInitManager(
-          noop_init_manager == nullptr ? local_init_manager_ : *noop_init_manager);
-    }*/
-
     ENVOY_LOG(debug, "rds: loading new configuration: config_name={} hash={}", route_config_name_,
               config_update_info_->configHash());
 
     if (route_config_provider_opt_.has_value()) {
       route_config_provider_opt_.value()->onConfigUpdate();
     }
-    // RDS update removed VHDS configuration
-    /*if (!config_update_info_->protobufConfiguration().has_vhds()) {
-      vhds_subscription_.release();
-    }*/
 
-    update_callback_manager_.runCallbacks();
+    // update_callback_manager_.runCallbacks();
   }
 
   local_init_target_.ready();
 }
-
-// Initialize a no-op InitManager in case the one in the factory_context has completed
-// initialization. This can happen if an RDS config update for an already established RDS
-// subscription contains VHDS configuration.
-// void RdsRouteConfigSubscription::maybeCreateInitManager(
-//    const std::string& version_info, std::unique_ptr<Init::ManagerImpl>& init_manager,
-//    std::unique_ptr<Cleanup>& init_vhds) {
-//  if (local_init_manager_.state() == Init::Manager::State::Initialized) {
-//    init_manager = std::make_unique<Init::ManagerImpl>(
-//        fmt::format("VHDS {}:{}", route_config_name_, version_info));
-//    init_vhds = std::make_unique<Cleanup>([this, &init_manager, version_info] {
-// For new RDS subscriptions created after listener warming up, we don't wait for them to warm
-// up.
-//      Init::WatcherImpl noop_watcher(
-// Note: we just throw it away.
-//          fmt::format("VHDS ConfigUpdate watcher {}:{}", route_config_name_, version_info),
-//          []() { /*Do nothing.*/ });
-//      init_manager->initialize(noop_watcher);
-//    });
-//  }
-//}
 
 void RdsRouteConfigSubscription::onConfigUpdate(
     const std::vector<Envoy::Config::DecodedResourceRef>& added_resources,
@@ -213,13 +167,6 @@ void RdsRouteConfigSubscription::onConfigUpdateFailed(
   // config.
   local_init_target_.ready();
 }
-
-/*void RdsRouteConfigSubscription::updateOnDemand(const std::string& aliases) {
-  if (vhds_subscription_.get() == nullptr) {
-    return;
-  }
-  vhds_subscription_->updateOnDemand(aliases);
-}*/
 
 bool RdsRouteConfigSubscription::validateUpdateSize(int num_resources) {
   if (num_resources == 0) {
@@ -261,41 +208,11 @@ RdsRouteConfigProviderImpl::~RdsRouteConfigProviderImpl() {
   subscription_->routeConfigProvider().reset();
 }
 
-Router::ConfigConstSharedPtr RdsRouteConfigProviderImpl::config() { return tls_->config_; }
+ConfigConstSharedPtr RdsRouteConfigProviderImpl::config() { return tls_->config_; }
 
 void RdsRouteConfigProviderImpl::onConfigUpdate() {
   tls_.runOnAllThreads([new_config = config_update_info_->parsedConfiguration()](
                            OptRef<ThreadLocalConfig> tls) { tls->config_ = new_config; });
-
-  // const auto aliases = config_update_info_->resourceIdsInLastVhdsUpdate();
-  // Regular (non-VHDS) RDS updates don't populate aliases fields in resources.
-  // if (aliases.empty()) {
-  //  return;
-  //}
-
-  // const auto config =
-  //    std::static_pointer_cast<const ConfigImpl>(config_update_info_->parsedConfiguration());
-  // Notifies connections that RouteConfiguration update has been propagated.
-  // Callbacks processing is performed in FIFO order. The callback is skipped if alias used in
-  // the VHDS update request do not match the aliases in the update response
-  /*for (auto it = config_update_callbacks_.begin(); it != config_update_callbacks_.end();) {
-    auto found = aliases.find(it->alias_);
-    if (found != aliases.end()) {
-      // TODO(dmitri-d) HeaderMapImpl is expensive, need to profile this
-      auto host_header = Http::RequestHeaderMapImpl::create();
-      host_header->setHost(VhdsSubscription::aliasToDomainName(it->alias_));
-      const bool host_exists = config->virtualHostExists(*host_header);
-      std::weak_ptr<Http::RouteConfigUpdatedCallback> current_cb(it->cb_);
-      it->thread_local_dispatcher_.post([current_cb, host_exists] {
-        if (auto cb = current_cb.lock()) {
-          (*cb)(host_exists);
-        }
-      });
-      it = config_update_callbacks_.erase(it);
-    } else {
-      it++;
-    }
-  }*/
 }
 
 void RdsRouteConfigProviderImpl::validateConfig(
@@ -304,28 +221,6 @@ void RdsRouteConfigProviderImpl::validateConfig(
   // TODO(lizan): consider cache the config here until onConfigUpdate.
   ConfigImpl validation_config(config, factory_context_);
 }
-
-// Schedules a VHDS request on the main thread and queues up the callback to use when the VHDS
-// response has been propagated to the worker thread that was the request origin.
-// void RdsRouteConfigProviderImpl::requestVirtualHostsUpdate(
-//    const std::string& for_domain, Event::Dispatcher& thread_local_dispatcher,
-//    std::weak_ptr<Http::RouteConfigUpdatedCallback> route_config_updated_cb) {
-//  auto alias =
-//      VhdsSubscription::domainNameToAlias(config_update_info_->routeConfigName(), for_domain);
-// The RdsRouteConfigProviderImpl instance can go away before the dispatcher has a chance to
-// execute the callback. still_alive shared_ptr will be deallocated when the current instance of
-// the RdsRouteConfigProviderImpl is deallocated; we rely on a weak_ptr to still_alive flag to
-// determine if the RdsRouteConfigProviderImpl instance is still valid.
-//  factory_context_.dispatcher().post([this, maybe_still_alive = std::weak_ptr<bool>(still_alive_),
-//                                      alias, &thread_local_dispatcher,
-//                                      route_config_updated_cb]() -> void {
-//    if (maybe_still_alive.lock()) {
-//      subscription_->updateOnDemand(alias);
-//      config_update_callbacks_.push_back({alias, thread_local_dispatcher,
-//      route_config_updated_cb});
-//    }
-//  });
-//}
 
 RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& admin) {
   config_tracker_entry_ =
@@ -337,7 +232,7 @@ RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& ad
   RELEASE_ASSERT(config_tracker_entry_, "");
 }
 
-Router::RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
+RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
     Init::Manager& init_manager) {
@@ -423,4 +318,6 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs(
 
 } // namespace Router
 } // namespace MetaProtocolProxy
+} // namespace NetworkFilters
+} // namespace Extensions
 } // namespace Envoy
