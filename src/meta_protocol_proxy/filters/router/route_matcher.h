@@ -19,35 +19,6 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-enum class RouteMatcherType : uint8_t {
-  Default,
-};
-
-/**
- * Names of available Protocol implementations.
- */
-class RouteMatcherNameValues {
-public:
-  struct RouteMatcherTypeHash {
-    template <typename T> std::size_t operator()(T t) const { return static_cast<std::size_t>(t); }
-  };
-
-  using RouteMatcherNameMap =
-      absl::node_hash_map<RouteMatcherType, std::string, RouteMatcherTypeHash>;
-
-  const RouteMatcherNameMap routeMatcherNameMap = {
-      {RouteMatcherType::Default, "default"},
-  };
-
-  const std::string& fromType(RouteMatcherType type) const {
-    const auto& itor = routeMatcherNameMap.find(type);
-    ASSERT(itor != routeMatcherNameMap.end());
-    return itor->second;
-  }
-};
-
-using RouteMatcherNames = ConstSingleton<RouteMatcherNameValues>;
-
 class RouteMatcher {
 public:
   virtual ~RouteMatcher() = default;
