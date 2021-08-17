@@ -104,8 +104,10 @@ class RdsRouteConfigProviderImpl;
  * RDS config providers.
  */
 class RdsRouteConfigSubscription
-    : Envoy::Config::SubscriptionBase<
-          envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>,
+    // The real configuration type is
+    // Envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration HTTP
+    // RouteConfiguration is used here because we want to reuse the http rds grpc service
+    : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>,
       Logger::Loggable<Logger::Id::router> {
 public:
   ~RdsRouteConfigSubscription() override;
