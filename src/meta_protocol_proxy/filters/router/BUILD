@@ -1,6 +1,5 @@
 package(default_visibility =  [
         "//src/meta_protocol_proxy:__pkg__",
-        "//src/meta_protocol_proxy/filters:__pkg__",
     ],
 )
 

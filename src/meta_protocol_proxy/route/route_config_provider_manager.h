@@ -1,20 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <string>
 
-#include "envoy/event/dispatcher.h"
-#include "envoy/json/json_object.h"
-#include "envoy/local_info/local_info.h"
-#include "envoy/runtime/runtime.h"
-#include "envoy/server/filter_config.h"
-#include "envoy/thread_local/thread_local.h"
-#include "envoy/upstream/cluster_manager.h"
+#include "envoy/server/factory_context.h"
 
 #include "api/v1alpha/route.pb.h"
 #include "api/v1alpha/meta_protocol_proxy.pb.h"
-
-#include "src/meta_protocol_proxy/route/rds.h"
 
 namespace Envoy {
 namespace Extensions {

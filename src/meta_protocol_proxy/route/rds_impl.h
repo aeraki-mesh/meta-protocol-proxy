@@ -46,23 +46,6 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-/**
- * Route configuration provider utilities.
- */
-//class RouteConfigProviderUtil {
-//public:
-//  /**
-//   * @return RouteConfigProviderSharedPtr a new route configuration provider based on the supplied
-//   * proto configuration. Notes the provider object could be shared among multiple listeners.
-//   */
-//  static RouteConfigProviderSharedPtr create(
-//      const envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager&
-//          config,
-//      Server::Configuration::ServerFactoryContext& factory_context,
-//      ProtobufMessage::ValidationVisitor& validator, Init::Manager& init_manager,
-//      const std::string& stat_prefix, RouteConfigProviderManager& route_config_provider_manager);
-//};
-
 class RouteConfigProviderManagerImpl;
 
 /**
@@ -84,10 +67,6 @@ public:
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
   void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&) const override {}
-  /*void requestVirtualHostsUpdate(const std::string&, Event::Dispatcher&,
-                                 std::weak_ptr<Http::RouteConfigUpdatedCallback>) override {
-    NOT_IMPLEMENTED_GCOVR_EXCL_LINE;
-  }*/
 
 private:
   ConfigConstSharedPtr config_;

@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "envoy/config/core/v3/base.pb.h"
-
 #include "src/meta_protocol_proxy/route/route_matcher.h"
 #include "src/meta_protocol_proxy/route/route_matcher_impl.h"
 
