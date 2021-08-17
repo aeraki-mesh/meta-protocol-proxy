@@ -69,15 +69,11 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
       stats_({ALL_RDS_STATS(POOL_COUNTER(*scope_), POOL_GAUGE(*scope_))}),
       route_config_provider_manager_(route_config_provider_manager),
       manager_identifier_(manager_identifier) {
-  ENVOY_LOG(info, "***** end rds subscription ***** 5");
   const auto resource_name = getResourceName();
-  ENVOY_LOG(info, "***** end rds subscription ***** 6");
-  ENVOY_LOG(info, "***** end rds subscription ***** {}", Grpc::Common::typeUrl(resource_name));
   subscription_ =
       factory_context.clusterManager().subscriptionFactory().subscriptionFromConfigSource(
           rds.config_source(), Grpc::Common::typeUrl(resource_name), *scope_, *this,
           resource_decoder_, {});
-  ENVOY_LOG(info, "***** end rds subscription ***** 7");
   local_init_manager_.add(local_init_target_);
   config_update_info_ = std::make_unique<RouteConfigUpdateReceiverImpl>(factory_context);
 }
@@ -228,18 +224,13 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     // around it. However, since this is not a performance critical path we err on the side
     // of simplicity.
 
-    ENVOY_LOG(info, "***** start rds subscription *****");
     RdsRouteConfigSubscriptionSharedPtr subscription(new RdsRouteConfigSubscription(
         rds, manager_identifier, factory_context, stat_prefix, *this));
-    ENVOY_LOG(info, "***** end rds subscription *****");
-
     init_manager.add(subscription->parent_init_target_);
-    ENVOY_LOG(info, "***** end rds subscription ***** 1");
     RdsRouteConfigProviderImplSharedPtr new_provider{
         new RdsRouteConfigProviderImpl(std::move(subscription), factory_context)};
     dynamic_route_config_providers_.insert(
         {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
-    ENVOY_LOG(info, "***** end rds subscription ***** 2");
     return new_provider;
   } else {
     // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
