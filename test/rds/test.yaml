@@ -1,3 +1,6 @@
+node:
+  id: test
+  cluster: test
 admin:
   access_log_path: ./envoy_debug.log
   address:
