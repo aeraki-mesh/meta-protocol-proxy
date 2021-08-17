@@ -90,6 +90,9 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
       route_config_provider_manager_(route_config_provider_manager),
       manager_identifier_(manager_identifier) {
   const auto resource_name = getResourceName();
+  assert(rds.config_source());
+  assert(resource_name);
+  assert(scope_);
   subscription_ =
       factory_context.clusterManager().subscriptionFactory().subscriptionFromConfigSource(
           rds.config_source(), Grpc::Common::typeUrl(resource_name), *scope_, *this,
@@ -245,7 +248,10 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     // of simplicity.
 
     ENVOY_LOG(info, "***** start rds subscription *****");
-
+    assert(rds);
+    assert(manager_identifier);
+    assert(factory_context);
+    assert(stat_prefix);
     RdsRouteConfigSubscriptionSharedPtr subscription(new RdsRouteConfigSubscription(
         rds, manager_identifier, factory_context, stat_prefix, *this));
     ENVOY_LOG(info, "***** end rds subscription *****");
