@@ -16,9 +16,7 @@ ConfigImpl::ConfigImpl(
         config,
     Server::Configuration::ServerFactoryContext& context)
     : name_(config.name()) {
-  route_matcher_ = std::make_unique<
-      Envoy::Extensions::NetworkFilters::MetaProtocolProxy::Router::RouteMatcherImpl>(config,
-                                                                                      context);
+  route_matcher_ = std::make_unique<RouteMatcherImpl>(config, context);
 }
 
 RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata, uint64_t random_value) const {
