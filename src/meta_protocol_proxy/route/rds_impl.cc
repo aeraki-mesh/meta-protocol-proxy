@@ -26,28 +26,6 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Route {
-/*
-RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
-    const envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager&
-        config,
-    Server::Configuration::ServerFactoryContext& factory_context,
-    ProtobufMessage::ValidationVisitor& validator, Init::Manager& init_manager,
-    const std::string& stat_prefix, RouteConfigProviderManager& route_config_provider_manager) {
-  switch (config.route_specifier_case()) {
-  case envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager::
-      RouteSpecifierCase::kRouteConfig:
-    return route_config_provider_manager.createStaticRouteConfigProvider(
-        config.route_config(), factory_context, validator);
-  case envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager::
-      RouteSpecifierCase::kRds:
-    return route_config_provider_manager.createRdsRouteConfigProvider(
-        // At the creation of a RDS route config provider, the factory_context's initManager is
-        // always valid, though the init manager may go away later when the listener goes away.
-        config.rds(), factory_context, stat_prefix, init_manager);
-  default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
-  }
-}*/
 
 StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
@@ -70,8 +48,10 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
     const uint64_t manager_identifier, Server::Configuration::ServerFactoryContext& factory_context,
     const std::string& stat_prefix, RouteConfigProviderManagerImpl& route_config_provider_manager)
-    : Envoy::Config::SubscriptionBase<
-          envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>(
+    // The real configuration type is
+    // Envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration HTTP
+    // RouteConfiguration is used here because we want to reuse the http rds grpc service
+    : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>(
           rds.config_source().resource_api_version(),
           factory_context.messageValidationContext().dynamicValidationVisitor(), "name"),
       route_config_name_(rds.route_config_name()),
@@ -92,7 +72,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
   ENVOY_LOG(info, "***** end rds subscription ***** 5");
   const auto resource_name = getResourceName();
   ENVOY_LOG(info, "***** end rds subscription ***** 6");
-  ENVOY_LOG(info, "***** end rds subscription ***** {}",Grpc::Common::typeUrl(resource_name));
+  ENVOY_LOG(info, "***** end rds subscription ***** {}", Grpc::Common::typeUrl(resource_name));
   subscription_ =
       factory_context.clusterManager().subscriptionFactory().subscriptionFromConfigSource(
           rds.config_source(), Grpc::Common::typeUrl(resource_name), *scope_, *this,
