@@ -243,13 +243,20 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     // std::make_shared does not work for classes with private constructors. There are ways
     // around it. However, since this is not a performance critical path we err on the side
     // of simplicity.
+
+    ENVOY_LOG(info, "***** start rds subscription *****");
+
     RdsRouteConfigSubscriptionSharedPtr subscription(new RdsRouteConfigSubscription(
         rds, manager_identifier, factory_context, stat_prefix, *this));
+    ENVOY_LOG(info, "***** end rds subscription *****");
+
     init_manager.add(subscription->parent_init_target_);
+    ENVOY_LOG(info, "***** end rds subscription ***** 1");
     RdsRouteConfigProviderImplSharedPtr new_provider{
         new RdsRouteConfigProviderImpl(std::move(subscription), factory_context)};
     dynamic_route_config_providers_.insert(
         {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
+    ENVOY_LOG(info, "***** end rds subscription ***** 2");
     return new_provider;
   } else {
     // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
