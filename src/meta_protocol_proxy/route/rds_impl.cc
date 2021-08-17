@@ -8,6 +8,7 @@
 #include "envoy/admin/v3/config_dump.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
+#include "envoy/config/route/v3/route.pb.h"
 
 #include "source/common/common/assert.h"
 #include "source/common/common/fmt.h"
@@ -51,7 +52,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
     // The real configuration type is
     // Envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration HTTP
     // RouteConfiguration is used here because we want to reuse the http rds grpc service
-    : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>(
+    : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration >(
           rds.config_source().resource_api_version(),
           factory_context.messageValidationContext().dynamicValidationVisitor(), "name"),
       route_config_name_(rds.route_config_name()),
