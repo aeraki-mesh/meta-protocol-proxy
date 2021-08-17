@@ -83,7 +83,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
                           [this]() { parent_init_target_.ready(); }),
       local_init_target_(
           fmt::format("RdsRouteConfigSubscription local-init-target {}", route_config_name_),
-          [this]() { subscription_->start({route_config_name_}); }),
+          [this]() { subscription_->start({route_c onfig_name_}); }),
       local_init_manager_(fmt::format("RDS local-init-manager {}", route_config_name_)),
       stat_prefix_(stat_prefix),
       stats_({ALL_RDS_STATS(POOL_COUNTER(*scope_), POOL_GAUGE(*scope_))}),
@@ -92,6 +92,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
   ENVOY_LOG(info, "***** end rds subscription ***** 5");
   const auto resource_name = getResourceName();
   ENVOY_LOG(info, "***** end rds subscription ***** 6");
+  ENVOY_LOG(info, "***** end rds subscription ***** {}",Grpc::Common::typeUrl(resource_name));
   subscription_ =
       factory_context.clusterManager().subscriptionFactory().subscriptionFromConfigSource(
           rds.config_source(), Grpc::Common::typeUrl(resource_name), *scope_, *this,
