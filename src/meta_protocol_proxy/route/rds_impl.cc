@@ -83,7 +83,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
                           [this]() { parent_init_target_.ready(); }),
       local_init_target_(
           fmt::format("RdsRouteConfigSubscription local-init-target {}", route_config_name_),
-          [this]() { subscription_->start({route_c onfig_name_}); }),
+          [this]() { subscription_->start({route_config_name_}); }),
       local_init_manager_(fmt::format("RDS local-init-manager {}", route_config_name_)),
       stat_prefix_(stat_prefix),
       stats_({ALL_RDS_STATS(POOL_COUNTER(*scope_), POOL_GAUGE(*scope_))}),
