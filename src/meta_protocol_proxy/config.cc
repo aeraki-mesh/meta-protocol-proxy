@@ -21,10 +21,10 @@ namespace MetaProtocolProxy {
 SINGLETON_MANAGER_REGISTRATION(meta_route_config_provider_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
-  Router::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
-      context.singletonManager().getTyped<Router::RouteConfigProviderManager>(
+  Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
+      context.singletonManager().getTyped<Route::RouteConfigProviderManager>(
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
-            return std::make_shared<Router::RouteConfigProviderManagerImpl>(context.admin());
+            return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.admin());
           });
   return {meta_route_config_provider_manager};
 }
@@ -52,7 +52,7 @@ REGISTER_FACTORY(MetaProtocolProxyFilterConfigFactory,
 // class ConfigImpl.
 ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
                        Server::Configuration::FactoryContext& context,
-                       Router::RouteConfigProviderManager& route_config_provider_manager)
+                       Route::RouteConfigProviderManager& route_config_provider_manager)
     : context_(context),
       stats_prefix_(
           fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
@@ -96,8 +96,8 @@ void ConfigImpl::createFilterChain(FilterChainFactoryCallbacks& callbacks) {
   }
 }
 
-Router::RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata,
-                                              uint64_t random_value) const {
+Route::RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata,
+                                             uint64_t random_value) const {
   auto route_config = route_config_provider_->config();
   if (route_config) {
     return route_config->route(metadata, random_value);

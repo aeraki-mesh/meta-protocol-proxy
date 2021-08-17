@@ -9,7 +9,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 ConfigImpl::ConfigImpl(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
@@ -25,7 +25,7 @@ RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata, uint64_t random_
   return route_matcher_->route(metadata, random_value);
 }
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

@@ -24,7 +24,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 class RouteEntryImplBase : public RouteEntry,
                            public Route,
@@ -44,8 +44,7 @@ public:
   // Router::Route
   const RouteEntry* routeEntry() const override;
 
-  virtual RouteConstSharedPtr matches(const Metadata& metadata,
-                                      uint64_t random_value) const PURE;
+  virtual RouteConstSharedPtr matches(const Metadata& metadata, uint64_t random_value) const PURE;
 
 protected:
   RouteConstSharedPtr clusterEntry(uint64_t random_value) const;
@@ -96,8 +95,7 @@ public:
   ~RouteEntryImpl() override;
 
   // RoutEntryImplBase
-  RouteConstSharedPtr matches(const Metadata& metadata,
-                              uint64_t random_value) const override;
+  RouteConstSharedPtr matches(const Metadata& metadata, uint64_t random_value) const override;
 };
 
 class RouteMatcherImpl : public RouteMatcher, public Logger::Loggable<Logger::Id::filter> {
@@ -107,14 +105,13 @@ public:
 
   RouteMatcherImpl(const RouteConfig& config, Server::Configuration::ServerFactoryContext& context);
 
-  RouteConstSharedPtr route(const Metadata& metadata,
-                            uint64_t random_value) const override;
+  RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
 
 private:
   std::vector<RouteEntryImplBaseConstSharedPtr> routes_;
 };
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

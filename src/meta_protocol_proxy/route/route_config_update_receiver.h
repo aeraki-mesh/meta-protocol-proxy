@@ -16,7 +16,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 /**
  * A primitive that keeps track of updates to a RouteConfiguration.
@@ -89,7 +89,7 @@ public:
 
 using RouteConfigUpdatePtr = std::unique_ptr<RouteConfigUpdateReceiver>;
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

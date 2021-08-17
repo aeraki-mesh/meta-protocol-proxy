@@ -61,8 +61,7 @@ public:
    * @param ctx the message context information
    * @return FilterStatus to indicate if filter chain iteration should continue
    */
-  virtual void onStreamDecoded(MetadataSharedPtr metadata,
-                               MutationSharedPtr mutation) PURE;
+  virtual void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) PURE;
 };
 
 using StreamDecoderSharedPtr = std::shared_ptr<StreamDecoder>;

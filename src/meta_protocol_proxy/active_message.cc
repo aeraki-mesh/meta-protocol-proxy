@@ -14,8 +14,7 @@ namespace MetaProtocolProxy {
 // class ActiveResponseDecoder
 ActiveResponseDecoder::ActiveResponseDecoder(ActiveMessage& parent, MetaProtocolProxyStats& stats,
                                              Network::Connection& connection,
-                                             std::string applicationProtocol,
-                                             CodecPtr&& codec)
+                                             std::string applicationProtocol, CodecPtr&& codec)
     : parent_(parent), stats_(stats), response_connection_(connection),
       application_protocol_(applicationProtocol), codec_(std::move(codec)),
       decoder_(std::make_unique<ResponseDecoder>(*codec_, *this)), complete_(false),
@@ -80,11 +79,9 @@ void ActiveResponseDecoder::onStreamDecoded(MetadataSharedPtr metadata,
       application_protocol_, metadata->getRequestId());
 }
 
-FilterStatus
-ActiveResponseDecoder::applyMessageEncodedFilters(MetadataSharedPtr metadata,
-                                                  MutationSharedPtr mutation) {
-  parent_.encoder_filter_action_ =
-      [metadata, mutation](EncoderFilter* filter) -> FilterStatus {
+FilterStatus ActiveResponseDecoder::applyMessageEncodedFilters(MetadataSharedPtr metadata,
+                                                               MutationSharedPtr mutation) {
+  parent_.encoder_filter_action_ = [metadata, mutation](EncoderFilter* filter) -> FilterStatus {
     return filter->onMessageEncoded(metadata, mutation);
   };
 
@@ -114,7 +111,7 @@ const Network::Connection* ActiveMessageFilterBase::connection() const {
   return parent_.connection();
 }
 
-Router::RouteConstSharedPtr ActiveMessageFilterBase::route() { return parent_.route(); }
+Route::RouteConstSharedPtr ActiveMessageFilterBase::route() { return parent_.route(); }
 
 Event::Dispatcher& ActiveMessageFilterBase::dispatcher() { return parent_.dispatcher(); }
 
@@ -123,8 +120,9 @@ void ActiveMessageFilterBase::resetStream() { parent_.resetStream(); }
 StreamInfo::StreamInfo& ActiveMessageFilterBase::streamInfo() { return parent_.streamInfo(); }
 
 // class ActiveMessageDecoderFilter
-ActiveMessageDecoderFilter::ActiveMessageDecoderFilter(
-    ActiveMessage& parent, DecoderFilterSharedPtr filter, bool dual_filter)
+ActiveMessageDecoderFilter::ActiveMessageDecoderFilter(ActiveMessage& parent,
+                                                       DecoderFilterSharedPtr filter,
+                                                       bool dual_filter)
     : ActiveMessageFilterBase(parent, dual_filter), handle_(filter) {}
 
 void ActiveMessageDecoderFilter::continueDecoding() {
@@ -147,15 +145,13 @@ void ActiveMessageDecoderFilter::continueDecoding() {
   }
 }
 
-void ActiveMessageDecoderFilter::sendLocalReply(const DirectResponse& response,
-                                                bool end_stream) {
+void ActiveMessageDecoderFilter::sendLocalReply(const DirectResponse& response, bool end_stream) {
   parent_.sendLocalReply(response, end_stream);
 }
 
 void ActiveMessageDecoderFilter::startUpstreamResponse() { parent_.startUpstreamResponse(); }
 
-UpstreamResponseStatus
-ActiveMessageDecoderFilter::upstreamData(Buffer::Instance& buffer) {
+UpstreamResponseStatus ActiveMessageDecoderFilter::upstreamData(Buffer::Instance& buffer) {
   return parent_.upstreamData(buffer);
 }
 
@@ -164,8 +160,9 @@ void ActiveMessageDecoderFilter::resetDownstreamConnection() {
 }
 
 // class ActiveMessageEncoderFilter
-ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(
-    ActiveMessage& parent, EncoderFilterSharedPtr filter, bool dual_filter)
+ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
+                                                       EncoderFilterSharedPtr filter,
+                                                       bool dual_filter)
     : ActiveMessageFilterBase(parent, dual_filter), handle_(filter) {}
 
 void ActiveMessageEncoderFilter::continueEncoding() {
@@ -242,13 +239,11 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
   return std::next(filter->entry());
 }
 
-void ActiveMessage::onStreamDecoded(MetadataSharedPtr metadata,
-                                    MutationSharedPtr mutation) {
+void ActiveMessage::onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   parent_.stats().request_decoding_success_.inc();
 
   metadata_ = metadata;
-  filter_action_ = [metadata,
-                    mutation](DecoderFilter* filter) -> FilterStatus {
+  filter_action_ = [metadata, mutation](DecoderFilter* filter) -> FilterStatus {
     return filter->onMessageDecoded(metadata, mutation);
   };
 
@@ -293,13 +288,13 @@ void ActiveMessage::createFilterChain() {
   parent_.config().filterFactory().createFilterChain(*this);
 }
 
-MetaProtocolProxy::Router::RouteConstSharedPtr ActiveMessage::route() {
+MetaProtocolProxy::Route::RouteConstSharedPtr ActiveMessage::route() {
   if (cached_route_) {
     return cached_route_.value();
   }
 
   if (metadata_ != nullptr) {
-    MetaProtocolProxy::Router::RouteConstSharedPtr route =
+    MetaProtocolProxy::Route::RouteConstSharedPtr route =
         parent_.config().routerConfig().route(*metadata_, stream_id_);
     cached_route_ = route;
     return cached_route_.value();
@@ -351,8 +346,7 @@ FilterStatus ActiveMessage::applyEncoderFilters(ActiveMessageEncoderFilter* filt
   return FilterStatus::Continue;
 }
 
-void ActiveMessage::sendLocalReply(const DirectResponse& response,
-                                   bool end_stream) {
+void ActiveMessage::sendLocalReply(const DirectResponse& response, bool end_stream) {
   ASSERT(metadata_);
   // metadata_->setRequestId(request_id_);
   parent_.sendLocalReply(*metadata_, response, end_stream);
@@ -445,15 +439,13 @@ void ActiveMessage::addFilter(CodecFilterSharedPtr filter) {
   addEncoderFilterWorker(filter, true);
 }
 
-void ActiveMessage::addDecoderFilterWorker(DecoderFilterSharedPtr filter,
-                                           bool dual_filter) {
+void ActiveMessage::addDecoderFilterWorker(DecoderFilterSharedPtr filter, bool dual_filter) {
   ActiveMessageDecoderFilterPtr wrapper =
       std::make_unique<ActiveMessageDecoderFilter>(*this, filter, dual_filter);
   filter->setDecoderFilterCallbacks(*wrapper);
   LinkedList::moveIntoListBack(std::move(wrapper), decoder_filters_);
 }
-void ActiveMessage::addEncoderFilterWorker(EncoderFilterSharedPtr filter,
-                                           bool dual_filter) {
+void ActiveMessage::addEncoderFilterWorker(EncoderFilterSharedPtr filter, bool dual_filter) {
   ActiveMessageEncoderFilterPtr wrapper =
       std::make_unique<ActiveMessageEncoderFilter>(*this, filter, dual_filter);
   filter->setEncoderFilterCallbacks(*wrapper);
@@ -471,9 +463,7 @@ void ActiveMessage::onError(const std::string& what) {
 
   ASSERT(metadata_);
   ENVOY_LOG(error, "Bad response: {}", what);
-  sendLocalReply(
-      AppException(Error{ErrorType::BadResponse, what}),
-      false);
+  sendLocalReply(AppException(Error{ErrorType::BadResponse, what}), false);
   parent_.deferredMessage(*this);
 }
 

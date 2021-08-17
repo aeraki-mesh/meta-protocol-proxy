@@ -32,13 +32,11 @@ public:
   void onDestroy() override;
   void setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) override;
 
-  FilterStatus onMessageDecoded(MetadataSharedPtr metadata,
-                                MutationSharedPtr mutation) override;
+  FilterStatus onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // EncoderFilter
   void setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks) override;
-  FilterStatus onMessageEncoded(MetadataSharedPtr metadata,
-                                MutationSharedPtr mutation) override;
+  FilterStatus onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // Upstream::LoadBalancerContextBase
   const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() override { return nullptr; }
@@ -55,8 +53,7 @@ public:
 
 private:
   struct UpstreamRequest : public Tcp::ConnectionPool::Callbacks {
-    UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool_data,
-                    MetadataSharedPtr& metadata);
+    UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool_data, MetadataSharedPtr& metadata);
     ~UpstreamRequest() override;
 
     FilterStatus start();

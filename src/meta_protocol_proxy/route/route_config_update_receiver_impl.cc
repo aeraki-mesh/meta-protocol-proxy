@@ -17,7 +17,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 bool RouteConfigUpdateReceiverImpl::onRdsUpdate(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& rc,
@@ -41,7 +41,7 @@ void RouteConfigUpdateReceiverImpl::onUpdateCommon(const std::string& version_in
   config_info_.emplace(RouteConfigProvider::ConfigInfo{*route_config_proto_, last_config_version_});
 }
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

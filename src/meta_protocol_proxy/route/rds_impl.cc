@@ -25,7 +25,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 /*
 RouteConfigProviderSharedPtr RouteConfigProviderUtil::create(
     const envoy::extensions::filters::network::http_connection_manager::v3::HttpConnectionManager&
@@ -315,7 +315,7 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs(
   return config_dump;
 }
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

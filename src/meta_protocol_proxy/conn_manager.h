@@ -34,14 +34,14 @@ public:
   virtual FilterChainFactory& filterFactory() PURE;
   virtual MetaProtocolProxyStats& stats() PURE;
   virtual CodecPtr createCodec() PURE;
-  virtual Router::Config& routerConfig() PURE;
+  virtual Route::Config& routerConfig() PURE;
   virtual std::string applicationProtocol() PURE;
   /**
- * @return Router::RouteConfigProvider* the configuration provider used to acquire a route
- *         config for each request flow. Pointer ownership is _not_ transferred to the caller of
- *         this function.
- */
-  virtual Router::RouteConfigProvider* routeConfigProvider() PURE;
+   * @return Route::RouteConfigProvider* the configuration provider used to acquire a route
+   *         config for each request flow. Pointer ownership is _not_ transferred to the caller of
+   *         this function.
+   */
+  virtual Route::RouteConfigProvider* routeConfigProvider() PURE;
 };
 
 // class ActiveMessagePtr;
@@ -76,8 +76,7 @@ public:
 
   void continueDecoding();
   void deferredMessage(ActiveMessage& message);
-  void sendLocalReply(Metadata& metadata,
-                      const DirectResponse& response, bool end_stream);
+  void sendLocalReply(Metadata& metadata, const DirectResponse& response, bool end_stream);
 
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }

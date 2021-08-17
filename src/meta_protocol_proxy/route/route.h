@@ -11,7 +11,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 /**
  * RouteEntry is an individual resolved route entry.
@@ -64,13 +64,12 @@ public:
    * @param random_value uint64_t used to select cluster affinity
    * @return the route or nullptr if there is no matching route for the request.
    */
-  virtual RouteConstSharedPtr route(const Metadata& metadata,
-                                    uint64_t random_value) const PURE;
+  virtual RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const PURE;
 };
 
 using ConfigConstSharedPtr = std::shared_ptr<const Config>;
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

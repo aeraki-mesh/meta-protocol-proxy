@@ -47,8 +47,8 @@ public:
    * @return ResponseType indicating whether the message is a successful or error reply or an
    *         exception
    */
-  virtual ResponseType encode(Metadata& metadata,
-                              Codec& codec, Buffer::Instance& buffer) const PURE;
+  virtual ResponseType encode(Metadata& metadata, Codec& codec,
+                              Buffer::Instance& buffer) const PURE;
 };
 
 using DirectResponsePtr = std::unique_ptr<DirectResponse>;
@@ -78,7 +78,7 @@ public:
   /**
    * @return RouteConstSharedPtr the route for the current request.
    */
-  virtual MetaProtocolProxy::Router::RouteConstSharedPtr route() PURE;
+  virtual MetaProtocolProxy::Route::RouteConstSharedPtr route() PURE;
 
   /**
    * @return StreamInfo for logging purposes.

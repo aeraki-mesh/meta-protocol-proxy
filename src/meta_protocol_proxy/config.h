@@ -42,7 +42,7 @@ private:
 class Utility {
 public:
   struct Singletons {
-    Router::RouteConfigProviderManagerSharedPtr route_config_provider_manager_;
+    Route::RouteConfigProviderManagerSharedPtr route_config_provider_manager_;
   };
 
   /**
@@ -55,7 +55,7 @@ public:
 };
 
 class ConfigImpl : public Config,
-                   public Router::Config,
+                   public Route::Config,
                    public FilterChainFactory,
                    Logger::Loggable<Logger::Id::config> {
 public:
@@ -66,23 +66,23 @@ public:
   using CodecConfig = envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Codec;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
-             Router::RouteConfigProviderManager& route_config_provider_manager);
+             Route::RouteConfigProviderManager& route_config_provider_manager);
   ~ConfigImpl() override = default;
 
   // FilterChainFactory
   void createFilterChain(FilterChainFactoryCallbacks& callbacks) override;
 
-  Router::RouteConfigProvider* routeConfigProvider() override {
+  Route::RouteConfigProvider* routeConfigProvider() override {
     return route_config_provider_.get();
   }
 
-  // Router::Config
-  Router::RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
+  // Route::Config
+  Route::RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
 
   // Config
   MetaProtocolProxyStats& stats() override { return stats_; }
   FilterChainFactory& filterFactory() override { return *this; }
-  Router::Config& routerConfig() override { return *this; }
+  Route::Config& routerConfig() override { return *this; }
   CodecPtr createCodec() override;
   std::string applicationProtocol() override { return application_protocol_; };
 
@@ -96,8 +96,8 @@ private:
   std::string application_protocol_;
   CodecConfig codecConfig_;
   std::list<FilterFactoryCb> filter_factories_;
-  Router::RouteConfigProviderSharedPtr route_config_provider_;
-  Router::RouteConfigProviderManager& route_config_provider_manager_;
+  Route::RouteConfigProviderSharedPtr route_config_provider_;
+  Route::RouteConfigProviderManager& route_config_provider_manager_;
 };
 
 } // namespace MetaProtocolProxy

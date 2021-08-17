@@ -19,7 +19,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 class RouteConfigUpdateReceiverImpl : public RouteConfigUpdateReceiver {
 public:
@@ -63,7 +63,7 @@ private:
   ConfigConstSharedPtr config_;
 };
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

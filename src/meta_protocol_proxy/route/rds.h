@@ -9,7 +9,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 /**
  * A provider for meta protocol route configurations.
@@ -30,7 +30,7 @@ public:
   virtual ~RouteConfigProvider() = default;
 
   /**
-   * @return Router::ConfigConstSharedPtr a route configuration for use during a single request. The
+   * @return Route::ConfigConstSharedPtr a route configuration for use during a single request. The
    * returned config may be different on a subsequent call, so a new config should be acquired for
    * each request flow.
    */
@@ -64,7 +64,7 @@ public:
 using RouteConfigProviderPtr = std::unique_ptr<RouteConfigProvider>;
 using RouteConfigProviderSharedPtr = std::shared_ptr<RouteConfigProvider>;
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

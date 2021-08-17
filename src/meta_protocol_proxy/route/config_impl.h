@@ -14,7 +14,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 /**
  * Implementation of Config that reads from a proto file.
@@ -44,7 +44,7 @@ private:
   const std::string name_;
 };
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

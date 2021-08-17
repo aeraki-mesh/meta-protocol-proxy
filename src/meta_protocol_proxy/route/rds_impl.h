@@ -44,7 +44,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 class RouteConfigProviderManagerImpl;
 
@@ -53,10 +53,12 @@ class RouteConfigProviderManagerImpl;
  */
 class StaticRouteConfigProviderImpl : public RouteConfigProvider {
 public:
-  StaticRouteConfigProviderImpl(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config,
-                                Server::Configuration::ServerFactoryContext& factory_context,
-                                ProtobufMessage::ValidationVisitor& validator,
-                                RouteConfigProviderManagerImpl& route_config_provider_manager);
+  StaticRouteConfigProviderImpl(
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+          config,
+      Server::Configuration::ServerFactoryContext& factory_context,
+      ProtobufMessage::ValidationVisitor& validator,
+      RouteConfigProviderManagerImpl& route_config_provider_manager);
   ~StaticRouteConfigProviderImpl() override;
 
   // RouteConfigProvider
@@ -66,11 +68,14 @@ public:
   }
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
-  void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&) const override {}
+  void validateConfig(
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&)
+      const override {}
 
 private:
   ConfigConstSharedPtr config_;
-  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration route_config_proto_;
+  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration
+      route_config_proto_;
   SystemTime last_updated_;
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
 };
@@ -97,7 +102,8 @@ class RdsRouteConfigProviderImpl;
  * RDS config providers.
  */
 class RdsRouteConfigSubscription
-    : Envoy::Config::SubscriptionBase<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>,
+    : Envoy::Config::SubscriptionBase<
+          envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>,
       Logger::Loggable<Logger::Id::router> {
 public:
   ~RdsRouteConfigSubscription() override;
@@ -166,14 +172,16 @@ public:
 
   RdsRouteConfigSubscription& subscription() { return *subscription_; }
 
-  //RouteConfigProvider
+  // RouteConfigProvider
   ConfigConstSharedPtr config() override;
   absl::optional<ConfigInfo> configInfo() const override {
     return config_update_info_->configInfo();
   }
   SystemTime lastUpdated() const override { return config_update_info_->lastUpdated(); }
   void onConfigUpdate() override;
-  void validateConfig(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& config) const override;
+  void validateConfig(
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+          config) const override;
 
 private:
   struct ThreadLocalConfig : public ThreadLocal::ThreadLocalObject {
@@ -211,10 +219,11 @@ public:
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       Init::Manager& init_manager) override;
 
-  RouteConfigProviderPtr
-  createStaticRouteConfigProvider(const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration& route_config,
-                                  Server::Configuration::ServerFactoryContext& factory_context,
-                                  ProtobufMessage::ValidationVisitor& validator) override;
+  RouteConfigProviderPtr createStaticRouteConfigProvider(
+      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+          route_config,
+      Server::Configuration::ServerFactoryContext& factory_context,
+      ProtobufMessage::ValidationVisitor& validator) override;
 
 private:
   // TODO(jsedgwick) These two members are prime candidates for the owned-entry list/map
@@ -231,7 +240,7 @@ private:
 
 using RouteConfigProviderManagerImplPtr = std::unique_ptr<RouteConfigProviderManagerImpl>;
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

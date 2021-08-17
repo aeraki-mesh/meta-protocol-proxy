@@ -126,15 +126,13 @@ void ConnectionManager::dispatch() {
   resetAllMessages(true);
 }
 
-void ConnectionManager::sendLocalReply(Metadata& metadata,
-                                       const DirectResponse& response,
+void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse& response,
                                        bool end_stream) {
   if (read_callbacks_->connection().state() != Network::Connection::State::Open) {
     return;
   }
 
-  DirectResponse::ResponseType result =
-      DirectResponse::ResponseType::ErrorReply;
+  DirectResponse::ResponseType result = DirectResponse::ResponseType::ErrorReply;
 
   try {
     Buffer::OwnedImpl buffer;

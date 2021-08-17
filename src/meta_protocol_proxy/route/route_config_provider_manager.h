@@ -11,7 +11,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 /**
  * The RouteConfigProviderManager exposes the ability to get a RouteConfigProvider.
@@ -23,9 +23,9 @@ public:
 
   /**
    * Get a RouteConfigProviderPtr for a route from RDS. Ownership of the RouteConfigProvider is the
-   * MetaProtocol ConnectionManagers who calls this function. The RouteConfigProviderManager holds raw
-   * pointers to the RouteConfigProviders. Clean up of the pointers happen from the destructor of
-   * the RouteConfigProvider. This method creates a RouteConfigProvider which may share the
+   * MetaProtocol ConnectionManagers who calls this function. The RouteConfigProviderManager holds
+   * raw pointers to the RouteConfigProviders. Clean up of the pointers happen from the destructor
+   * of the RouteConfigProvider. This method creates a RouteConfigProvider which may share the
    * underlying RDS subscription with the same (route_config_name, cluster).
    * @param rds supplies the proto configuration of an RDS-configured RouteConfigProvider.
    * @param factory_context is the context to use for the route config provider.
@@ -55,7 +55,7 @@ public:
 using RouteConfigProviderManagerPtr = std::unique_ptr<RouteConfigProviderManager>;
 using RouteConfigProviderManagerSharedPtr = std::shared_ptr<RouteConfigProviderManager>;
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

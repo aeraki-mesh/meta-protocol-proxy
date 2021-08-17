@@ -39,9 +39,7 @@ public:
   ~MetadataImpl() = default;
 
   void put(std::string key, std::any value) override { properties_.put(key, value); };
-  AnyOptConstRef get(std::string key) const override {
-    return properties_.get(key);
-  };
+  AnyOptConstRef get(std::string key) const override { return properties_.get(key); };
   void putString(std::string key, std::string value) override {
     this->put(key, value);
     auto lowcase_key = Http::LowerCaseString(key);
@@ -55,9 +53,7 @@ public:
     origin_message_ = originMessage;
   };
   Buffer::Instance& getOriginMessage() override { return origin_message_; };
-  void setMessageType(MessageType messageType) override {
-    message_type_ = messageType;
-  };
+  void setMessageType(MessageType messageType) override { message_type_ = messageType; };
   MessageType getMessageType() const override { return message_type_; };
   void setResponseStatus(ResponseStatus responseStatus) override {
     response_status_ = responseStatus;
@@ -90,9 +86,7 @@ public:
   ~MutationImpl() = default;
 
   void put(std::string key, std::any value) override { properties_.put(key, value); };
-  AnyOptConstRef get(std::string key) const override {
-    return properties_.get(key);
-  };
+  AnyOptConstRef get(std::string key) const override { return properties_.get(key); };
   void putString(std::string key, std::string value) override { this->put(key, value); };
   std::string getString(std::string key) const override { return properties_.getString(key); };
   bool getBool(std::string key) const override { return properties_.getBool(key); };
