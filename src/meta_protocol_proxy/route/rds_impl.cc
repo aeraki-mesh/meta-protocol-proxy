@@ -89,14 +89,14 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
       stats_({ALL_RDS_STATS(POOL_COUNTER(*scope_), POOL_GAUGE(*scope_))}),
       route_config_provider_manager_(route_config_provider_manager),
       manager_identifier_(manager_identifier) {
+  ENVOY_LOG(info, "***** end rds subscription ***** 5");
   const auto resource_name = getResourceName();
-  assert(rds.config_source());
-  assert(resource_name);
-  assert(scope_);
+  ENVOY_LOG(info, "***** end rds subscription ***** 6");
   subscription_ =
       factory_context.clusterManager().subscriptionFactory().subscriptionFromConfigSource(
           rds.config_source(), Grpc::Common::typeUrl(resource_name), *scope_, *this,
           resource_decoder_, {});
+  ENVOY_LOG(info, "***** end rds subscription ***** 7");
   local_init_manager_.add(local_init_target_);
   config_update_info_ = std::make_unique<RouteConfigUpdateReceiverImpl>(factory_context);
 }
@@ -248,10 +248,6 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     // of simplicity.
 
     ENVOY_LOG(info, "***** start rds subscription *****");
-    assert(rds);
-    assert(manager_identifier);
-    assert(factory_context);
-    assert(stat_prefix);
     RdsRouteConfigSubscriptionSharedPtr subscription(new RdsRouteConfigSubscription(
         rds, manager_identifier, factory_context, stat_prefix, *this));
     ENVOY_LOG(info, "***** end rds subscription *****");
