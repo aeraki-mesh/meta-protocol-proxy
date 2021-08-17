@@ -94,8 +94,8 @@ private:
 
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
-  RouteConstSharedPtr route_{};
-  const RouteEntry* route_entry_{};
+  Route::RouteConstSharedPtr route_{};
+  const Route::RouteEntry* route_entry_{};
   Upstream::ClusterInfoConstSharedPtr cluster_;
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
