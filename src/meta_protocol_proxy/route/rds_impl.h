@@ -206,7 +206,8 @@ private:
 using RdsRouteConfigProviderImplSharedPtr = std::shared_ptr<RdsRouteConfigProviderImpl>;
 
 class RouteConfigProviderManagerImpl : public RouteConfigProviderManager,
-                                       public Singleton::Instance {
+                                       public Singleton::Instance,
+                                       Logger::Loggable<Logger::Id::router> {
 public:
   RouteConfigProviderManagerImpl(Server::Admin& admin);
 
