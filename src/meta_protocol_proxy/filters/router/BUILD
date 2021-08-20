@@ -17,8 +17,8 @@ envoy_cc_library(
     hdrs = ["config.h"],
     deps = [
         ":router_lib",
-        "//api/v1alpha:pkg_cc_proto",
-        "//api/router/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy/filters:factory_base_lib",
         "//src/meta_protocol_proxy/filters:filter_config_interface",
         "@envoy//envoy/registry",

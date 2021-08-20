@@ -48,7 +48,7 @@ envoy_cc_library(
         ":decoder_lib",
         ":heartbeat_response_lib",
         ":stats_lib",
-        "//api/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy/route:rds_interface",
         "//src/meta_protocol_proxy/route:route_interface",
         "//src/meta_protocol_proxy/filters:filter_interface",
