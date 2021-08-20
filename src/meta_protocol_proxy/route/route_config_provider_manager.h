@@ -4,7 +4,7 @@
 
 #include "envoy/server/factory_context.h"
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 #include "api/v1alpha/meta_protocol_proxy.pb.h"
 
 namespace Envoy {

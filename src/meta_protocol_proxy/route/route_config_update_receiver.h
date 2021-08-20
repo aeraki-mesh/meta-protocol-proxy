@@ -4,7 +4,7 @@
 
 #include "envoy/common/pure.h"
 #include "envoy/common/time.h"
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
