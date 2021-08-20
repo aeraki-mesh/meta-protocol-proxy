@@ -24,5 +24,4 @@ if [ `uname` = "Darwin" ];then
     bazel build ${buildFlags} //:$target --host_force_python=PY3
 else
    bazel build ${buildFlags} //:$target
-   #bazel build ${buildFlags}  //src/meta_protocol_proxy/filters/router/rds:string_accessor_lib
 fi
