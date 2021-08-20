@@ -149,7 +149,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
       auto httpMatch = httpRoute.match();
       auto headerSize = httpMatch.headers_size();
       ASSERT(headerSize > 1);
-      auto* metaMatch = new aeraki::meta_protocol_proxy::v1alpha::RouteMatch();
+      auto* metaMatch = new aeraki::meta_protocol_proxy::config::route::v1alpha::RouteMatch();
 
       for (int i = 0; i < headerSize; i++) {
         metaMatch->mutable_metadata()->AddAllocated(
