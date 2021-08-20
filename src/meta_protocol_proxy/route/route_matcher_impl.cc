@@ -11,13 +11,11 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Route {
 
-RouteEntryImplBase::RouteEntryImplBase(
-    const aeraki::meta_protocol_proxy::v1alpha::Route& route)
+RouteEntryImplBase::RouteEntryImplBase(const aeraki::meta_protocol_proxy::v1alpha::Route& route)
     : cluster_name_(route.route().cluster()),
       config_headers_(Http::HeaderUtility::buildHeaderDataVector(route.match().metadata())) {
   if (route.route().cluster_specifier_case() ==
-      aeraki::meta_protocol_proxy::v1alpha::RouteAction::
-          ClusterSpecifierCase::kWeightedClusters) {
+      aeraki::meta_protocol_proxy::v1alpha::RouteAction::ClusterSpecifierCase::kWeightedClusters) {
     total_cluster_weight_ = 0UL;
     for (const auto& cluster : route.route().weighted_clusters().clusters()) {
       weighted_clusters_.emplace_back(std::make_shared<WeightedClusterEntry>(*this, cluster));
@@ -60,8 +58,7 @@ RouteEntryImplBase::WeightedClusterEntry::WeightedClusterEntry(const RouteEntryI
     : parent_(parent), cluster_name_(cluster.name()),
       cluster_weight_(PROTOBUF_GET_WRAPPED_REQUIRED(cluster, weight)) {}
 
-RouteEntryImpl::RouteEntryImpl(
-    const aeraki::meta_protocol_proxy::v1alpha::Route& route)
+RouteEntryImpl::RouteEntryImpl(const aeraki::meta_protocol_proxy::v1alpha::Route& route)
     : RouteEntryImplBase(route) {}
 
 RouteEntryImpl::~RouteEntryImpl() = default;

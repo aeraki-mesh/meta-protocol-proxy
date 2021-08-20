@@ -33,10 +33,10 @@ public:
    * @param init_manager the Init::Manager used to coordinate initialization of a the underlying RDS
    * subscription.
    */
-  virtual RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
-      Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
-      Init::Manager& init_manager) PURE;
+  virtual RouteConfigProviderSharedPtr
+  createRdsRouteConfigProvider(const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
+                               Server::Configuration::ServerFactoryContext& factory_context,
+                               const std::string& stat_prefix, Init::Manager& init_manager) PURE;
 
   /**
    * Get a RouteConfigSharedPtr for a statically defined route. Ownership is as described for
@@ -46,8 +46,7 @@ public:
    * @param validator is the message validator for route config.
    */
   virtual RouteConfigProviderPtr createStaticRouteConfigProvider(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-          route_config,
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& route_config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator) PURE;
 };

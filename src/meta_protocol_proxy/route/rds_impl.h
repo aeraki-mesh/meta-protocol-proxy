@@ -56,8 +56,7 @@ class RouteConfigProviderManagerImpl;
 class StaticRouteConfigProviderImpl : public RouteConfigProvider {
 public:
   StaticRouteConfigProviderImpl(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-          config,
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator,
       RouteConfigProviderManagerImpl& route_config_provider_manager);
@@ -70,14 +69,13 @@ public:
   }
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
-  void validateConfig(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&)
+  void
+  validateConfig(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&)
       const override {}
 
 private:
   ConfigConstSharedPtr config_;
-  aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration
-      route_config_proto_;
+  aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration route_config_proto_;
   SystemTime last_updated_;
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
 };
@@ -129,11 +127,11 @@ private:
       aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           meta_protocol_route_config);
 
-  RdsRouteConfigSubscription(
-      const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
-      const uint64_t manager_identifier,
-      Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
-      RouteConfigProviderManagerImpl& route_config_provider_manager);
+  RdsRouteConfigSubscription(const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
+                             const uint64_t manager_identifier,
+                             Server::Configuration::ServerFactoryContext& factory_context,
+                             const std::string& stat_prefix,
+                             RouteConfigProviderManagerImpl& route_config_provider_manager);
 
   bool validateUpdateSize(int num_resources);
 
@@ -187,9 +185,8 @@ public:
   }
   SystemTime lastUpdated() const override { return config_update_info_->lastUpdated(); }
   void onConfigUpdate() override;
-  void validateConfig(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-          config) const override;
+  void validateConfig(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
+                          config) const override;
 
 private:
   struct ThreadLocalConfig : public ThreadLocal::ThreadLocalObject {
@@ -223,14 +220,14 @@ public:
   dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const;
 
   // RouteConfigProviderManager
-  RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
-      Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
-      Init::Manager& init_manager) override;
+  RouteConfigProviderSharedPtr
+  createRdsRouteConfigProvider(const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
+                               Server::Configuration::ServerFactoryContext& factory_context,
+                               const std::string& stat_prefix,
+                               Init::Manager& init_manager) override;
 
   RouteConfigProviderPtr createStaticRouteConfigProvider(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-          route_config,
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& route_config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator) override;
 

@@ -24,15 +24,13 @@ constexpr char CanonicalName[] = "aeraki.meta_protocol_proxy";
  * Config registration for the meta protocol proxy filter. @see NamedNetworkFilterConfigFactory.
  */
 class MetaProtocolProxyFilterConfigFactory
-    : public Common::FactoryBase<
-          aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
+    : public Common::FactoryBase<aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
 public:
   MetaProtocolProxyFilterConfigFactory() : FactoryBase(CanonicalName, true) {}
 
 private:
   Network::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy&
-          proto_config,
+      const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy& proto_config,
       Server::Configuration::FactoryContext& context) override;
 };
 
@@ -59,10 +57,8 @@ class ConfigImpl : public Config,
                    public FilterChainFactory,
                    Logger::Loggable<Logger::Id::config> {
 public:
-  using MetaProtocolProxyConfig =
-      aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
-  using MetaProtocolFilterConfig =
-      aeraki::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
+  using MetaProtocolProxyConfig = aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
+  using MetaProtocolFilterConfig = aeraki::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
   using CodecConfig = aeraki::meta_protocol_proxy::v1alpha::Codec;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,

@@ -26,8 +26,8 @@ bool RouteConfigUpdateReceiverImpl::onRdsUpdate(
   if (new_hash == last_config_hash_) {
     return false;
   }
-  route_config_proto_ = std::make_unique<
-      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration>(rc);
+  route_config_proto_ =
+      std::make_unique<aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration>(rc);
   last_config_hash_ = new_hash;
   config_ = std::make_shared<ConfigImpl>(*route_config_proto_, factory_context_);
 

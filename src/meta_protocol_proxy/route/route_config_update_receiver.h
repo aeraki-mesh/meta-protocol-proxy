@@ -31,10 +31,9 @@ public:
    * @param version_info supplies RouteConfiguration version.
    * @return bool whether RouteConfiguration has been updated.
    */
-  virtual bool onRdsUpdate(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-          rc,
-      const std::string& version_info) PURE;
+  virtual bool
+  onRdsUpdate(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& rc,
+              const std::string& version_info) PURE;
 
   using VirtualHostRefVector =
       std::vector<std::reference_wrapper<const envoy::config::route::v3::VirtualHost>>;
@@ -65,9 +64,8 @@ public:
    * @return aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
    * current RouteConfiguration.
    */
-  virtual const aeraki::meta_protocol_proxy::v1alpha::
-      RouteConfiguration&
-      protobufConfiguration() PURE;
+  virtual const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
+  protobufConfiguration() PURE;
 
   /**
    * @return Router::ConfigConstSharedPtr a parsed and validated copy of current RouteConfiguration.

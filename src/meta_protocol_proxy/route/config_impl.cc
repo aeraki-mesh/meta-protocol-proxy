@@ -12,8 +12,7 @@ namespace MetaProtocolProxy {
 namespace Route {
 
 ConfigImpl::ConfigImpl(
-    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-        config,
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
     Server::Configuration::ServerFactoryContext& context)
     : name_(config.name()) {
   route_matcher_ = std::make_unique<RouteMatcherImpl>(config, context);

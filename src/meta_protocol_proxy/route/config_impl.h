@@ -21,10 +21,8 @@ namespace Route {
  */
 class ConfigImpl : public Config {
 public:
-  ConfigImpl(
-      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-          config,
-      Server::Configuration::ServerFactoryContext& context);
+  ConfigImpl(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
+             Server::Configuration::ServerFactoryContext& context);
 
   RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
 
