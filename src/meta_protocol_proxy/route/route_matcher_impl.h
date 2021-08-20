@@ -6,6 +6,7 @@
 
 #include "envoy/type/v3/range.pb.h"
 #include "envoy/config/route/v3/route_components.pb.h"
+#include "envoy/server/factory_context.h"
 
 #include "api/v1alpha/route.pb.h"
 
@@ -14,8 +15,8 @@
 #include "source/common/http/header_utility.h"
 #include "source/common/protobuf/protobuf.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
-#include "src/meta_protocol_proxy/filters/router/route.h"
-#include "src/meta_protocol_proxy/filters/router/router.h"
+#include "src/meta_protocol_proxy/route/route_matcher.h"
+#include "src/meta_protocol_proxy/route/route.h"
 
 #include "absl/types/optional.h"
 
@@ -23,7 +24,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 class RouteEntryImplBase : public RouteEntry,
                            public Route,
@@ -43,8 +44,7 @@ public:
   // Router::Route
   const RouteEntry* routeEntry() const override;
 
-  virtual RouteConstSharedPtr matches(const Metadata& metadata,
-                                      uint64_t random_value) const PURE;
+  virtual RouteConstSharedPtr matches(const Metadata& metadata, uint64_t random_value) const PURE;
 
 protected:
   RouteConstSharedPtr clusterEntry(uint64_t random_value) const;
@@ -95,24 +95,23 @@ public:
   ~RouteEntryImpl() override;
 
   // RoutEntryImplBase
-  RouteConstSharedPtr matches(const Metadata& metadata,
-                              uint64_t random_value) const override;
+  RouteConstSharedPtr matches(const Metadata& metadata, uint64_t random_value) const override;
 };
 
 class RouteMatcherImpl : public RouteMatcher, public Logger::Loggable<Logger::Id::filter> {
 public:
   using RouteConfig =
       envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration;
-  RouteMatcherImpl(const RouteConfig& config, Server::Configuration::FactoryContext& context);
 
-  RouteConstSharedPtr route(const Metadata& metadata,
-                            uint64_t random_value) const override;
+  RouteMatcherImpl(const RouteConfig& config, Server::Configuration::ServerFactoryContext& context);
+
+  RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
 
 private:
   std::vector<RouteEntryImplBaseConstSharedPtr> routes_;
 };
 
-} // namespace Router
+} // namespace Route
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

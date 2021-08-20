@@ -1,12 +1,9 @@
-licenses(["notice"])  # Apache 2
+package(default_visibility = ["//visibility:public"])
 
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
-    "envoy_package",
 )
-
-envoy_package()
 
 envoy_cc_library(
     name = "filter_interface",
@@ -17,7 +14,7 @@ envoy_cc_library(
         "@envoy//envoy/network:connection_interface",
         "@envoy//envoy/stream_info:stream_info_interface",
         "//src/meta_protocol_proxy:decoder_events_lib",
-        "//src/meta_protocol_proxy/filters/router:router_interface",
+        "//src/meta_protocol_proxy/route:route_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
     ],
 )

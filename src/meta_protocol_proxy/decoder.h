@@ -38,8 +38,7 @@ private:
 };
 
 struct ActiveStream {
-  ActiveStream(StreamHandler& handler, MetadataSharedPtr metadata,
-               MutationSharedPtr mutation)
+  ActiveStream(StreamHandler& handler, MetadataSharedPtr metadata, MutationSharedPtr mutation)
       : handler_(handler), metadata_(metadata), mutation_(mutation) {}
   ~ActiveStream() {
     metadata_.reset();
@@ -63,8 +62,7 @@ public:
   class Delegate {
   public:
     virtual ~Delegate() = default;
-    virtual ActiveStream* newStream(MetadataSharedPtr metadata,
-                                    MutationSharedPtr mutation) PURE;
+    virtual ActiveStream* newStream(MetadataSharedPtr metadata, MutationSharedPtr mutation) PURE;
     virtual void onHeartbeat(MetadataSharedPtr metadata) PURE;
   };
 
@@ -132,19 +130,15 @@ protected:
  */
 template <typename T> class Decoder : public DecoderBase {
 public:
-  Decoder(Codec& codec, T& callbacks)
-      : DecoderBase(codec), callbacks_(callbacks) {}
+  Decoder(Codec& codec, T& callbacks) : DecoderBase(codec), callbacks_(callbacks) {}
 
-  ActiveStream* newStream(MetadataSharedPtr metadata,
-                          MutationSharedPtr mutation) override {
+  ActiveStream* newStream(MetadataSharedPtr metadata, MutationSharedPtr mutation) override {
     ASSERT(!stream_);
     stream_ = std::make_unique<ActiveStream>(callbacks_.newStream(), metadata, mutation);
     return stream_.get();
   }
 
-  void onHeartbeat(MetadataSharedPtr metadata) override {
-    callbacks_.onHeartbeat(metadata);
-  }
+  void onHeartbeat(MetadataSharedPtr metadata) override { callbacks_.onHeartbeat(metadata); }
 
 private:
   T& callbacks_;
@@ -152,16 +146,14 @@ private:
 
 class RequestDecoder : public Decoder<RequestDecoderCallbacks> {
 public:
-  RequestDecoder(Codec& codec, RequestDecoderCallbacks& callbacks)
-      : Decoder(codec, callbacks) {}
+  RequestDecoder(Codec& codec, RequestDecoderCallbacks& callbacks) : Decoder(codec, callbacks) {}
 };
 
 using RequestDecoderPtr = std::unique_ptr<RequestDecoder>;
 
 class ResponseDecoder : public Decoder<ResponseDecoderCallbacks> {
 public:
-  ResponseDecoder(Codec& codec, ResponseDecoderCallbacks& callbacks)
-      : Decoder(codec, callbacks) {}
+  ResponseDecoder(Codec& codec, ResponseDecoderCallbacks& callbacks) : Decoder(codec, callbacks) {}
 };
 
 using ResponseDecoderPtr = std::unique_ptr<ResponseDecoder>;

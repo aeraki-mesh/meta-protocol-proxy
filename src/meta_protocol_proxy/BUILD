@@ -1,11 +1,9 @@
-licenses(["notice"])  # Apache 2
+package(default_visibility = ["//visibility:public"])
 
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
 )
-
-package(default_visibility = ["//visibility:public"])
 
 envoy_cc_library(
     name = "config",
@@ -15,6 +13,14 @@ envoy_cc_library(
     deps = [
         ":conn_manager_lib",
         ":codec_impl_lib",
+        "//src/meta_protocol_proxy/codec:factory_lib",
+        "//src/meta_protocol_proxy/route:route_config_provider_manager_interface",
+        "//src/meta_protocol_proxy/route:rds_lib",
+        "//src/meta_protocol_proxy/route:route_matcher",
+        "//src/meta_protocol_proxy/route:route_config_lib",
+        "//src/meta_protocol_proxy/filters:factory_base_lib",
+        "//src/meta_protocol_proxy/filters/router:config",
+        "//src/meta_protocol_proxy/filters/router:router_lib",
         "@envoy//envoy/registry",
         "@envoy//envoy/stats:stats_interface",
         "@envoy//envoy/stats:stats_macros",
@@ -22,11 +28,6 @@ envoy_cc_library(
         "@envoy//source/common/config:utility_lib",
         "@envoy//source/extensions/filters/network:well_known_names",
         "@envoy//source/extensions/filters/network/common:factory_base_lib",
-        "//src/meta_protocol_proxy/filters:factory_base_lib",
-        "//src/meta_protocol_proxy/filters/router:config",
-        "//src/meta_protocol_proxy/filters/router:route_matcher",
-        "//src/meta_protocol_proxy/filters/router:router_lib",
-	    "//src/meta_protocol_proxy/codec:factory_lib",
     ],
 )
 
@@ -47,6 +48,10 @@ envoy_cc_library(
         ":decoder_lib",
         ":heartbeat_response_lib",
         ":stats_lib",
+        "//api/v1alpha:pkg_cc_proto",
+        "//src/meta_protocol_proxy/route:rds_interface",
+        "//src/meta_protocol_proxy/route:route_interface",
+        "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//envoy/event:deferred_deletable",
         "@envoy//envoy/event:dispatcher_interface",
         "@envoy//envoy/network:connection_interface",
@@ -61,9 +66,6 @@ envoy_cc_library(
         "@envoy//source/common/network:filter_lib",
         "@envoy//source/common/stats:timespan_lib",
         "@envoy//source/common/stream_info:stream_info_lib",
-        "//src/meta_protocol_proxy/filters:filter_interface",
-        "//src/meta_protocol_proxy/filters/router:router_interface",
-	    "//api/v1alpha:pkg_cc_proto",
     ],
 )
 

@@ -10,12 +10,12 @@ bazel version
 
 # bazel clean --expunge
 
-buildFlags="-s --sandbox_debug "
+buildFlags=" -s --sandbox_debug --verbose_explanations --explain=build.log --verbose_failures "
 # gdb opt fastbuild
 if [ ! -z $1 ];then
-    buildFlags+=" -c $1"
+    buildFlags+=" -c $1" //dgb, opt, fastbuild
 else
-    buildFlags=$buildFlags" -c fastbuild"
+    buildFlags=$buildFlags" -c fastbuild "
 fi
 
 target="envoy"
@@ -23,5 +23,6 @@ target="envoy"
 if [ `uname` = "Darwin" ];then
     bazel build ${buildFlags} //:$target --host_force_python=PY3
 else
-    bazel build -c dbg ${buildFlags} //:$target
+   bazel build ${buildFlags} //:$target
+   #bazel build ${buildFlags}  //src/meta_protocol_proxy/filters/router/rds:string_accessor_lib
 fi

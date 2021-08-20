@@ -14,15 +14,13 @@ namespace MetaProtocolProxy {
 namespace Router {
 
 class RouterFilterConfig
-    : public FactoryBase<
-          envoy::extensions::filters::meta_protocol_proxy::router::v1alpha::Router> {
+    : public FactoryBase<envoy::extensions::filters::meta_protocol_proxy::router::v1alpha::Router> {
 public:
   RouterFilterConfig() : FactoryBase("aeraki.meta_protocol.filters.router") {}
 
 private:
   FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const envoy::extensions::filters::meta_protocol_proxy::router::v1alpha::Router&
-          proto_config,
+      const envoy::extensions::filters::meta_protocol_proxy::router::v1alpha::Router& proto_config,
       const std::string& stat_prefix, Server::Configuration::FactoryContext& context) override;
 };
 

@@ -17,11 +17,9 @@ struct AppExceptionBase : public EnvoyException,
                           public DirectResponse,
                           Logger::Loggable<Logger::Id::filter> {
   AppExceptionBase(const AppExceptionBase& ex) = default;
-  AppExceptionBase(const Error& error)
-      : EnvoyException(error.message), error_(error) {}
+  AppExceptionBase(const Error& error) : EnvoyException(error.message), error_(error) {}
 
-  ResponseType encode(Metadata& metadata, Codec& codec,
-                      Buffer::Instance& buffer) const override {
+  ResponseType encode(Metadata& metadata, Codec& codec, Buffer::Instance& buffer) const override {
     ASSERT(buffer.length() == 0);
     codec.onError(metadata, error_, buffer);
     return ResponseType::Exception;

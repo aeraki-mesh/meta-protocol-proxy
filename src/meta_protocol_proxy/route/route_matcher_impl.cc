@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/route_matcher.h"
+#include "src/meta_protocol_proxy/route/route_matcher_impl.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
 #include "envoy/config/route/v3/route_components.pb.h"
 #include "api/v1alpha/route.pb.h"
@@ -9,7 +9,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace Route {
 
 RouteEntryImplBase::RouteEntryImplBase(
     const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Route& route)
@@ -66,8 +66,7 @@ RouteEntryImpl::RouteEntryImpl(
 
 RouteEntryImpl::~RouteEntryImpl() = default;
 
-RouteConstSharedPtr RouteEntryImpl::matches(const Metadata& metadata,
-                                            uint64_t random_value) const {
+RouteConstSharedPtr RouteEntryImpl::matches(const Metadata& metadata, uint64_t random_value) const {
   if (!RouteEntryImplBase::headersMatch(metadata)) {
     ENVOY_LOG(error, "meta protocol route matcher: headers not match");
     return nullptr;
@@ -76,8 +75,9 @@ RouteConstSharedPtr RouteEntryImpl::matches(const Metadata& metadata,
   return clusterEntry(random_value);
 }
 
-RouteMatcherImpl::RouteMatcherImpl(const RouteConfig& config,
-                                   Server::Configuration::FactoryContext&) {
+RouteMatcherImpl::RouteMatcherImpl(
+    const RouteConfig& config,
+    Server::Configuration::ServerFactoryContext&) { // TODO remove ServerFactoryContext parameter
   using envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteMatch;
 
   for (const auto& route : config.routes()) {
@@ -86,8 +86,7 @@ RouteMatcherImpl::RouteMatcherImpl(const RouteConfig& config,
   ENVOY_LOG(debug, "meta protocol route matcher: routes list size {}", routes_.size());
 }
 
-RouteConstSharedPtr RouteMatcherImpl::route(const Metadata& metadata,
-                                            uint64_t random_value) const {
+RouteConstSharedPtr RouteMatcherImpl::route(const Metadata& metadata, uint64_t random_value) const {
   for (const auto& route : routes_) {
     RouteConstSharedPtr route_entry = route->matches(metadata, random_value);
     if (nullptr != route_entry) {
@@ -98,7 +97,7 @@ RouteConstSharedPtr RouteMatcherImpl::route(const Metadata& metadata,
   return nullptr;
 }
 
-} // namespace Router
+} // namespace Route
 } // namespace  MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

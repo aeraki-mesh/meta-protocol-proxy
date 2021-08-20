@@ -13,7 +13,7 @@
 #include "src/meta_protocol_proxy/decoder.h"
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
-#include "src/meta_protocol_proxy/filters/router/router.h"
+#include "src/meta_protocol_proxy/route/route.h"
 #include "src/meta_protocol_proxy/stats.h"
 
 #include "absl/types/optional.h"
@@ -38,20 +38,16 @@ public:
   UpstreamResponseStatus onData(Buffer::Instance& data);
 
   // StreamHandler
-  void onStreamDecoded(MetadataSharedPtr metadata,
-                       MutationSharedPtr mutation) override;
+  void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // ResponseDecoderCallbacks
   StreamHandler& newStream() override { return *this; }
-  void onHeartbeat(MetadataSharedPtr) override {
-    NOT_IMPLEMENTED_GCOVR_EXCL_LINE;
-  }
+  void onHeartbeat(MetadataSharedPtr) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
 
   uint64_t requestId() const { return metadata_ ? metadata_->getRequestId() : 0; }
 
 private:
-  FilterStatus applyMessageEncodedFilters(MetadataSharedPtr metadata,
-                                          MutationSharedPtr mutation);
+  FilterStatus applyMessageEncodedFilters(MetadataSharedPtr metadata, MutationSharedPtr mutation);
 
   ActiveMessage& parent_;
   MetaProtocolProxyStats& stats_;
@@ -76,7 +72,7 @@ public:
   uint64_t requestId() const override;
   uint64_t streamId() const override;
   const Network::Connection* connection() const override;
-  MetaProtocolProxy::Router::RouteConstSharedPtr route() override;
+  MetaProtocolProxy::Route::RouteConstSharedPtr route() override;
   // SerializationType serializationType() const override;
   // ProtocolType protocolType() const override;
   StreamInfo::StreamInfo& streamInfo() override;
@@ -95,13 +91,12 @@ class ActiveMessageDecoderFilter : public DecoderFilterCallbacks,
                                    public LinkedObject<ActiveMessageDecoderFilter>,
                                    Logger::Loggable<Logger::Id::filter> {
 public:
-  ActiveMessageDecoderFilter(ActiveMessage& parent,
-                             DecoderFilterSharedPtr filter, bool dual_filter);
+  ActiveMessageDecoderFilter(ActiveMessage& parent, DecoderFilterSharedPtr filter,
+                             bool dual_filter);
   ~ActiveMessageDecoderFilter() override = default;
 
   void continueDecoding() override;
-  void sendLocalReply(const DirectResponse& response,
-                      bool end_stream) override;
+  void sendLocalReply(const DirectResponse& response, bool end_stream) override;
   void startUpstreamResponse() override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
@@ -121,8 +116,8 @@ class ActiveMessageEncoderFilter : public ActiveMessageFilterBase,
                                    public LinkedObject<ActiveMessageEncoderFilter>,
                                    Logger::Loggable<Logger::Id::filter> {
 public:
-  ActiveMessageEncoderFilter(ActiveMessage& parent,
-                             EncoderFilterSharedPtr filter, bool dual_filter);
+  ActiveMessageEncoderFilter(ActiveMessage& parent, EncoderFilterSharedPtr filter,
+                             bool dual_filter);
   ~ActiveMessageEncoderFilter() override = default;
 
   void continueEncoding() override;
@@ -163,8 +158,7 @@ public:
   void addFilter(CodecFilterSharedPtr filter) override;
 
   // StreamHandler
-  void onStreamDecoded(MetadataSharedPtr metadata,
-                       MutationSharedPtr mutation) override;
+  void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // DecoderFilterCallbacks
   uint64_t requestId() const override;
@@ -174,9 +168,8 @@ public:
   // SerializationType serializationType() const override;
   // ProtocolType protocolType() const override;
   StreamInfo::StreamInfo& streamInfo() override;
-  Router::RouteConstSharedPtr route() override;
-  void sendLocalReply(const DirectResponse& response,
-                      bool end_stream) override;
+  Route::RouteConstSharedPtr route() override;
+  void sendLocalReply(const DirectResponse& response, bool end_stream) override;
   void startUpstreamResponse() override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
@@ -205,7 +198,7 @@ private:
   Stats::TimespanPtr request_timer_;
   ActiveResponseDecoderPtr response_decoder_;
 
-  absl::optional<Router::RouteConstSharedPtr> cached_route_;
+  absl::optional<Route::RouteConstSharedPtr> cached_route_;
 
   std::list<ActiveMessageDecoderFilterPtr> decoder_filters_;
   std::function<FilterStatus(DecoderFilter*)> filter_action_;

@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/router_impl.h"
+#include "src/meta_protocol_proxy/filters/router/router.h"
 
 #include "envoy/upstream/cluster_manager.h"
 #include "envoy/upstream/thread_local_cluster.h"
@@ -23,17 +23,15 @@ void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
   callbacks_ = &callbacks;
 }
 
-FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
-                                      MutationSharedPtr) {
+FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
   route_ = callbacks_->route();
   if (!route_) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'", *callbacks_,
                      metadata->getRequestId());
     callbacks_->sendLocalReply(
-        AppException(Error{
-            ErrorType::RouteNotFound,
-            fmt::format("meta protocol router: no cluster match for request '{}'",
-                        metadata->getRequestId())}),
+        AppException(Error{ErrorType::RouteNotFound,
+                           fmt::format("meta protocol router: no cluster match for request '{}'",
+                                       metadata->getRequestId())}),
         false);
     return FilterStatus::StopIteration;
   }
@@ -45,11 +43,11 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   if (!cluster) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: unknown cluster '{}'", *callbacks_,
                      route_entry_->clusterName());
-    callbacks_->sendLocalReply(AppException(Error{
-                                   ErrorType::ClusterNotFound,
-                                   fmt::format("meta protocol router: unknown cluster '{}'",
-                                               route_entry_->clusterName())}),
-                               false);
+    callbacks_->sendLocalReply(
+        AppException(Error{ErrorType::ClusterNotFound,
+                           fmt::format("meta protocol router: unknown cluster '{}'",
+                                       route_entry_->clusterName())}),
+        false);
     return FilterStatus::StopIteration;
   }
 
@@ -59,28 +57,28 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
 
   if (cluster_->maintenanceMode()) {
     callbacks_->sendLocalReply(
-        AppException(Error{
-            ErrorType::Unspecified,
-            fmt::format("meta protocol router: maintenance mode for cluster '{}'",
-                        route_entry_->clusterName())}),
+        AppException(Error{ErrorType::Unspecified,
+                           fmt::format("meta protocol router: maintenance mode for cluster '{}'",
+                                       route_entry_->clusterName())}),
         false);
     return FilterStatus::StopIteration;
   }
 
   auto conn_pool_data = cluster->tcpConnPool(Upstream::ResourcePriority::Default, this);
   if (!conn_pool_data) {
-    callbacks_->sendLocalReply(AppException(Error{
-                                   ErrorType::NoHealthyUpstream,
-                                   fmt::format("meta protocol router: no healthy upstream for '{}'",
-                                               route_entry_->clusterName())}),
-                               false);
+    callbacks_->sendLocalReply(
+        AppException(Error{ErrorType::NoHealthyUpstream,
+                           fmt::format("meta protocol router: no healthy upstream for '{}'",
+                                       route_entry_->clusterName())}),
+        false);
     return FilterStatus::StopIteration;
   }
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
 
   // TODO encode mutation into the outgoing request
-  upstream_request_buffer_.move(metadata->getOriginMessage(), metadata->getOriginMessage().length());
+  upstream_request_buffer_.move(metadata->getOriginMessage(),
+                                metadata->getOriginMessage().length());
   upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool_data, metadata);
   return upstream_request_->start();
 }
@@ -89,8 +87,7 @@ void Router::setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks) {
   encoder_callbacks_ = &callbacks;
 }
 
-FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata,
-                                      MutationSharedPtr) {
+FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr) {
   if (upstream_request_ == nullptr) {
     return FilterStatus::Continue;
   }
@@ -320,27 +317,26 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
   switch (reason) {
   case ConnectionPool::PoolFailureReason::Overflow:
     parent_.callbacks_->sendLocalReply(
-        AppException(Error{
-            ErrorType::Unspecified,
-            fmt::format("meta protocol upstream request: too many connections")}),
+        AppException(Error{ErrorType::Unspecified,
+                           fmt::format("meta protocol upstream request: too many connections")}),
         false);
     break;
   case ConnectionPool::PoolFailureReason::LocalConnectionFailure:
     // Should only happen if we closed the connection, due to an error condition, in which case
     // we've already handled any possible downstream response.
     parent_.callbacks_->sendLocalReply(
-        AppException(Error{
-            ErrorType::Unspecified,
-            fmt::format("meta protocol upstream request: local connection failure '{}'",
-                        upstream_host_->address()->asString())}),
+        AppException(
+            Error{ErrorType::Unspecified,
+                  fmt::format("meta protocol upstream request: local connection failure '{}'",
+                              upstream_host_->address()->asString())}),
         false);
     break;
   case ConnectionPool::PoolFailureReason::RemoteConnectionFailure:
     parent_.callbacks_->sendLocalReply(
-        AppException(Error{
-            ErrorType::Unspecified,
-            fmt::format("meta protocol upstream request: remote connection failure '{}'",
-                        upstream_host_->address()->asString())}),
+        AppException(
+            Error{ErrorType::Unspecified,
+                  fmt::format("meta protocol upstream request: remote connection failure '{}'",
+                              upstream_host_->address()->asString())}),
         false);
     break;
   case ConnectionPool::PoolFailureReason::Timeout:

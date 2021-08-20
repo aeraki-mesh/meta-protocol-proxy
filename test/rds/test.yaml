@@ -1,0 +1,62 @@
+node:
+  id: test-id
+  cluster: test
+admin:
+  access_log_path: ./envoy_debug.log
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 8080
+static_resources:
+  listeners:
+    name: listener_meta_protocol
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 20880
+    filter_chains:
+      - filters:
+          - name: aeraki.meta_protocol_proxy
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.network.meta_protocol_proxy.v1alpha.MetaProtocolProxy
+              statPrefix: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+              application_protocol: dubbo
+              codec:
+                name: aeraki.meta_protocol.codec.dubbo
+              metaProtocolFilters:
+                - name: aeraki.meta_protocol.filters.router
+              rds:
+                route_config_name: "test"
+                config_source:
+                  resource_api_version: V3
+                  api_config_source:
+                    api_type: GRPC
+                    transport_api_version: V3
+                    request_timeout: 10s
+                    grpc_services:
+                      envoy_grpc:
+                        cluster_name: aeraki_xds_server
+  clusters:
+  - name: aeraki_xds_server
+    type: STATIC
+    http2_protocol_options: {}
+    load_assignment:
+      cluster_name: aeraki_xds_server
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 18000
+  - name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+    type: STATIC
+    load_assignment:
+      cluster_name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 20881

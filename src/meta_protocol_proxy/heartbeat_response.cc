@@ -7,9 +7,8 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
-DirectResponse::ResponseType
-HeartbeatResponse::encode(Metadata& metadata, Codec& codec,
-                          Buffer::Instance& buffer) const {
+DirectResponse::ResponseType HeartbeatResponse::encode(Metadata& metadata, Codec& codec,
+                                                       Buffer::Instance& buffer) const {
   metadata.setMessageType(MessageType::Heartbeat);
   codec.encode(metadata, MutationImpl{}, buffer);
   ENVOY_LOG(debug, "buffer length {}", buffer.length());
