@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package envoy.extensions.filters.network.meta_protocol_proxy.v1alpha;
+package envoy.extensions.filters.network.meta_protocol_proxy.config.route.v1alpha;
 
 import "envoy/config/route/v3/route_components.proto";
 

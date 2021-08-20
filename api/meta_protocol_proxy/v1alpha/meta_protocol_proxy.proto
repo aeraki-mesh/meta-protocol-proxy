@@ -4,7 +4,7 @@ package envoy.extensions.filters.network.meta_protocol_proxy.v1alpha;
 
 import "envoy/config/core/v3/config_source.proto";
 
-import "api/v1alpha/route.proto";
+import "api/config/route/v1alpha/route.proto";
 
 import "google/protobuf/any.proto";
 
