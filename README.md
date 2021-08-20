@@ -74,3 +74,19 @@ Hello Aeraki, response from ae6582f53868/172.17.0.2
 
 This output means that the thrift test client has successfully reached the thrift test server through envoy MetaProtocol proxy. 
 To understand how it works, you can look into [test/thrift/test.yaml](test/thrift/test.yaml) and play with the MetaProtocol configuration. 
+
+### RDS
+
+MetaProtocol framework implements RDS discovery protocol, which means the route configuration can be fetched from a RDS server on the fly. MetaProtocol Proxy will apply the updated routes to all the subsequent requests, and
+the existing connections won't be interrupted in this process.
+
+Run ```./test/rds/test.sh ```, this script will run the envoy, an example rds server, dubbo test client and thrift test server。You'll expect to see the below output:
+
+```bash
+Hello Aeraki, response from 400c8a27e761/172.17.0.2
+Hello Aeraki, response from 400c8a27e761/172.17.0.2
+Hello Aeraki, response from 400c8a27e761/172.17.0.2
+```
+
+This output means that the dubbo test client has successfully reached the dubbo test server through envoy MetaProtocol proxy, with the route configuration fetched from the RDS server.
+To understand how it works, you can look into [test/rds/test.yaml](test/rds/test.yaml) and play with the MetaProtocol configuration. 

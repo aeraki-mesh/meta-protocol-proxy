@@ -67,3 +67,17 @@ Hello Aeraki, response from ae6582f53868/172.17.0.2
 ```
 
 该输出表示 thrift 客户端通过 envoy 成功调用到 thrift 服务器端。你可以查看 [test/thrift/test.yaml](test/thrift/test.yaml) 文件，以了解 MetaProtocol 的具体配置。
+
+### RDS
+
+MetaProtocol 框架代码实现了 RDS 协议。MetaProtocol Proxy 会和配置的 RDS 服务器进行实时通信，获取路由配置。当路由配置更新后，MetaProtocol Proxy 会将更新的路由配置应用到后续的请求中，路由更新不会导致已有连接发生中断。
+
+参照 Dubbo 测试步骤设置 dns 域名，然后运行 ```./test/rds/test.sh ```，该命令会启动 envoy，RDS 服务器 和 dubbo 测试程序。如果执行顺利，你可以看到类似下面的输出：
+
+```bash
+Hello Aeraki, response from 400c8a27e761/172.17.0.2
+Hello Aeraki, response from 400c8a27e761/172.17.0.2
+Hello Aeraki, response from 400c8a27e761/172.17.0.2
+```
+
+该输出表示 dubbo 客户端通过 envoy 成功调用到 dubbo 服务器端，并且 envoy 的路由配置来自于 RDS 服务器。你可以查看 [test/rds/test.yaml](test/rds/test.yaml) 文件，以了解 MetaProtocol RDS 的相关配置。
