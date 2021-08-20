@@ -124,6 +124,10 @@ private:
                       const std::string& system_version_info) override;
   void onConfigUpdateFailed(Envoy::Config::ConfigUpdateFailureReason reason,
                             const EnvoyException* e) override;
+  void httpRouteConfig2MetaProtocolRouteConfig(
+      const envoy::config::route::v3::RouteConfiguration& http_route_config,
+      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+          meta_protocol_route_config);
 
   RdsRouteConfigSubscription(
       const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,

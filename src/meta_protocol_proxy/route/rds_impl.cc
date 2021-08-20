@@ -17,8 +17,6 @@
 #include "source/common/http/header_map_impl.h"
 #include "source/common/protobuf/utility.h"
 
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
-
 #include "src/meta_protocol_proxy/route/config_impl.h"
 
 namespace Envoy {
@@ -95,19 +93,29 @@ void RdsRouteConfigSubscription::onConfigUpdate(
   if (!validateUpdateSize(resources.size())) {
     return;
   }
-  const auto& route_config = dynamic_cast<
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&>(
+  const auto& http_route_config = dynamic_cast<const envoy::config::route::v3::RouteConfiguration&>(
       resources[0].get().resource());
-  if (route_config.name() != route_config_name_) {
+
+  auto meta_protocol_route_config =
+      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration();
+  httpRouteConfig2MetaProtocolRouteConfig(http_route_config, meta_protocol_route_config);
+  /*route_config.set_name(http_route_config.name());
+  auto* route = route_config.add_routes();
+  auto action =
+      new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteAction();
+  action->set_cluster("outbound|20880||org.apache.dubbo.samples.basic.api.demoservice");
+  route->set_allocated_route(action);*/
+
+  if (meta_protocol_route_config.name() != route_config_name_) {
     throw EnvoyException(fmt::format("Unexpected RDS configuration (expecting {}): {}",
-                                     route_config_name_, route_config.name()));
+                                     route_config_name_, meta_protocol_route_config.name()));
   }
   if (route_config_provider_opt_.has_value()) {
-    route_config_provider_opt_.value()->validateConfig(route_config);
+    route_config_provider_opt_.value()->validateConfig(meta_protocol_route_config);
   }
   std::unique_ptr<Init::ManagerImpl> noop_init_manager;
   std::unique_ptr<Cleanup> resume_rds;
-  if (config_update_info_->onRdsUpdate(route_config, version_info)) {
+  if (config_update_info_->onRdsUpdate(meta_protocol_route_config, version_info)) {
     stats_.config_reload_.inc();
     stats_.config_reload_time_ms_.set(DateUtil::nowToMilliseconds(factory_context_.timeSource()));
     ENVOY_LOG(debug, "rds: loading new configuration: config_name={} hash={}", route_config_name_,
@@ -116,11 +124,64 @@ void RdsRouteConfigSubscription::onConfigUpdate(
     if (route_config_provider_opt_.has_value()) {
       route_config_provider_opt_.value()->onConfigUpdate();
     }
-
-    // update_callback_manager_.runCallbacks();
   }
 
   local_init_target_.ready();
+}
+
+// We use the Envoy RDS(HTTP RouteConfiguration) to transmit MetaProtocol RouteConfiguration between
+// the RDS server and Envoy. The HTTP RouteConfiguration needs to be convert to MetaProtocol
+// RouteConfiguration after received.
+void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
+    const envoy::config::route::v3::RouteConfiguration& http_route_config,
+    envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+        meta_protocol_route_config) {
+  ASSERT(http_route_config.virtual_hosts_size() == 1);
+  auto routeSize = http_route_config.virtual_hosts(0).routes_size();
+  ASSERT(routeSize > 0);
+
+  meta_protocol_route_config.set_name(http_route_config.name());
+
+  for (int i = 0; i < routeSize; i++) {
+    auto* metaRoute = meta_protocol_route_config.add_routes();
+    auto httpRoute = http_route_config.virtual_hosts(0).routes(i);
+    metaRoute->set_name(httpRoute.name());
+    if (httpRoute.has_match()) {
+      auto httpMatch = httpRoute.match();
+      auto headerSize = httpMatch.headers_size();
+      ASSERT(headerSize > 1);
+      auto* metaMatch =
+          new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteMatch();
+
+      for (int i = 0; i < headerSize; i++) {
+        metaMatch->mutable_headers()->AddAllocated(
+            new envoy::config::route::v3::HeaderMatcher(httpMatch.headers(i)));
+        /*auto httpHeader = httpMatch.headers(i);
+        auto* header = metaMatch->add_headers();
+        header->set_name(httpHeader.name());
+        switch (httpHeader.header_match_specifier_case()) {
+        case envoy::config::route::v3::HeaderMatcher::HeaderMatchSpecifierCase::kContainsMatch:
+          header->set_allocated_contains_match(new std::string(header->contains_match()));
+
+        }*/
+      }
+      metaRoute->set_allocated_match(metaMatch);
+    }
+
+    ASSERT(httpRoute.has_route());
+
+    auto* action =
+        new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteAction();
+    if (httpRoute.route().cluster_specifier_case() ==
+        envoy::config::route::v3::RouteAction::ClusterSpecifierCase::kCluster) {
+      action->set_allocated_cluster(new std::string(httpRoute.route().cluster()));
+    } else if (httpRoute.route().cluster_specifier_case() ==
+               envoy::config::route::v3::RouteAction::ClusterSpecifierCase::kWeightedClusters) {
+      action->set_allocated_weighted_clusters(
+          new envoy::config::route::v3::WeightedCluster(httpRoute.route().weighted_clusters()));
+    }
+    metaRoute->set_allocated_route(action);
+  }
 }
 
 void RdsRouteConfigSubscription::onConfigUpdate(
