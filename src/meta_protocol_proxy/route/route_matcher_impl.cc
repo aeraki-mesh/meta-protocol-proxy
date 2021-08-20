@@ -15,7 +15,7 @@ RouteEntryImplBase::RouteEntryImplBase(const aeraki::meta_protocol_proxy::v1alph
     : cluster_name_(route.route().cluster()),
       config_headers_(Http::HeaderUtility::buildHeaderDataVector(route.match().metadata())) {
   if (route.route().cluster_specifier_case() ==
-      aeraki::meta_protocol_proxy::v1alpha::RouteAction::ClusterSpecifierCase::kWeightedClusters) {
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction::ClusterSpecifierCase::kWeightedClusters) {
     total_cluster_weight_ = 0UL;
     for (const auto& cluster : route.route().weighted_clusters().clusters()) {
       weighted_clusters_.emplace_back(std::make_shared<WeightedClusterEntry>(*this, cluster));

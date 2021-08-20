@@ -101,7 +101,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
   /*route_config.set_name(http_route_config.name());
   auto* route = route_config.add_routes();
   auto action =
-      new aeraki::meta_protocol_proxy::v1alpha::RouteAction();
+      new aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction();
   action->set_cluster("outbound|20880||org.apache.dubbo.samples.basic.api.demoservice");
   route->set_allocated_route(action);*/
 
@@ -160,7 +160,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
 
     ASSERT(httpRoute.has_route());
 
-    auto* action = new aeraki::meta_protocol_proxy::v1alpha::RouteAction();
+    auto* action = new aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction();
     if (httpRoute.route().cluster_specifier_case() ==
         envoy::config::route::v3::RouteAction::ClusterSpecifierCase::kCluster) {
       action->set_allocated_cluster(new std::string(httpRoute.route().cluster()));
