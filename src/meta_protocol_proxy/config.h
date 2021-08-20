@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.validate.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.validate.h"
 
 #include "source/extensions/filters/network/common/factory_base.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
@@ -24,15 +24,13 @@ constexpr char CanonicalName[] = "aeraki.meta_protocol_proxy";
  * Config registration for the meta protocol proxy filter. @see NamedNetworkFilterConfigFactory.
  */
 class MetaProtocolProxyFilterConfigFactory
-    : public Common::FactoryBase<
-          envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
+    : public Common::FactoryBase<aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
 public:
   MetaProtocolProxyFilterConfigFactory() : FactoryBase(CanonicalName, true) {}
 
 private:
   Network::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy&
-          proto_config,
+      const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy& proto_config,
       Server::Configuration::FactoryContext& context) override;
 };
 
@@ -59,11 +57,9 @@ class ConfigImpl : public Config,
                    public FilterChainFactory,
                    Logger::Loggable<Logger::Id::config> {
 public:
-  using MetaProtocolProxyConfig =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
-  using MetaProtocolFilterConfig =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
-  using CodecConfig = envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Codec;
+  using MetaProtocolProxyConfig = aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
+  using MetaProtocolFilterConfig = aeraki::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
+  using CodecConfig = aeraki::meta_protocol_proxy::v1alpha::Codec;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
              Route::RouteConfigProviderManager& route_config_provider_manager);

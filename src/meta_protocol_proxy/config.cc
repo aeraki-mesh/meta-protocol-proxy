@@ -30,8 +30,7 @@ Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryCont
 }
 
 Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy&
-        proto_config,
+    const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy& proto_config,
     Server::Configuration::FactoryContext& context) {
   Utility::Singletons singletons = Utility::createSingletons(context);
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
@@ -60,13 +59,11 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
       route_config_provider_manager_(route_config_provider_manager) {
   switch (config.route_specifier_case()) {
-  case envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy::
-      RouteSpecifierCase::kRds:
+  case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRds:
     route_config_provider_ = route_config_provider_manager_.createRdsRouteConfigProvider(
         config.rds(), context_.getServerFactoryContext(), stats_prefix_, context_.initManager());
     break;
-  case envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy::
-      RouteSpecifierCase::kRouteConfig:
+  case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRouteConfig:
     route_config_provider_ = route_config_provider_manager_.createStaticRouteConfigProvider(
         config.route_config(), context_.getServerFactoryContext(),
         context_.messageValidationVisitor());
@@ -79,8 +76,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
   if (config.meta_protocol_filters().empty()) {
     ENVOY_LOG(debug, "using default router filter");
 
-    envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolFilter
-        router_config;
+    aeraki::meta_protocol_proxy::v1alpha::MetaProtocolFilter router_config;
     router_config.set_name("aeraki.meta_protocol.filters.router");
     registerFilter(router_config);
   } else {

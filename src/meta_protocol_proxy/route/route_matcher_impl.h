@@ -8,7 +8,7 @@
 #include "envoy/config/route/v3/route_components.pb.h"
 #include "envoy/server/factory_context.h"
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
 #include "source/common/common/logger.h"
 #include "source/common/common/matchers.h"
@@ -31,8 +31,7 @@ class RouteEntryImplBase : public RouteEntry,
                            public std::enable_shared_from_this<RouteEntryImplBase>,
                            public Logger::Loggable<Logger::Id::filter> {
 public:
-  RouteEntryImplBase(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Route& route);
+  RouteEntryImplBase(const aeraki::meta_protocol_proxy::config::route::v1alpha::Route& route);
   ~RouteEntryImplBase() override = default;
 
   // Router::RouteEntry
@@ -90,8 +89,7 @@ using RouteEntryImplBaseConstSharedPtr = std::shared_ptr<const RouteEntryImplBas
 
 class RouteEntryImpl : public RouteEntryImplBase {
 public:
-  RouteEntryImpl(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Route& route);
+  RouteEntryImpl(const aeraki::meta_protocol_proxy::config::route::v1alpha::Route& route);
   ~RouteEntryImpl() override;
 
   // RoutEntryImplBase
@@ -100,8 +98,7 @@ public:
 
 class RouteMatcherImpl : public RouteMatcher, public Logger::Loggable<Logger::Id::filter> {
 public:
-  using RouteConfig =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration;
+  using RouteConfig = aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration;
 
   RouteMatcherImpl(const RouteConfig& config, Server::Configuration::ServerFactoryContext& context);
 

@@ -5,7 +5,7 @@
 
 #include "envoy/server/factory_context.h"
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
 #include "src/meta_protocol_proxy/route/route.h"
 #include "src/meta_protocol_proxy/route/route_matcher.h"
@@ -21,10 +21,8 @@ namespace Route {
  */
 class ConfigImpl : public Config {
 public:
-  ConfigImpl(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-          config,
-      Server::Configuration::ServerFactoryContext& context);
+  ConfigImpl(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
+             Server::Configuration::ServerFactoryContext& context);
 
   RouteConstSharedPtr route(const Metadata& metadata, uint64_t random_value) const override;
 

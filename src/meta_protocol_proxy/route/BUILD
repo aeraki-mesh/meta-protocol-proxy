@@ -28,7 +28,7 @@ envoy_cc_library(
     hdrs = ["rds.h"],
     deps = [
         ":route_interface",
-        "//api/router/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
     ],
 )
 
@@ -37,8 +37,8 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["route_config_provider_manager.h"],
     deps = [
-        "//api/v1alpha:pkg_cc_proto",
-        "//api/router/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
         "@envoy//envoy/server:factory_context_interface",
     ],
 )
@@ -50,7 +50,7 @@ envoy_cc_library(
     external_deps = ["abseil_optional"],
     deps = [
         ":rds_interface",
-        "//api/router/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
         "@envoy//envoy/common:time_interface",
         "@envoy//source/common/protobuf",
         "@envoy_api//envoy/service/discovery/v3:pkg_cc_proto",
@@ -67,8 +67,8 @@ envoy_cc_library(
         ":route_matcher_interface",
         ":route_matcher",
 	":route_interface",
-	"//api/v1alpha:pkg_cc_proto",
-        "//api/router/v1alpha:pkg_cc_proto",
+	"//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
     ],
 )
 
@@ -132,7 +132,7 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["route_matcher.h"],
     deps = [
-        "//api/router/v1alpha:pkg_cc_proto",
+        "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
     ],
 )
 
@@ -153,7 +153,7 @@ envoy_cc_library(
         "@envoy_api//envoy/type/v3:pkg_cc_proto",
         "//src/meta_protocol_proxy/codec:codec_interface",
 	"//src/meta_protocol_proxy:codec_impl_lib",
-	"//api/v1alpha:pkg_cc_proto",
+	"//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
     ],
 )
 

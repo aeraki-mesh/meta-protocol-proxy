@@ -1,17 +1,17 @@
 syntax = "proto3";
 
-package envoy.extensions.filters.network.meta_protocol_proxy.v1alpha;
+package aeraki.meta_protocol_proxy.v1alpha;
 
 import "envoy/config/core/v3/config_source.proto";
 
-import "api/v1alpha/route.proto";
+import "api/meta_protocol_proxy/config/route/v1alpha/route.proto";
 
 import "google/protobuf/any.proto";
 
 import "udpa/annotations/status.proto";
 import "validate/validate.proto";
 
-option java_package = "io.envoyproxy.envoy.extensions.filters.network.meta_protocol_proxy.v1alpha";
+option java_package = "io.aeraki.meta_protocol_proxy.v1alpha";
 option java_outer_classname = "MetaProtocolProxyProto";
 option java_multiple_files = true;
 option (udpa.annotations.file_status).package_version_status = ACTIVE;
@@ -36,7 +36,7 @@ message MetaProtocolProxy {
     Rds rds = 3;
 
     // The route table for the meta protocol proxy is static and is specified in this property.
-    RouteConfiguration route_config = 4;
+    config.route.v1alpha.RouteConfiguration route_config = 4;
   }
 
   // The codec which encodes and decodes the application protocol.
@@ -51,7 +51,7 @@ message MetaProtocolProxy {
 
 message Rds {
   // Configuration source specifier for RDS.
-  config.core.v3.ConfigSource config_source = 1 [(validate.rules).message = {required: true}];
+  envoy.config.core.v3.ConfigSource config_source = 1 [(validate.rules).message = {required: true}];
 
   // The name of the route configuration. This name will be passed to the RDS
   // API. This allows an Envoy configuration with multiple HTTP listeners (and

@@ -4,7 +4,7 @@
 
 #include "envoy/common/pure.h"
 #include "envoy/common/time.h"
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
@@ -31,10 +31,9 @@ public:
    * @param version_info supplies RouteConfiguration version.
    * @return bool whether RouteConfiguration has been updated.
    */
-  virtual bool onRdsUpdate(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-          rc,
-      const std::string& version_info) PURE;
+  virtual bool
+  onRdsUpdate(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& rc,
+              const std::string& version_info) PURE;
 
   using VirtualHostRefVector =
       std::vector<std::reference_wrapper<const envoy::config::route::v3::VirtualHost>>;
@@ -62,12 +61,11 @@ public:
   virtual absl::optional<RouteConfigProvider::ConfigInfo> configInfo() const PURE;
 
   /**
-   * @return envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+   * @return aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
    * current RouteConfiguration.
    */
-  virtual const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::
-      RouteConfiguration&
-      protobufConfiguration() PURE;
+  virtual const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
+  protobufConfiguration() PURE;
 
   /**
    * @return Router::ConfigConstSharedPtr a parsed and validated copy of current RouteConfiguration.

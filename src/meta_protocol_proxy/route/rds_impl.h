@@ -33,9 +33,9 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
 
-#include "api/v1alpha/route.pb.h"
-#include "api/v1alpha/route.pb.validate.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.validate.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
@@ -56,8 +56,7 @@ class RouteConfigProviderManagerImpl;
 class StaticRouteConfigProviderImpl : public RouteConfigProvider {
 public:
   StaticRouteConfigProviderImpl(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-          config,
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator,
       RouteConfigProviderManagerImpl& route_config_provider_manager);
@@ -70,14 +69,13 @@ public:
   }
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
-  void validateConfig(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&)
+  void
+  validateConfig(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&)
       const override {}
 
 private:
   ConfigConstSharedPtr config_;
-  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration
-      route_config_proto_;
+  aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration route_config_proto_;
   SystemTime last_updated_;
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
 };
@@ -105,7 +103,7 @@ class RdsRouteConfigProviderImpl;
  */
 class RdsRouteConfigSubscription
     // The real configuration type is
-    // Envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration HTTP
+    // aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
     // RouteConfiguration is used here because we want to reuse the http rds grpc service
     : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>,
       Logger::Loggable<Logger::Id::router> {
@@ -126,14 +124,14 @@ private:
                             const EnvoyException* e) override;
   void httpRouteConfig2MetaProtocolRouteConfig(
       const envoy::config::route::v3::RouteConfiguration& http_route_config,
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           meta_protocol_route_config);
 
-  RdsRouteConfigSubscription(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
-      const uint64_t manager_identifier,
-      Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
-      RouteConfigProviderManagerImpl& route_config_provider_manager);
+  RdsRouteConfigSubscription(const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
+                             const uint64_t manager_identifier,
+                             Server::Configuration::ServerFactoryContext& factory_context,
+                             const std::string& stat_prefix,
+                             RouteConfigProviderManagerImpl& route_config_provider_manager);
 
   bool validateUpdateSize(int num_resources);
 
@@ -187,9 +185,8 @@ public:
   }
   SystemTime lastUpdated() const override { return config_update_info_->lastUpdated(); }
   void onConfigUpdate() override;
-  void validateConfig(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-          config) const override;
+  void validateConfig(const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
+                          config) const override;
 
 private:
   struct ThreadLocalConfig : public ThreadLocal::ThreadLocalObject {
@@ -223,14 +220,14 @@ public:
   dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const;
 
   // RouteConfigProviderManager
-  RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
-      Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
-      Init::Manager& init_manager) override;
+  RouteConfigProviderSharedPtr
+  createRdsRouteConfigProvider(const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
+                               Server::Configuration::ServerFactoryContext& factory_context,
+                               const std::string& stat_prefix,
+                               Init::Manager& init_manager) override;
 
   RouteConfigProviderPtr createStaticRouteConfigProvider(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-          route_config,
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& route_config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator) override;
 

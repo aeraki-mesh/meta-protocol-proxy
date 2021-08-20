@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 #include "src/meta_protocol_proxy/route/route.h"
 
 namespace Envoy {
@@ -19,8 +19,7 @@ public:
   struct ConfigInfo {
     // A reference to the currently loaded route configuration. Do not hold this reference beyond
     // the caller of configInfo()'s scope.
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-        config_;
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config_;
 
     // The discovery version that supplied this route. This will be set to "" in the case of
     // static routes.
@@ -57,8 +56,8 @@ public:
    * Validate if the route configuration can be applied to the context of the route config provider.
    */
   virtual void validateConfig(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
-          config) const PURE;
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config)
+      const PURE;
 };
 
 using RouteConfigProviderPtr = std::unique_ptr<RouteConfigProvider>;
