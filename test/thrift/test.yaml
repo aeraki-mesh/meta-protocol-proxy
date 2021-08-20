@@ -15,7 +15,7 @@ static_resources:
     - filters:
       - name: aeraki.meta_protocol_proxy
         typed_config:
-          '@type': type.googleapis.com/envoy.extensions.filters.network.meta_protocol_proxy.v1alpha.MetaProtocolProxy
+          '@type': type.googleapis.com/aeraki.meta_protocol_proxy.v1alpha.MetaProtocolProxy
           application_protocol: thrift
           codec:
             name: aeraki.meta_protocol.codec.thrift
