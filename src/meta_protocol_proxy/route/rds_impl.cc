@@ -156,14 +156,6 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
       for (int i = 0; i < headerSize; i++) {
         metaMatch->mutable_metadata()->AddAllocated(
             new envoy::config::route::v3::HeaderMatcher(httpMatch.headers(i)));
-        /*auto httpHeader = httpMatch.headers(i);
-        auto* header = metaMatch->add_headers();
-        header->set_name(httpHeader.name());
-        switch (httpHeader.header_match_specifier_case()) {
-        case envoy::config::route::v3::HeaderMatcher::HeaderMatchSpecifierCase::kContainsMatch:
-          header->set_allocated_contains_match(new std::string(header->contains_match()));
-
-        }*/
       }
       metaRoute->set_allocated_match(metaMatch);
     }
