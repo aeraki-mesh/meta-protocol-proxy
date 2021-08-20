@@ -154,7 +154,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
           new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteMatch();
 
       for (int i = 0; i < headerSize; i++) {
-        metaMatch->mutable_headers()->AddAllocated(
+        metaMatch->mutable_metadata()->AddAllocated(
             new envoy::config::route::v3::HeaderMatcher(httpMatch.headers(i)));
         /*auto httpHeader = httpMatch.headers(i);
         auto* header = metaMatch->add_headers();
