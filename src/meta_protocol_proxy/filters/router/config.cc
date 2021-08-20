@@ -11,8 +11,8 @@ namespace MetaProtocolProxy {
 namespace Router {
 
 FilterFactoryCb RouterFilterConfig::createFilterFactoryFromProtoTyped(
-    const aeraki::meta_protocol_proxy::filters::router::v1alpha::Router&,
-    const std::string&, Server::Configuration::FactoryContext& context) {
+    const aeraki::meta_protocol_proxy::filters::router::v1alpha::Router&, const std::string&,
+    Server::Configuration::FactoryContext& context) {
   return [&context](FilterChainFactoryCallbacks& callbacks) -> void {
     callbacks.addFilter(std::make_shared<Router>(context.clusterManager()));
   };
