@@ -1,5 +1,5 @@
 node:
-  id: test
+  id: test-id
   cluster: test
 admin:
   access_log_path: ./envoy_debug.log
@@ -26,18 +26,20 @@ static_resources:
               metaProtocolFilters:
                 - name: aeraki.meta_protocol.filters.router
               rds:
-                route_config_name: "aeraki_meta_protocol_dubbo_rds_test"
+                route_config_name: "test"
                 config_source:
                   resource_api_version: V3
                   api_config_source:
                     api_type: GRPC
                     transport_api_version: V3
+                    request_timeout: 10s
                     grpc_services:
                       envoy_grpc:
                         cluster_name: aeraki_xds_server
   clusters:
-    name: aeraki_xds_server
+  - name: aeraki_xds_server
     type: STATIC
+    http2_protocol_options: {}
     load_assignment:
       cluster_name: aeraki_xds_server
       endpoints:
@@ -46,4 +48,15 @@ static_resources:
                 address:
                   socket_address:
                     address: 127.0.0.1
-                    port_value: 15010
+                    port_value: 18000
+  - name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+    type: STATIC
+    load_assignment:
+      cluster_name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 20881
