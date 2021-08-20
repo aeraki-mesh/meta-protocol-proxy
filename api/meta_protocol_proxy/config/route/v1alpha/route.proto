@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package envoy.extensions.filters.network.meta_protocol_proxy.config.route.v1alpha;
+package aeraki.meta_protocol_proxy.config.route.v1alpha;
 
 import "envoy/config/route/v3/route_components.proto";
 
 import "udpa/annotations/status.proto";
 import "validate/validate.proto";
 
-option java_package = "io.envoyproxy.envoy.extensions.filters.network.meta_protocol_proxy.v1alpha";
+option java_package = "io.aeraki.meta_protocol_proxy.config.route.v1alpha";
 option java_outer_classname = "MetaRouteConfigurationProto";
 option java_multiple_files = true;
 option (udpa.annotations.file_status).package_version_status = ACTIVE;
