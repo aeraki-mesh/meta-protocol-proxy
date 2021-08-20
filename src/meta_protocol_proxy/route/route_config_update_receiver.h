@@ -65,7 +65,7 @@ public:
    * @return aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
    * current RouteConfiguration.
    */
-  virtual const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::
+  virtual const aeraki::meta_protocol_proxy::v1alpha::
       RouteConfiguration&
       protobufConfiguration() PURE;
 

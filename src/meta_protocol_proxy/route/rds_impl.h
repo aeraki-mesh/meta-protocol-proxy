@@ -130,7 +130,7 @@ private:
           meta_protocol_route_config);
 
   RdsRouteConfigSubscription(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
+      const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
       const uint64_t manager_identifier,
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       RouteConfigProviderManagerImpl& route_config_provider_manager);
@@ -224,7 +224,7 @@ public:
 
   // RouteConfigProviderManager
   RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
+      const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       Init::Manager& init_manager) override;
 

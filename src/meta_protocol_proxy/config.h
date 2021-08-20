@@ -25,13 +25,13 @@ constexpr char CanonicalName[] = "aeraki.meta_protocol_proxy";
  */
 class MetaProtocolProxyFilterConfigFactory
     : public Common::FactoryBase<
-          envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
+          aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
 public:
   MetaProtocolProxyFilterConfigFactory() : FactoryBase(CanonicalName, true) {}
 
 private:
   Network::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy&
+      const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy&
           proto_config,
       Server::Configuration::FactoryContext& context) override;
 };
@@ -60,10 +60,10 @@ class ConfigImpl : public Config,
                    Logger::Loggable<Logger::Id::config> {
 public:
   using MetaProtocolProxyConfig =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
+      aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
   using MetaProtocolFilterConfig =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
-  using CodecConfig = envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Codec;
+      aeraki::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
+  using CodecConfig = aeraki::meta_protocol_proxy::v1alpha::Codec;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
              Route::RouteConfigProviderManager& route_config_provider_manager);

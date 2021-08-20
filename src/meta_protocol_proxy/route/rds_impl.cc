@@ -26,8 +26,7 @@ namespace MetaProtocolProxy {
 namespace Route {
 
 StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
-    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-        config,
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor&, // TODO Remove validator parameter
     RouteConfigProviderManagerImpl& route_config_provider_manager)
@@ -43,9 +42,9 @@ StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
 
 // TODO(htuch): If support for multiple clusters is added per #1170 cluster_name_
 RdsRouteConfigSubscription::RdsRouteConfigSubscription(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
-    const uint64_t manager_identifier, Server::Configuration::ServerFactoryContext& factory_context,
-    const std::string& stat_prefix, RouteConfigProviderManagerImpl& route_config_provider_manager)
+    const aeraki::meta_protocol_proxy::v1alpha::Rds& rds, const uint64_t manager_identifier,
+    Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
+    RouteConfigProviderManagerImpl& route_config_provider_manager)
     // The real configuration type is
     // aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
     // RouteConfiguration is used here because we want to reuse the http rds grpc service
@@ -102,7 +101,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
   /*route_config.set_name(http_route_config.name());
   auto* route = route_config.add_routes();
   auto action =
-      new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteAction();
+      new aeraki::meta_protocol_proxy::v1alpha::RouteAction();
   action->set_cluster("outbound|20880||org.apache.dubbo.samples.basic.api.demoservice");
   route->set_allocated_route(action);*/
 
@@ -150,8 +149,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
       auto httpMatch = httpRoute.match();
       auto headerSize = httpMatch.headers_size();
       ASSERT(headerSize > 1);
-      auto* metaMatch =
-          new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteMatch();
+      auto* metaMatch = new aeraki::meta_protocol_proxy::v1alpha::RouteMatch();
 
       for (int i = 0; i < headerSize; i++) {
         metaMatch->mutable_metadata()->AddAllocated(
@@ -162,8 +160,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
 
     ASSERT(httpRoute.has_route());
 
-    auto* action =
-        new envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteAction();
+    auto* action = new aeraki::meta_protocol_proxy::v1alpha::RouteAction();
     if (httpRoute.route().cluster_specifier_case() ==
         envoy::config::route::v3::RouteAction::ClusterSpecifierCase::kCluster) {
       action->set_allocated_cluster(new std::string(httpRoute.route().cluster()));
@@ -248,8 +245,7 @@ void RdsRouteConfigProviderImpl::onConfigUpdate() {
 }
 
 void RdsRouteConfigProviderImpl::validateConfig(
-    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-        config) const {
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config) const {
   // TODO(lizan): consider cache the config here until onConfigUpdate.
   ConfigImpl validation_config(config, factory_context_);
 }
@@ -265,7 +261,7 @@ RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& ad
 }
 
 RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
+    const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
     Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
     Init::Manager& init_manager) {
   // RdsRouteConfigSubscriptions are unique based on their serialized RDS config.
@@ -298,8 +294,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
 }
 
 RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigProvider(
-    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-        route_config,
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& route_config,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor& validator) {
   auto provider = std::make_unique<StaticRouteConfigProviderImpl>(

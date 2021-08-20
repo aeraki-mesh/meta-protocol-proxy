@@ -34,7 +34,7 @@ public:
    * subscription.
    */
   virtual RouteConfigProviderSharedPtr createRdsRouteConfigProvider(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Rds& rds,
+      const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
       Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
       Init::Manager& init_manager) PURE;
 

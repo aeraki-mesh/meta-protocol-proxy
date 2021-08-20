@@ -26,7 +26,7 @@ public:
   RouteConfigUpdateReceiverImpl(Server::Configuration::ServerFactoryContext& factory_context)
       : factory_context_(factory_context), time_source_(factory_context.timeSource()),
         route_config_proto_(
-            std::make_unique<envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::
+            std::make_unique<aeraki::meta_protocol_proxy::v1alpha::
                                  RouteConfiguration>()),
         last_config_hash_(0ull) {}
 
@@ -44,7 +44,7 @@ public:
   }
   const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
   protobufConfiguration() override {
-    return static_cast<const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::
+    return static_cast<const aeraki::meta_protocol_proxy::v1alpha::
                            RouteConfiguration&>(*route_config_proto_);
   }
   ConfigConstSharedPtr parsedConfiguration() const override { return config_; }

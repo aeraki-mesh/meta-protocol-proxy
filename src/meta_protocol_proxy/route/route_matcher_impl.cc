@@ -12,11 +12,11 @@ namespace MetaProtocolProxy {
 namespace Route {
 
 RouteEntryImplBase::RouteEntryImplBase(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Route& route)
+    const aeraki::meta_protocol_proxy::v1alpha::Route& route)
     : cluster_name_(route.route().cluster()),
       config_headers_(Http::HeaderUtility::buildHeaderDataVector(route.match().metadata())) {
   if (route.route().cluster_specifier_case() ==
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteAction::
+      aeraki::meta_protocol_proxy::v1alpha::RouteAction::
           ClusterSpecifierCase::kWeightedClusters) {
     total_cluster_weight_ = 0UL;
     for (const auto& cluster : route.route().weighted_clusters().clusters()) {
@@ -61,7 +61,7 @@ RouteEntryImplBase::WeightedClusterEntry::WeightedClusterEntry(const RouteEntryI
       cluster_weight_(PROTOBUF_GET_WRAPPED_REQUIRED(cluster, weight)) {}
 
 RouteEntryImpl::RouteEntryImpl(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::Route& route)
+    const aeraki::meta_protocol_proxy::v1alpha::Route& route)
     : RouteEntryImplBase(route) {}
 
 RouteEntryImpl::~RouteEntryImpl() = default;
@@ -78,7 +78,7 @@ RouteConstSharedPtr RouteEntryImpl::matches(const Metadata& metadata, uint64_t r
 RouteMatcherImpl::RouteMatcherImpl(
     const RouteConfig& config,
     Server::Configuration::ServerFactoryContext&) { // TODO remove ServerFactoryContext parameter
-  using envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteMatch;
+  using aeraki::meta_protocol_proxy::v1alpha::RouteMatch;
 
   for (const auto& route : config.routes()) {
     routes_.emplace_back(std::make_shared<RouteEntryImpl>(route));
