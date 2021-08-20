@@ -46,7 +46,7 @@ public:
    * @param validator is the message validator for route config.
    */
   virtual RouteConfigProviderPtr createStaticRouteConfigProvider(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           route_config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator) PURE;

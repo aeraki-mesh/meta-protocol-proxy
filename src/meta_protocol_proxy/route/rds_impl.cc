@@ -26,7 +26,7 @@ namespace MetaProtocolProxy {
 namespace Route {
 
 StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
         config,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor&, // TODO Remove validator parameter
@@ -47,7 +47,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
     const uint64_t manager_identifier, Server::Configuration::ServerFactoryContext& factory_context,
     const std::string& stat_prefix, RouteConfigProviderManagerImpl& route_config_provider_manager)
     // The real configuration type is
-    // Envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration HTTP
+    // aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
     // RouteConfiguration is used here because we want to reuse the http rds grpc service
     : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>(
           rds.config_source().resource_api_version(),
@@ -97,7 +97,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
       resources[0].get().resource());
 
   auto meta_protocol_route_config =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration();
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration();
   httpRouteConfig2MetaProtocolRouteConfig(http_route_config, meta_protocol_route_config);
   /*route_config.set_name(http_route_config.name());
   auto* route = route_config.add_routes();
@@ -134,7 +134,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
 // RouteConfiguration after received.
 void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
     const envoy::config::route::v3::RouteConfiguration& http_route_config,
-    envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+    aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
         meta_protocol_route_config) {
   ASSERT(http_route_config.virtual_hosts_size() == 1);
   auto routeSize = http_route_config.virtual_hosts(0).routes_size();
@@ -248,7 +248,7 @@ void RdsRouteConfigProviderImpl::onConfigUpdate() {
 }
 
 void RdsRouteConfigProviderImpl::validateConfig(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
         config) const {
   // TODO(lizan): consider cache the config here until onConfigUpdate.
   ConfigImpl validation_config(config, factory_context_);
@@ -298,7 +298,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
 }
 
 RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigProvider(
-    const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
         route_config,
     Server::Configuration::ServerFactoryContext& factory_context,
     ProtobufMessage::ValidationVisitor& validator) {

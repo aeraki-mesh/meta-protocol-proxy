@@ -101,7 +101,7 @@ public:
 class RouteMatcherImpl : public RouteMatcher, public Logger::Loggable<Logger::Id::filter> {
 public:
   using RouteConfig =
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration;
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration;
 
   RouteMatcherImpl(const RouteConfig& config, Server::Configuration::ServerFactoryContext& context);
 

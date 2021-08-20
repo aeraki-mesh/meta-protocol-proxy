@@ -32,7 +32,7 @@ public:
    * @return bool whether RouteConfiguration has been updated.
    */
   virtual bool onRdsUpdate(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           rc,
       const std::string& version_info) PURE;
 
@@ -62,7 +62,7 @@ public:
   virtual absl::optional<RouteConfigProvider::ConfigInfo> configInfo() const PURE;
 
   /**
-   * @return envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+   * @return aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
    * current RouteConfiguration.
    */
   virtual const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::

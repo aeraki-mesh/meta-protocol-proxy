@@ -56,7 +56,7 @@ class RouteConfigProviderManagerImpl;
 class StaticRouteConfigProviderImpl : public RouteConfigProvider {
 public:
   StaticRouteConfigProviderImpl(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator,
@@ -71,12 +71,12 @@ public:
   SystemTime lastUpdated() const override { return last_updated_; }
   void onConfigUpdate() override {}
   void validateConfig(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&)
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&)
       const override {}
 
 private:
   ConfigConstSharedPtr config_;
-  envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration
+  aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration
       route_config_proto_;
   SystemTime last_updated_;
   RouteConfigProviderManagerImpl& route_config_provider_manager_;
@@ -105,7 +105,7 @@ class RdsRouteConfigProviderImpl;
  */
 class RdsRouteConfigSubscription
     // The real configuration type is
-    // Envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration HTTP
+    // aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
     // RouteConfiguration is used here because we want to reuse the http rds grpc service
     : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>,
       Logger::Loggable<Logger::Id::router> {
@@ -126,7 +126,7 @@ private:
                             const EnvoyException* e) override;
   void httpRouteConfig2MetaProtocolRouteConfig(
       const envoy::config::route::v3::RouteConfiguration& http_route_config,
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           meta_protocol_route_config);
 
   RdsRouteConfigSubscription(
@@ -188,7 +188,7 @@ public:
   SystemTime lastUpdated() const override { return config_update_info_->lastUpdated(); }
   void onConfigUpdate() override;
   void validateConfig(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           config) const override;
 
 private:
@@ -229,7 +229,7 @@ public:
       Init::Manager& init_manager) override;
 
   RouteConfigProviderPtr createStaticRouteConfigProvider(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           route_config,
       Server::Configuration::ServerFactoryContext& factory_context,
       ProtobufMessage::ValidationVisitor& validator) override;

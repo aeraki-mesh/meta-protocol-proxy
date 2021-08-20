@@ -22,7 +22,7 @@ namespace Route {
 class ConfigImpl : public Config {
 public:
   ConfigImpl(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           config,
       Server::Configuration::ServerFactoryContext& context);
 

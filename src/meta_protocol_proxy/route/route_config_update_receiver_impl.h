@@ -33,7 +33,7 @@ public:
   bool onDemandFetchFailed(const envoy::service::discovery::v3::Resource& resource) const;
   void onUpdateCommon(const std::string& version_info);
   bool onRdsUpdate(
-      const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
           rc,
       const std::string& version_info) override;
   const std::string& routeConfigName() const override { return route_config_proto_->name(); }
@@ -42,7 +42,7 @@ public:
   absl::optional<RouteConfigProvider::ConfigInfo> configInfo() const override {
     return config_info_;
   }
-  const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration&
+  const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
   protobufConfiguration() override {
     return static_cast<const envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::
                            RouteConfiguration&>(*route_config_proto_);
@@ -54,7 +54,7 @@ private:
   Server::Configuration::ServerFactoryContext& factory_context_;
   TimeSource& time_source_;
   std::unique_ptr<
-      envoy::extensions::filters::network::meta_protocol_proxy::v1alpha::RouteConfiguration>
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration>
       route_config_proto_;
   uint64_t last_config_hash_;
   std::string last_config_version_;
