@@ -9,7 +9,7 @@
 #include "source/common/common/logger.h"
 #include "source/common/protobuf/utility.h"
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/route/route_config_update_receiver.h"

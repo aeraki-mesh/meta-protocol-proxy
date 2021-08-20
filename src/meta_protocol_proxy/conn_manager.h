@@ -1,7 +1,7 @@
 #pragma once
 
 #include "envoy/common/time.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/network/connection.h"
 #include "envoy/network/filter.h"
 #include "envoy/stats/scope.h"

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "api/v1alpha/route.pb.h"
-#include "api/v1alpha/route.pb.validate.h"
-#include "api/router/v1alpha/router.pb.h"
-#include "api/router/v1alpha/router.pb.validate.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.validate.h"
+#include "api/meta_protocol_proxy/filters/router/v1alpha/router.pb.h"
+#include "api/meta_protocol_proxy/filters/router/v1alpha/router.pb.validate.h"
 
 #include "src/meta_protocol_proxy/filters/factory_base.h"
 

@@ -5,7 +5,7 @@
 
 #include "envoy/server/factory_context.h"
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
 #include "src/meta_protocol_proxy/route/route.h"
 #include "src/meta_protocol_proxy/route/route_matcher.h"

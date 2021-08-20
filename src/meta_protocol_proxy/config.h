@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.validate.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.validate.h"
 
 #include "source/extensions/filters/network/common/factory_base.h"
 #include "src/meta_protocol_proxy/conn_manager.h"

@@ -8,7 +8,7 @@
 #include "envoy/config/route/v3/route_components.pb.h"
 #include "envoy/server/factory_context.h"
 
-#include "api/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
 #include "source/common/common/logger.h"
 #include "source/common/common/matchers.h"

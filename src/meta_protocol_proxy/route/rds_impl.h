@@ -33,9 +33,9 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
 
-#include "api/v1alpha/route.pb.h"
-#include "api/v1alpha/route.pb.validate.h"
-#include "api/v1alpha/meta_protocol_proxy.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
+#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.validate.h"
+#include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
