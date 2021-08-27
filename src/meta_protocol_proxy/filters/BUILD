@@ -10,9 +10,9 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["filter.h"],
     deps = [
-        "@envoy//envoy/buffer:buffer_interface",
-        "@envoy//envoy/network:connection_interface",
-        "@envoy//envoy/stream_info:stream_info_interface",
+        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//include/envoy/network:connection_interface",
+        "@envoy//include/envoy/stream_info:stream_info_interface",
         "//src/meta_protocol_proxy:decoder_events_lib",
         "//src/meta_protocol_proxy/route:route_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
@@ -25,8 +25,8 @@ envoy_cc_library(
     hdrs = ["filter_config.h"],
     deps = [
         ":filter_interface",
-        "@envoy//envoy/config:typed_config_interface",
-        "@envoy//envoy/server:filter_config_interface",
+        "@envoy//include/envoy/config:typed_config_interface",
+        "@envoy//include/envoy/server:filter_config_interface",
         "@envoy//source/common/common:macros",
         "@envoy//source/common/protobuf:cc_wkt_protos",
     ],

@@ -64,8 +64,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationShared
     return FilterStatus::StopIteration;
   }
 
-  auto conn_pool_data = cluster->tcpConnPool(Upstream::ResourcePriority::Default, this);
-  if (!conn_pool_data) {
+  auto conn_pool = cluster->tcpConnPool(Upstream::ResourcePriority::Default, this);
+  if (!conn_pool) {
     callbacks_->sendLocalReply(
         AppException(Error{ErrorType::NoHealthyUpstream,
                            fmt::format("meta protocol router: no healthy upstream for '{}'",
@@ -79,7 +79,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationShared
   // TODO encode mutation into the outgoing request
   upstream_request_buffer_.move(metadata->getOriginMessage(),
                                 metadata->getOriginMessage().length());
-  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool_data, metadata);
+  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool, metadata);
   return upstream_request_->start();
 }
 
@@ -190,15 +190,15 @@ void Router::cleanup() {
   }
 }
 
-Router::UpstreamRequest::UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool_data,
+Router::UpstreamRequest::UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool,
                                          MetadataSharedPtr& metadata)
-    : parent_(parent), conn_pool_data_(pool_data), metadata_(metadata), request_complete_(false),
+    : parent_(parent), conn_pool_(pool), metadata_(metadata), request_complete_(false),
       response_started_(false), response_complete_(false), stream_reset_(false) {}
 
 Router::UpstreamRequest::~UpstreamRequest() = default;
 
 FilterStatus Router::UpstreamRequest::start() {
-  Tcp::ConnectionPool::Cancellable* handle = conn_pool_data_.newConnection(*this);
+  Tcp::ConnectionPool::Cancellable* handle = conn_pool_.newConnection(*this);
   if (handle) {
     // Pause while we wait for a connection.
     conn_pool_handle_ = handle;
@@ -235,7 +235,6 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
 }
 
 void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason,
-                                            absl::string_view,
                                             Upstream::HostDescriptionConstSharedPtr host) {
   conn_pool_handle_ = nullptr;
 

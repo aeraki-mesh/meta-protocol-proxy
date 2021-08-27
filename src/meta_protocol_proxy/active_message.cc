@@ -1,7 +1,7 @@
 #include "src/meta_protocol_proxy/active_message.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
 
-#include "source/common/stats/timespan_impl.h"
+#include "common/stats/timespan_impl.h"
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/codec_impl.h"

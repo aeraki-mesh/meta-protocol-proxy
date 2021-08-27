@@ -6,8 +6,8 @@
 #include "envoy/config/typed_config.h"
 #include "envoy/server/filter_config.h"
 
-#include "source/common/common/macros.h"
-#include "source/common/protobuf/protobuf.h"
+#include "common/common/macros.h"
+#include "common/protobuf/protobuf.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 
 namespace Envoy {

@@ -18,7 +18,7 @@ envoy_cc_library(
     hdrs = ["route.h"],
     deps = [
         "//src/meta_protocol_proxy/codec:codec_interface",
-        "@envoy//envoy/router:router_interface",
+        "@envoy//include/envoy/router:router_interface",
     ],
 )
 
@@ -39,7 +39,7 @@ envoy_cc_library(
     deps = [
         "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
         "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
-        "@envoy//envoy/server:factory_context_interface",
+        "@envoy//include/envoy/server:factory_context_interface",
     ],
 )
 
@@ -51,7 +51,7 @@ envoy_cc_library(
     deps = [
         ":rds_interface",
         "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
-        "@envoy//envoy/common:time_interface",
+        "@envoy//include/envoy/common:time_interface",
         "@envoy//source/common/protobuf",
         "@envoy_api//envoy/service/discovery/v3:pkg_cc_proto",
     ],
@@ -81,7 +81,7 @@ envoy_cc_library(
         ":route_config_lib",
         ":rds_interface",
         ":route_config_update_info_interface",
-        "@envoy//envoy/server:factory_context_interface",
+        "@envoy//include/envoy/server:factory_context_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:minimal_logger_lib",
         "@envoy//source/common/protobuf:utility_lib",
@@ -101,11 +101,11 @@ envoy_cc_library(
         ":rds_interface",
         ":route_config_provider_manager_interface",
         ":route_config_update_info_interface",
-        "@envoy//envoy/config:subscription_interface",
-        "@envoy//envoy/local_info:local_info_interface",
-        "@envoy//envoy/server:admin_interface",
-        "@envoy//envoy/singleton:instance_interface",
-        "@envoy//envoy/thread_local:thread_local_interface",
+        "@envoy//include/envoy/config:subscription_interface",
+        "@envoy//include/envoy/local_info:local_info_interface",
+        "@envoy//include/envoy/server:admin_interface",
+        "@envoy//include/envoy/singleton:instance_interface",
+        "@envoy//include/envoy/thread_local:thread_local_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:callback_impl_lib",
         "@envoy//source/common/common:cleanup_lib",
@@ -144,7 +144,7 @@ envoy_cc_library(
     deps = [
         ":route_matcher_interface",
         ":route_interface",
-        "@envoy//envoy/router:router_interface",
+        "@envoy//include/envoy/router:router_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/common:matchers_lib",
         "@envoy//source/common/http:header_utility_lib",

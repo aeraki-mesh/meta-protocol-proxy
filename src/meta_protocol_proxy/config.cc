@@ -3,7 +3,7 @@
 #include "absl/container/flat_hash_map.h"
 
 #include "envoy/registry/registry.h"
-#include "source/common/config/utility.h"
+#include "common/config/utility.h"
 
 #include "src/meta_protocol_proxy/codec/factory.h"
 #include "src/meta_protocol_proxy/conn_manager.h"

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "source/common/common/assert.h"
-#include "source/common/common/fmt.h"
-#include "source/common/singleton/const_singleton.h"
+#include "common/common/assert.h"
+#include "common/common/fmt.h"
+#include "common/singleton/const_singleton.h"
 #include "src/application_protocols/dubbo/message.h"
 
 #include "absl/container/node_hash_map.h"

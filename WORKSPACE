@@ -28,9 +28,27 @@ http_archive(
 
 http_archive(
     name = "io_istio_proxy",
+    strip_prefix = "proxy-1.10.0",
     sha256 = "19d13bc4859dc8422b91fc28b0d8d12a34848393583eedfb08af971c658e7ffb",
     url = "https://github.com/istio/proxy/archive/refs/tags/1.10.0.tar.gz",
 )
+
+load(
+    "@io_istio_proxy//bazel:repositories.bzl",
+    "docker_dependencies",
+    "googletest_repositories",
+    "istioapi_dependencies",
+)
+
+googletest_repositories()
+
+istioapi_dependencies()
+
+bind(
+    name = "boringssl_crypto",
+    actual = "//external:ssl",
+)
+
 
 load("@envoy//bazel:api_binding.bzl", "envoy_api_binding")
 
@@ -67,3 +85,45 @@ load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 rules_pkg_dependencies()
 
+# Docker dependencies
+
+docker_dependencies()
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull",
+)
+
+container_pull(
+    name = "distroless_cc",
+    # Latest as of 10/21/2019. To update, remove this line, re-build, and copy the suggested digest.
+    digest = "sha256:86f16733f25964c40dcd34edf14339ddbb2287af2f7c9dfad88f0366723c00d7",
+    registry = "gcr.io",
+    repository = "distroless/cc",
+)
+
+container_pull(
+    name = "bionic",
+    # Latest as of 10/21/2019. To update, remove this line, re-build, and copy the suggested digest.
+    digest = "sha256:3e83eca7870ee14a03b8026660e71ba761e6919b6982fb920d10254688a363d4",
+    registry = "index.docker.io",
+    repository = "library/ubuntu",
+    tag = "bionic",
+)
+
+# End of docker dependencies
+
+load("@io_istio_proxy//bazel:wasm.bzl", "wasm_dependencies")
+
+wasm_dependencies()

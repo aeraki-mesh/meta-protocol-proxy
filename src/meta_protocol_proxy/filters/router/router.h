@@ -7,9 +7,9 @@
 #include "envoy/tcp/conn_pool.h"
 #include "envoy/upstream/thread_local_cluster.h"
 
-#include "source/common/common/logger.h"
-#include "source/common/buffer/buffer_impl.h"
-#include "source/common/upstream/load_balancer_impl.h"
+#include "common/common/logger.h"
+#include "common/buffer/buffer_impl.h"
+#include "common/upstream/load_balancer_impl.h"
 
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/route/route.h"
@@ -53,7 +53,7 @@ public:
 
 private:
   struct UpstreamRequest : public Tcp::ConnectionPool::Callbacks {
-    UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool_data, MetadataSharedPtr& metadata);
+    UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool, MetadataSharedPtr& metadata);
     ~UpstreamRequest() override;
 
     FilterStatus start();
@@ -62,7 +62,6 @@ private:
 
     // Tcp::ConnectionPool::Callbacks
     void onPoolFailure(ConnectionPool::PoolFailureReason reason,
-                       absl::string_view transport_failure_reason,
                        Upstream::HostDescriptionConstSharedPtr host) override;
     void onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn,
                      Upstream::HostDescriptionConstSharedPtr host) override;
@@ -74,7 +73,7 @@ private:
     void onResetStream(ConnectionPool::PoolFailureReason reason);
 
     Router& parent_;
-    Upstream::TcpPoolData conn_pool_data_;
+    Tcp::ConnectionPool::Instance& conn_pool_;
     MetadataSharedPtr metadata_;
     MutationSharedPtr mutation_;
 

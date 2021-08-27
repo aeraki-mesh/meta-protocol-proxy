@@ -8,8 +8,8 @@
 #include "envoy/http/header_map.h"
 #include "envoy/common/optref.h"
 #include "envoy/common/pure.h"
-#include "source/common/buffer/buffer_impl.h"
-#include "source/common/http/header_map_impl.h"
+#include "common/buffer/buffer_impl.h"
+#include "common/http/header_map_impl.h"
 
 #include "src/meta_protocol_proxy/codec/codec.h"
 

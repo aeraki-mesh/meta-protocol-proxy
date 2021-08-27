@@ -6,7 +6,7 @@
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/exception.h"
 
-#include "source/common/common/utility.h"
+#include "common/common/utility.h"
 #include "src/application_protocols/thrift/thrift.h"
 
 namespace Envoy {
