@@ -39,6 +39,7 @@ static_resources:
   clusters:
   - name: aeraki_xds_server
     type: STATIC
+    connect_timeout: 5s
     http2_protocol_options: {}
     load_assignment:
       cluster_name: aeraki_xds_server
@@ -51,6 +52,7 @@ static_resources:
                     port_value: 18000
   - name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
     type: STATIC
+    connect_timeout: 5s
     load_assignment:
       cluster_name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
       endpoints:

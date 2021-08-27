@@ -217,7 +217,7 @@ public:
   RouteConfigProviderManagerImpl(Server::Admin& admin);
 
   std::unique_ptr<envoy::admin::v3::RoutesConfigDump>
-  dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const;
+  dumpRouteConfigs() const;
 
   // RouteConfigProviderManager
   RouteConfigProviderSharedPtr

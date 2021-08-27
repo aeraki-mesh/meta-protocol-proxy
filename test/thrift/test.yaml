@@ -34,6 +34,7 @@ static_resources:
   clusters:
     name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
     type: STATIC
+    connect_timeout: 5s
     load_assignment:
       cluster_name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
       endpoints:
