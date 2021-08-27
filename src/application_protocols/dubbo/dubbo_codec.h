@@ -7,7 +7,7 @@
 #include "envoy/common/optref.h"
 #include "envoy/common/pure.h"
 
-#include "source/common/common/logger.h"
+#include "common/common/logger.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/application_protocols/dubbo/protocol.h"
 

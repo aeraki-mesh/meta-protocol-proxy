@@ -5,7 +5,7 @@
 
 #include "envoy/common/pure.h"
 
-#include "source/common/protobuf/utility.h"
+#include "common/protobuf/utility.h"
 #include "src/meta_protocol_proxy/filters/filter_config.h"
 
 namespace Envoy {

@@ -21,7 +21,7 @@ envoy_cc_library(
         "//api/meta_protocol_proxy/filters/router/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy/filters:factory_base_lib",
         "//src/meta_protocol_proxy/filters:filter_config_interface",
-        "@envoy//envoy/registry",
+        "@envoy//include/envoy/registry",
     ],
 )
 
@@ -34,10 +34,10 @@ envoy_cc_library(
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "//src/meta_protocol_proxy/route:route_interface",
-        "@envoy//envoy/tcp:conn_pool_interface",
-        "@envoy//envoy/upstream:cluster_manager_interface",
-        "@envoy//envoy/upstream:load_balancer_interface",
-        "@envoy//envoy/upstream:thread_local_cluster_interface",
+        "@envoy//include/envoy/tcp:conn_pool_interface",
+        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//include/envoy/upstream:load_balancer_interface",
+        "@envoy//include/envoy/upstream:thread_local_cluster_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/http:header_utility_lib",
         "@envoy//source/common/router:metadatamatchcriteria_lib",

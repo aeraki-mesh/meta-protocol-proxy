@@ -4,10 +4,10 @@
 
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
-#include "source/common/common/assert.h"
-#include "source/common/common/fmt.h"
-#include "source/common/common/thread.h"
-#include "source/common/protobuf/utility.h"
+#include "common/common/assert.h"
+#include "common/common/fmt.h"
+#include "common/common/thread.h"
+#include "common/protobuf/utility.h"
 
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 

@@ -37,6 +37,7 @@ static_resources:
   clusters:
     name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
     type: STATIC
+    connect_timeout: 5s
     load_assignment:
       cluster_name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
       endpoints:

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "source/common/common/assert.h"
-#include "source/common/singleton/const_singleton.h"
+#include "common/common/assert.h"
+#include "common/singleton/const_singleton.h"
 
 namespace Envoy {
 namespace Extensions {

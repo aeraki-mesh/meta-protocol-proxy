@@ -7,8 +7,8 @@
 #include "envoy/common/optref.h"
 #include "envoy/common/pure.h"
 
-#include "source/common/buffer/buffer_impl.h"
-#include "source/common/common/logger.h"
+#include "common/buffer/buffer_impl.h"
+#include "common/common/logger.h"
 
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/application_protocols/thrift/protocol.h"

@@ -2,8 +2,8 @@
 
 #include "envoy/buffer/buffer.h"
 
-#include "source/common/common/logger.h"
-#include "source/common/buffer/buffer_impl.h"
+#include "common/common/logger.h"
+#include "common/buffer/buffer_impl.h"
 
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/application_protocols/thrift/thrift_codec.h"
