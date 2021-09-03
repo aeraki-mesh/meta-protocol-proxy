@@ -248,50 +248,50 @@ void RdsRouteConfigProviderImpl::validateConfig(
   ConfigImpl validation_config(config, factory_context_);
 }
 
-RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& ) {
-  //TODO print config
-  //config_tracker_entry_ =
+RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin&) {
+  // TODO print config
+  // config_tracker_entry_ =
   //    admin.getConfigTracker().add("routes", [this] { return dumpRouteConfigs(); });
   // ConfigTracker keys must be unique. We are asserting that no one has stolen the "routes" key
   // from us, since the returned entry will be nullptr if the key already exists.
-  //RELEASE_ASSERT(config_tracker_entry_, "");
+  // RELEASE_ASSERT(config_tracker_entry_, "");
 }
 
 RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
     const aeraki::meta_protocol_proxy::v1alpha::Rds& rds,
     Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
     Init::Manager& init_manager) {
-    // RdsRouteConfigSubscriptions are unique based on their serialized RDS config.
-    const uint64_t manager_identifier = MessageUtil::hash(rds);
-    auto it = dynamic_route_config_providers_.find(manager_identifier);
+  // RdsRouteConfigSubscriptions are unique based on their serialized RDS config.
+  const uint64_t manager_identifier = MessageUtil::hash(rds);
+  auto it = dynamic_route_config_providers_.find(manager_identifier);
 
-    if (it == dynamic_route_config_providers_.end()) {
-      // std::make_shared does not work for classes with private constructors. There are ways
-      // around it. However, since this is not a performance critical path we err on the side
-      // of simplicity.
+  if (it == dynamic_route_config_providers_.end()) {
+    // std::make_shared does not work for classes with private constructors. There are ways
+    // around it. However, since this is not a performance critical path we err on the side
+    // of simplicity.
 
-      RdsRouteConfigSubscriptionSharedPtr subscription(new RdsRouteConfigSubscription(
-          rds, manager_identifier, factory_context, stat_prefix, *this));
-      ENVOY_LOG(
-          info, "meta protocol rds subscription: route_config_name: {} xds server: {}",
-          rds.route_config_name(),
-          rds.config_source().api_config_source().grpc_services().Get(0).envoy_grpc().cluster_name());
-      init_manager.add(subscription->parent_init_target_);
-      RdsRouteConfigProviderImplSharedPtr new_provider{
-          new RdsRouteConfigProviderImpl(std::move(subscription), factory_context)};
-      dynamic_route_config_providers_.insert(
-          {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
-      return new_provider;
-    } else {
-      // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
-      // in the RdsRouteConfigSubscription destructor, and the single threaded nature
-      // of this code, locking the weak_ptr will not fail.
-      auto existing_provider = it->second.lock();
-      RELEASE_ASSERT(existing_provider != nullptr,
-                     absl::StrCat("cannot find subscribed rds resource ", rds.route_config_name()));
-      init_manager.add(existing_provider->subscription_->parent_init_target_);
-      return existing_provider;
-    }
+    RdsRouteConfigSubscriptionSharedPtr subscription(new RdsRouteConfigSubscription(
+        rds, manager_identifier, factory_context, stat_prefix, *this));
+    ENVOY_LOG(
+        info, "meta protocol rds subscription: route_config_name: {} xds server: {}",
+        rds.route_config_name(),
+        rds.config_source().api_config_source().grpc_services().Get(0).envoy_grpc().cluster_name());
+    init_manager.add(subscription->parent_init_target_);
+    RdsRouteConfigProviderImplSharedPtr new_provider{
+        new RdsRouteConfigProviderImpl(std::move(subscription), factory_context)};
+    dynamic_route_config_providers_.insert(
+        {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
+    return new_provider;
+  } else {
+    // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
+    // in the RdsRouteConfigSubscription destructor, and the single threaded nature
+    // of this code, locking the weak_ptr will not fail.
+    auto existing_provider = it->second.lock();
+    RELEASE_ASSERT(existing_provider != nullptr,
+                   absl::StrCat("cannot find subscribed rds resource ", rds.route_config_name()));
+    init_manager.add(existing_provider->subscription_->parent_init_target_);
+    return existing_provider;
+  }
 }
 
 RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigProvider(
@@ -343,4 +343,3 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
