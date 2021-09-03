@@ -53,7 +53,8 @@ public:
 
 private:
   struct UpstreamRequest : public Tcp::ConnectionPool::Callbacks {
-    UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool, MetadataSharedPtr& metadata);
+    UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool,
+                    MetadataSharedPtr& metadata);
     ~UpstreamRequest() override;
 
     FilterStatus start();
