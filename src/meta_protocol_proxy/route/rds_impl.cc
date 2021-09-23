@@ -145,7 +145,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
     if (httpRoute.has_match()) {
       auto httpMatch = httpRoute.match();
       auto headerSize = httpMatch.headers_size();
-      if (headerSize > 1) {
+      if (headerSize > 0) {
         auto* metaMatch = new aeraki::meta_protocol_proxy::config::route::v1alpha::RouteMatch();
 
         for (int i = 0; i < headerSize; i++) {
