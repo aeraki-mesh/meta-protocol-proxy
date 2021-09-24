@@ -35,6 +35,43 @@ allowing users to write their own layer-7 filters to add custom logic into MetaP
 
 Follow this guide [Building Envoy with Bazel](https://github.com/envoyproxy/envoy/blob/main/bazel/README.md) to install the required software.
 
+Below is how to build on Ubuntu 18.04：
+
+### Install Bazelisk as Bazel
+
+It is recommended to use Bazelisk installed as bazel, to avoid Bazel compatibility issues.
+
+```bash
+sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+sudo chmod +x /usr/local/bin/bazel
+```
+
+### Install external dependencies
+
+```bash
+sudo apt-get install \
+autoconf \
+automake \
+cmake \
+curl \
+libtool \
+make \
+ninja-build \
+patch \
+python3-pip \
+unzip \
+virtualenv
+```
+
+### Install build toolchain
+
+```bash
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt-get install llvm-10 lldb-10 llvm-10-dev libllvm10 llvm-10-runtime clang-10 clang++-10 lld-10 gcc-10 g++-10
+```
+
+### Build
 Run  ```./build.sh```, if the build completes successfully, the generated binary will be at ```bazel-bin/envoy```, which contains 
 the MetaProtocol Proxy and the codecs of the application protocols.
 
