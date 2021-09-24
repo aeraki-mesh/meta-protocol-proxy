@@ -30,6 +30,43 @@ MetaProtocol 实现为一个能够在 Service Mesh 中管理任何七层协议�
 
 参考 [Building Envoy with Bazel](https://github.com/envoyproxy/envoy/blob/main/bazel/README.md) 安装构建所需的软件。
 
+推荐使用 Ubuntu 18.04，Ubuntu 上的构建流程如下：
+
+### 安装 Bazelisk
+
+建议使用 Bazelisk，以规避 Bazel 的兼容性问题。
+
+```bash
+sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+sudo chmod +x /usr/local/bin/bazel
+```
+
+### 安装外部依赖
+
+```bash
+sudo apt-get install \
+autoconf \
+automake \
+cmake \
+curl \
+libtool \
+make \
+ninja-build \
+patch \
+python3-pip \
+unzip \
+virtualenv
+```
+
+### 安装构建工具
+
+```bash
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt-get install llvm-10 lldb-10 llvm-10-dev libllvm10 llvm-10-runtime clang-10 clang++-10 lld-10 gcc-10 g++-10
+```
+
+### 编译
 运行 ```./build.sh```，如果构建顺利完成，生成的二进制文件路径为 bazel-bin/envoy ，该二进制文件中包含了 MetaProtocol Proxy 和
 基于 MetaProtocol Proxy 实现的 Dubbo 协议。
 
