@@ -45,13 +45,18 @@ RouteConstSharedPtr RouteEntryImplBase::clusterEntry(uint64_t random_value) cons
 
 bool RouteEntryImplBase::headersMatch(const Metadata& metadata) const {
   if (config_headers_.empty()) {
-    ENVOY_LOG(debug, "meta protocol route matcher: no headers match");
+    ENVOY_LOG(debug, "meta protocol route matcher: no metadata match");
     return true;
   }
   const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
   const auto& headers = metadataImpl->getHeaders();
-  ENVOY_LOG(debug, "meta protocol route matcher: headers size {}, metadata headers size {}",
+  ENVOY_LOG(debug, "meta protocol route matcher: match condition size {}, metadata size {}",
             config_headers_.size(), headers.size());
+  for (const Http::HeaderUtility::HeaderDataPtr& cfg_header_data : config_headers_) {
+    ENVOY_LOG(debug, "meta protocol route matcher: metadata: {},value: {}", cfg_header_data->name_,
+              cfg_header_data->value_);
+  }
+
   return Http::HeaderUtility::matchHeaders(headers, config_headers_);
 }
 
