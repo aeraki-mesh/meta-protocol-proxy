@@ -53,9 +53,16 @@ bool RouteEntryImplBase::headersMatch(const Metadata& metadata) const {
   ENVOY_LOG(debug, "meta protocol route matcher: match condition size {}, metadata size {}",
             config_headers_.size(), headers.size());
   for (const Http::HeaderUtility::HeaderDataPtr& cfg_header_data : config_headers_) {
-    ENVOY_LOG(debug, "meta protocol route matcher: metadata: {},value: {}", cfg_header_data->name_,
-              cfg_header_data->value_);
+    ENVOY_LOG(debug, "meta protocol route matcher: match condition: {}, value: {}",
+              cfg_header_data->name_, cfg_header_data->value_);
   }
+
+  Envoy::Http::HeaderMap::ConstIterateCb get_headers_cb = [](const Envoy::Http::HeaderEntry& header) {
+    ENVOY_LOG(debug, "meta protocol route matcher: request metadata: {}, value: {}",
+              header.key().getStringView(), header.value().getStringView());
+    return Envoy::Http::HeaderMap::Iterate::Continue;
+  };
+  headers.iterate(get_headers_cb);
 
   return Http::HeaderUtility::matchHeaders(headers, config_headers_);
 }

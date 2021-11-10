@@ -8,6 +8,7 @@
 #include "src/application_protocols/dubbo/dubbo_codec.h"
 #include "src/application_protocols/dubbo/protocol.h"
 #include "src/application_protocols/dubbo/message.h"
+#include "src/application_protocols/dubbo/message_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -102,11 +103,21 @@ void DubboCodec::onError(const MetaProtocolProxy::Metadata& metadata,
 void DubboCodec::toMetadata(const MessageMetadata& msgMetadata,
                             MetaProtocolProxy::Metadata& metadata) {
   if (msgMetadata.hasInvocationInfo()) {
-    metadata.putString("interface", msgMetadata.invocationInfo().serviceName());
-    metadata.putString("method", msgMetadata.invocationInfo().methodName());
-    // TODO Add attachment to the metadata header
-    metadata.put("InvocationInfo", msgMetadata.invocationInfoPtr());
+    auto* invo = const_cast<RpcInvocationImpl*>(
+        dynamic_cast<const RpcInvocationImpl*>(&msgMetadata.invocationInfo()));
+
+    metadata.putString("interface", invo->serviceName());
+    metadata.putString("method", invo->methodName());
+    for (const auto& pair : invo->attachment().attachment()) {
+      const auto key = pair.first->toString();
+      const auto value = pair.second->toString();
+      if (!key.has_value() || !value.has_value()) {
+        continue;
+      }
+      metadata.putString(*(key.value()), *(value.value()));
+    }
   }
+  metadata.put("InvocationInfo", msgMetadata.invocationInfoPtr());
   metadata.put("ProtocolType", msgMetadata.protocolType());
   metadata.put("ProtocolVersion", msgMetadata.protocolVersion());
   metadata.put("MessageType", msgMetadata.messageType());

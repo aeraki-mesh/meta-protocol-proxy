@@ -30,6 +30,8 @@ static_resources:
                     exact_match: org.apache.dubbo.samples.basic.api.DemoService
                   - name: method
                     exact_match: sayHello
+                  - name: foo
+                    exact_match: bar
               route:
                 cluster: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
           statPrefix: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
