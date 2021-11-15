@@ -38,6 +38,13 @@ bool PropertiesImpl::getBool(std::string key) const {
   }
   return false;
 }
+uint32_t PropertiesImpl::getUint32(std::string key) const {
+  auto value = this->get(key);
+  if (value.has_value()) {
+    return std::any_cast<uint32_t>(value.ref());
+  }
+  return 0;
+}
 
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters

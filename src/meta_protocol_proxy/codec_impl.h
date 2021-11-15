@@ -28,6 +28,7 @@ public:
   void putString(std::string key, std::string value) override;
   std::string getString(std::string key) const override;
   bool getBool(std::string key) const override;
+  uint32_t getUint32(std::string key) const override;
 
 private:
   std::unique_ptr<std::map<std::string, std::any>> map_;
@@ -48,6 +49,7 @@ public:
   };
   std::string getString(std::string key) const override { return properties_.getString(key); };
   bool getBool(std::string key) const override { return properties_.getBool(key); };
+  uint32_t getUint32(std::string key) const override { return properties_.getUint32(key); };
 
   void setOriginMessage(Buffer::Instance& originMessage) override {
     origin_message_ = originMessage;
@@ -90,6 +92,7 @@ public:
   void putString(std::string key, std::string value) override { this->put(key, value); };
   std::string getString(std::string key) const override { return properties_.getString(key); };
   bool getBool(std::string key) const override { return properties_.getBool(key); };
+  uint32_t getUint32(std::string key) const override { return properties_.getUint32(key); };
 
 private:
   PropertiesImpl properties_;

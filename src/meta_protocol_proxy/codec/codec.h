@@ -66,6 +66,13 @@ public:
    * @return
    */
   virtual bool getBool(std::string key) const PURE;
+
+  /**
+   * Get a uint32 value from the metadata.
+   * @param key
+   * @return
+   */
+  virtual uint32_t getUint32(std::string key) const PURE;
 };
 
 class Metadata : public Properties {
