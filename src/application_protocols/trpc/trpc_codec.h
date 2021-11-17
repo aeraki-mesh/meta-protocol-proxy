@@ -27,7 +27,7 @@ class TrpcCodec : public MetaProtocolProxy::Codec,
                   public CodecCheckerCallBacks,
                   public Logger::Loggable<Logger::Id::misc> {
 public:
-  TrpcCodec() : decoder_base_(*this){};
+  TrpcCodec() : decoder_base_(*this),messageType_(MetaProtocolProxy::MessageType::Request){};
   ~TrpcCodec() override = default;
 
   MetaProtocolProxy::DecodeStatus decode(Buffer::Instance& buffer,
@@ -42,12 +42,13 @@ public:
 
 private:
   void toMetadata(MetaProtocolProxy::Metadata& metadata);
-  void toTrpcHeader(const MetaProtocolProxy::Metadata& metadata, trpc::ResponseProtocol& header);
 
 private:
   CodecChecker decoder_base_;
-  trpc::RequestProtocol header_;
+  trpc::RequestProtocol requestHeader_;
+  trpc::ResponseProtocol responseHeader_;
   std::unique_ptr<Buffer::OwnedImpl> origin_msg_;
+  MetaProtocolProxy::MessageType messageType_;
 };
 
 } // namespace Trpc

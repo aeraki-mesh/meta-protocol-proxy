@@ -18,6 +18,10 @@ MetaProtocolProxy::DecodeStatus TrpcCodec::decode(Buffer::Instance& buffer,
                                                   MetaProtocolProxy::Metadata& metadata) {
   ENVOY_LOG(debug, "trpc decoder: {} bytes available", buffer.length());
   // https://git.code.oa.com/trpc/trpc-protocol/blob/master/docs/protocol_design.md
+  messageType_ = metadata.getMessageType();
+  ASSERT(messageType_ == MetaProtocolProxy::MessageType::Request ||
+         messageType_ == MetaProtocolProxy::MessageType::Response);
+
   auto state = decoder_base_.onData(buffer);
 
   if (state == CodecChecker::DecodeStage::kWaitForData) {
@@ -31,7 +35,7 @@ MetaProtocolProxy::DecodeStatus TrpcCodec::decode(Buffer::Instance& buffer,
 
 void TrpcCodec::encode(const MetaProtocolProxy::Metadata& metadata,
                        const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
-  // TODO
+  // TODO we don't need to implement encode for now
   (void)metadata;
   (void)mutation;
   (void)buffer;
@@ -42,7 +46,11 @@ void TrpcCodec::onError(const MetaProtocolProxy::Metadata& metadata,
   TrpcResponseProtocol response_protocol;
   // rsp_header_
   auto& header = response_protocol.protocol_header_;
-  toTrpcHeader(metadata, header);
+  header.set_request_id(metadata.getRequestId());
+  header.set_call_type(metadata.getUint32("call_type"));
+  header.set_version(metadata.getUint32("version"));
+  header.set_content_type(metadata.getUint32("content_type"));
+  header.set_content_type(metadata.getUint32("content_encoding"));
 
   int32_t errCode;
   switch (error.type) {
@@ -65,7 +73,13 @@ void TrpcCodec::onFixedHeaderDecoded(std::unique_ptr<TrpcFixedHeader> fixed_head
 }
 
 bool TrpcCodec::onDecodeRequestOrResponseProtocol(std::string&& header_raw) {
-  if (!header_.ParseFromString(header_raw)) {
+  if (messageType_ == MetaProtocolProxy::MessageType::Request) {
+    if (!requestHeader_.ParseFromString(header_raw)) {
+      return false;
+    }
+    return true;
+  }
+  if (!responseHeader_.ParseFromString(header_raw)) {
     return false;
   }
   return true;
@@ -76,27 +90,28 @@ void TrpcCodec::onCompleted(std::unique_ptr<Buffer::OwnedImpl> buffer) {
 }
 
 void TrpcCodec::toMetadata(MetaProtocolProxy::Metadata& metadata) {
-  metadata.setRequestId(header_.request_id());
-  metadata.putString("service", header_.callee());
-  metadata.putString("method", header_.func());
-  metadata.put("call_type", header_.call_type());
-  metadata.put("version", header_.version());
-  metadata.put("message_type", header_.content_encoding());
-  metadata.put("content_type", header_.content_type());
-  metadata.put("content_encoding", header_.content_encoding());
-  for (auto const& kv : header_.trans_info()) {
-    metadata.putString(kv.first, kv.second);
+  if (messageType_ == MetaProtocolProxy::MessageType::Request) {
+    metadata.setRequestId(requestHeader_.request_id());
+    metadata.putString("caller",requestHeader_.caller());
+    metadata.putString("callee", requestHeader_.callee());
+    metadata.putString("func", requestHeader_.func());
+
+    metadata.put("call_type", requestHeader_.call_type());
+    metadata.put("version", requestHeader_.version());
+    metadata.put("content_type", requestHeader_.content_type());
+    metadata.put("content_encoding", requestHeader_.content_encoding());
+
+    for (auto const& kv : requestHeader_.trans_info()) {
+      metadata.putString(kv.first, kv.second);
+    }
+  } else {
+    metadata.setRequestId(responseHeader_.request_id());
+    metadata.putString("error_msg", responseHeader_.error_msg());
+    for (auto const& kv : responseHeader_.trans_info()) {
+      metadata.putString(kv.first, kv.second);
+    }
   }
   metadata.setOriginMessage(*origin_msg_);
-}
-
-void TrpcCodec::toTrpcHeader(const MetaProtocolProxy::Metadata& metadata,
-                             trpc::ResponseProtocol& header) {
-  header.set_request_id(metadata.getRequestId());
-  header.set_call_type(metadata.getUint32("call_type"));
-  header.set_version(metadata.getUint32("version"));
-  header.set_content_type(metadata.getUint32("content_type"));
-  header.set_content_type(metadata.getUint32("content_encoding"));
 }
 
 } // namespace Trpc

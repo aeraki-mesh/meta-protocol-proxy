@@ -26,8 +26,12 @@ static_resources:
             - name: default
               match:
                 metadata:
-                  - name: service
+                  - name: callee 
                     exact_match: trpc.test.helloworld
+                  - name: caller 
+                    exact_match: trpc.app.trpc-client.service
+                  - name: func
+                    exact_match: /trpc.test.helloworld.Greeter/SayHello
               route:
                 cluster: trpc.test.helloworld
           statPrefix: trpc.test.helloworld
