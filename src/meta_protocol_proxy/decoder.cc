@@ -8,6 +8,7 @@ namespace MetaProtocolProxy {
 
 ProtocolState DecoderStateMachine::onDecodeStream(Buffer::Instance& buffer) {
   auto metadata = std::make_shared<MetadataImpl>();
+  metadata->setMessageType(messageType_);
   auto decodeStatus = codec_.decode(buffer, *metadata);
   if (decodeStatus == DecodeStatus::WaitForData) {
     return ProtocolState::WaitForData;
@@ -36,7 +37,8 @@ ProtocolState DecoderStateMachine::run(Buffer::Instance& buffer) {
 
 using DecoderStateMachinePtr = std::unique_ptr<DecoderStateMachine>;
 
-DecoderBase::DecoderBase(Codec& codec) : codec_(codec) {}
+DecoderBase::DecoderBase(Codec& codec, MessageType messageType)
+    : codec_(codec), messageType_(messageType) {}
 
 DecoderBase::~DecoderBase() { complete(); }
 
@@ -76,7 +78,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
  * Start to decode a message
  */
 void DecoderBase::start() {
-  state_machine_ = std::make_unique<DecoderStateMachine>(codec_, *this);
+  state_machine_ = std::make_unique<DecoderStateMachine>(codec_, messageType_, *this);
   decode_started_ = true;
 }
 

@@ -66,8 +66,9 @@ public:
     virtual void onHeartbeat(MetadataSharedPtr metadata) PURE;
   };
 
-  DecoderStateMachine(Codec& codec, Delegate& delegate)
-      : codec_(codec), delegate_(delegate), state_(ProtocolState::OnDecodeStreamData) {}
+  DecoderStateMachine(Codec& codec, MessageType messageType, Delegate& delegate)
+      : codec_(codec), messageType_(messageType), delegate_(delegate),
+        state_(ProtocolState::OnDecodeStreamData) {}
 
   /**
    * Consumes as much data from the configured Buffer as possible and executes the decoding state
@@ -90,6 +91,7 @@ private:
   ProtocolState onDecodeStream(Buffer::Instance& buffer);
 
   Codec& codec_;
+  MessageType messageType_;
   Delegate& delegate_;
   ProtocolState state_;
 };
@@ -99,7 +101,7 @@ using DecoderStateMachinePtr = std::unique_ptr<DecoderStateMachine>;
 class DecoderBase : public DecoderStateMachine::Delegate,
                     public Logger::Loggable<Logger::Id::filter> {
 public:
-  DecoderBase(Codec& codec);
+  DecoderBase(Codec& codec, MessageType messageType);
   ~DecoderBase() override;
 
   /**
@@ -121,7 +123,7 @@ protected:
   Codec& codec_;
   ActiveStreamPtr stream_;
   DecoderStateMachinePtr state_machine_;
-
+  MessageType messageType_;
   bool decode_started_{false};
 };
 
@@ -130,7 +132,8 @@ protected:
  */
 template <typename T> class Decoder : public DecoderBase {
 public:
-  Decoder(Codec& codec, T& callbacks) : DecoderBase(codec), callbacks_(callbacks) {}
+  Decoder(Codec& codec, T& callbacks, MessageType messageType)
+      : DecoderBase(codec, messageType), callbacks_(callbacks) {}
 
   ActiveStream* newStream(MetadataSharedPtr metadata, MutationSharedPtr mutation) override {
     ASSERT(!stream_);
@@ -146,14 +149,16 @@ private:
 
 class RequestDecoder : public Decoder<RequestDecoderCallbacks> {
 public:
-  RequestDecoder(Codec& codec, RequestDecoderCallbacks& callbacks) : Decoder(codec, callbacks) {}
+  RequestDecoder(Codec& codec, RequestDecoderCallbacks& callbacks)
+      : Decoder(codec, callbacks, MessageType::Request) {}
 };
 
 using RequestDecoderPtr = std::unique_ptr<RequestDecoder>;
 
 class ResponseDecoder : public Decoder<ResponseDecoderCallbacks> {
 public:
-  ResponseDecoder(Codec& codec, ResponseDecoderCallbacks& callbacks) : Decoder(codec, callbacks) {}
+  ResponseDecoder(Codec& codec, ResponseDecoderCallbacks& callbacks)
+      : Decoder(codec, callbacks, MessageType::Response) {}
 };
 
 using ResponseDecoderPtr = std::unique_ptr<ResponseDecoder>;

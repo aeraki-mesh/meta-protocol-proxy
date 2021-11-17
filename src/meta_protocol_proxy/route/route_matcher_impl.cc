@@ -57,11 +57,12 @@ bool RouteEntryImplBase::headersMatch(const Metadata& metadata) const {
               cfg_header_data->name_, cfg_header_data->value_);
   }
 
-  Envoy::Http::HeaderMap::ConstIterateCb get_headers_cb = [](const Envoy::Http::HeaderEntry& header) {
-    ENVOY_LOG(debug, "meta protocol route matcher: request metadata: {}, value: {}",
-              header.key().getStringView(), header.value().getStringView());
-    return Envoy::Http::HeaderMap::Iterate::Continue;
-  };
+  Envoy::Http::HeaderMap::ConstIterateCb get_headers_cb =
+      [](const Envoy::Http::HeaderEntry& header) {
+        ENVOY_LOG(debug, "meta protocol route matcher: request metadata: {}, value: {}",
+                  header.key().getStringView(), header.value().getStringView());
+        return Envoy::Http::HeaderMap::Iterate::Continue;
+      };
   headers.iterate(get_headers_cb);
 
   return Http::HeaderUtility::matchHeaders(headers, config_headers_);
