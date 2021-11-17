@@ -1,0 +1,47 @@
+admin:
+  access_log_path: ./envoy_debug.log
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 8080
+static_resources:
+  listeners:
+    name: listener_meta_protocol
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 28000
+    filter_chains:
+    - filters:
+      - name: aeraki.meta_protocol_proxy
+        typed_config:
+          '@type': type.googleapis.com/aeraki.meta_protocol_proxy.v1alpha.MetaProtocolProxy
+          application_protocol: trpc
+          codec:
+            name: aeraki.meta_protocol.codec.trpc
+          metaProtocolFilters:
+          - name: aeraki.meta_protocol.filters.router
+          routeConfig:
+            routes:
+            - name: default
+              match:
+                metadata:
+                  - name: service
+                    exact_match: trpc.test.helloworld
+              route:
+                cluster: trpc.test.helloworld
+          statPrefix: trpc.test.helloworld
+
+  clusters:
+    name: trpc.test.helloworld
+    type: STATIC
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: trpc.test.helloworld
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 8000
