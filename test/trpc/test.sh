@@ -1,8 +1,11 @@
-BASEDIR=$(dirname "$0")
-#docker kill consumer provider server client
-#docker rm consumer provider server client
-#docker run -d --network host --name consumer --env mode=demo aeraki/dubbo-sample-consumer
-#docker run -d -p 20881:20880 --name provider aeraki/dubbo-sample-provider
-#kill `ps -ef | awk '/bazel-bin\/envoy/{print $2}'`
-$BASEDIR/../../bazel-bin/envoy -c $BASEDIR/test.yaml &
-#docker logs -f consumer
+#!/bin/bash
+BASEDIR=$("pwd")
+$BASEDIR/../../bazel-bin/envoy -c $BASEDIR/test.yaml -l debug &
+
+cd $BASEDIR/helloworld/server
+go build -o trpc-server
+$BASEDIR/helloworld/server/trpc-server&
+
+cd $BASEDIR/helloworld/client
+go build -o trpc-client
+$BASEDIR/helloworld/client/trpc-client -addr=ip://127.0.0.1:28000

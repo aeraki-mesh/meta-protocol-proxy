@@ -1,0 +1,107 @@
+global:                             #全局配置
+  namespace: Development            #环境类型，分正式production和非正式development两种类型
+  env_name: test                    #环境名称，非正式环境下多环境的名称
+  container_name: ${container_name} #容器名称, 占位符由运营平台替换成实际容器名
+  local_ip: ${local_ip}             #本地ip，容器内为容器ip，物理机或虚拟机为本机ip
+
+server:                                            #服务端配置
+  app: test                                        #业务的应用名
+  server: Greeter                               #进程服务名
+  bin_path: /usr/local/trpc/bin/                   #二进制可执行文件和框架配置文件所在路径
+  conf_path: /usr/local/trpc/conf/                 #业务配置文件所在路径
+  data_path: /usr/local/trpc/data/                 #业务数据文件所在路径
+  filter:                                          #针对所有service处理函数前后的拦截器列表
+    - simpledebuglog
+    - m007                                         #007监控
+    - recovery                                     #recovery过滤器
+    - tjg                                          #天机阁分布式追踪
+  service:                                         #业务服务提供的service，可以有多个
+    - name: trpc.test.helloworld.Greeter          #service的路由名称
+      ip: 127.0.0.1                                #服务监听ip地址 可使用占位符 ${ip},ip和nic二选一，优先ip
+      port: 8000                                   #服务监听端口 可使用占位符 ${port}
+      network: tcp                                 #网络监听类型  tcp udp
+      protocol: trpc                               #应用层协议 trpc http
+      timeout: 1000                                #请求最长处理时间 单位 毫秒
+      registry: polaris                            #服务启动时使用的服务注册方式
+    
+
+client:                                            #客户端调用的后端配置
+  timeout: 1000                                    #针对所有后端的请求最长处理时间
+  namespace: Development                           #针对所有后端的环境
+  filter:                                          #针对所有后端调用函数前后的拦截器列表
+    - tjg
+    - m007
+  service:                                         #针对单个后端的配置
+    - name: trpc.test.helloworld.Greeter           #后端服务的service name
+      namespace: Development                       #后端服务的环境
+      network: tcp                                 #后端服务的网络类型 tcp udp 配置优先
+      protocol: trpc                   #应用层协议 trpc http
+      target: ip://127.0.0.1:8000                  #请求服务地址
+      timeout: 800                                 #请求最长处理时间
+    
+
+plugins:                                          #插件配置
+  registry:                                       #服务注册配置
+    polaris:                                      #北极星名字注册服务的配置
+      heartbeat_interval: 3000                    #名字注册服务心跳上报间隔
+      heartbeat_timeout: 1000                     #名字服务心跳超时
+
+  selector:                                       #针对用户自定义的selector的配置
+    polaris:                                      #针对polaris整体api的内部配置
+      address_list: ${polaris_address_list}       #名字服务远程地址列表
+      protocol: grpc                              #名字服务远程交互协议类型
+
+  config:                                         #业务配置中心的配置
+    tconf:                                        #tconf远程配置中心的名字
+      timeout: 1000                               #拉取远程配置超时时间
+      address_list: ${tconf_address_list}         #远程配置中心远程地址列表
+      providers:
+        - name: tconf                             #provider名字，代码使用如：`config.WithProvider("tconf")`
+          appid: ${app}.${server}                 #appid格式：应用名.服务名; tconf平台注册生成.
+          env_name: ${env_name}                   #环境信息
+          namespace: ${namespace}                 #配置命名空间
+          tick: 2000                              #后台协程同步文件间隔，单位毫秒
+
+  log:                                            #日志配置
+    default:                                      #默认日志的配置，可支持多输出
+      - writer: file                              #本地文件日志
+        level: info                               #本地文件滚动日志的级别
+        writer_config:
+          filename: ./trpc.log                      #本地文件滚动日志存放的路径
+          max_size: 10                              #本地文件滚动日志的大小 单位 MB
+          max_backups: 10                           #最大日志文件数
+          max_age: 7                                #最大日志保留天数
+          compress:  false                          #日志文件是否压缩
+
+  tracing:
+    tjg:
+      appid: trpc_${app}
+      service_name: trpc.${app}.${server}
+      sampler:
+        type: mix
+        mix:
+          sample_rate: 1024
+          min_speed_rate: 1
+          max_speed_rate: 10
+      reporter:
+        type: atta
+        atta:
+          atta_id: '0af00000141'                                  
+          atta_token: '7913895459'             
+          log_atta_id: '0c000006190'
+          log_atta_token: '9155347633'
+  
+  metrics:
+    m007:                                         #007 monitor
+      reportInterval: 60000                       #上报间隔[可选，默认为60000]
+      namespace:  ${namespace}                    #环境类型，分正式production和非正式development两种类型。[可选,未配置则与global.namespace一致]
+      app:       ${app}                           #业务名。[可选，未配置则与server.app一致]
+      server:    ${server}                        #服务名。[可选，未配置则与server.server一致]
+      ip:        ${local_ip}                      #本机IP。[可选，未配置则与global.local_ip一致]
+      containerName:  ${container_name}           #容器名称。[可选，未配置则与global.container_name一致]
+      version:   v0.0.1                           #服务版本 [可选，默认无]
+      frameCode:            trpc                  #框架版本 trpc grpc等 [可选，默认为trpc]
+      prefixMetrics:        pp_trm                #累积量和时刻量前缀[可选，默认为pp_trm]
+      prefixActiveModCall:  pp_tra                #模调主调属性前缀[可选，默认为pp_tra]
+      prefixPassiveModCall: pp_trp                #模调被调属性前缀[可选，默认为pp_trp]
+      prefixCustom:         pp_trc                #Custom前缀[可选，默认为pp_trc]
