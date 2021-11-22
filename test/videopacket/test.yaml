@@ -1,0 +1,47 @@
+admin:
+  access_log_path: ./envoy_debug.log
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 8080
+static_resources:
+  listeners:
+    name: listener_meta_protocol
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 30000
+    filter_chains:
+      - filters:
+          - name: aeraki.meta_protocol_proxy
+            typed_config:
+              '@type': type.googleapis.com/aeraki.meta_protocol_proxy.v1alpha.MetaProtocolProxy
+              application_protocol: videopacket
+              codec:
+                name: aeraki.meta_protocol.codec.videopacket
+              metaProtocolFilters:
+                - name: aeraki.meta_protocol.filters.router
+              routeConfig:
+                routes:
+                  - name: default
+                    match:
+                      metadata:
+                        - name: command
+                          exact_match: "0x1"
+                    route:
+                      cluster: trpc.videopacket.command
+              statPrefix: trpc.videopacket.command
+
+  clusters:
+    name: trpc.videopacket.command.
+    type: STATIC
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: trpc.videopacket.command
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 8000
