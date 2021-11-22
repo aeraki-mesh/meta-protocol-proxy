@@ -1,0 +1,125 @@
+branch:
+  trunk_name: "master"
+  branch_type_A:
+    tag:
+      pattern: "v${versionnumber}"
+      versionnumber: "{Major-version}.{Feature-version}.{Fix-version}"
+
+artifact:
+  - path: "/"
+    artifact_name : "trpc-go"
+    dependence_conf: "go.mod"
+    repository_url: "http://git.code.oa.com/trpc-go/trpc-go"
+
+source:
+  test_source:
+    filepath_regex: [".*_test.go$"]
+  auto_generate_source:
+    filepath_regex: [".*.pb.go$", ".*.trpc.go$"]
+
+code_review:
+  restrict_labels: ["CR-编程规范", "CR-业务逻辑","CR-边界逻辑","CR-代码架构","CR-性能影响","CR-安全性","CR-可测试性","CR-可读性"]
+
+file :
+  - path: "/"
+    owners :  ["nickzydeng", "tensorchen"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["nickzydeng", "tensorchen"]
+      necessary_reviewers :  ["nickzydeng", "tensorchen"]
+  - path: "/admin"
+    owners :  ["jethe", "sumiyang"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["jethe", "sumiyang"]
+      necessary_reviewers :  ["jethe", "sumiyang"]
+  - path: "/client"
+    owners :  ["nickzydeng", "misakachen"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["nickzydeng", "misakachen"]
+      necessary_reviewers :  ["nickzydeng", "misakachen"]
+  - path: "/codec"
+    owners :  ["nickzydeng", "zhijiezhang"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["nickzydeng", "zhijiezhang"]
+      necessary_reviewers :  ["nickzydeng", "zhijiezhang"]
+  - path: "/config"
+    owners :  ["alvinzhu", "treycheng"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["alvinzhu", "treycheng"]
+      necessary_reviewers :  ["alvinzhu", "treycheng"]
+  - path: "/errs"
+    owners :  ["nickzydeng", "delvintang"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["nickzydeng", "delvintang"]
+      necessary_reviewers :  ["nickzydeng", "delvintang"]
+  - path: "/examples"
+    owners :  ["misakachen", "delvintang"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["misakachen", "delvintang"]
+      necessary_reviewers :  ["misakachen", "delvintang"]
+  - path: "/filter"
+    owners :  ["tensorchen", "nickzydeng"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["tensorchen", "nickzydeng"]
+      necessary_reviewers :  ["tensorchen", "nickzydeng"]
+  - path: "/http"
+    owners :  ["alvinzhu", "nickzydeng"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["alvinzhu", "nickzydeng"]
+      necessary_reviewers :  ["alvinzhu", "nickzydeng"]
+  - path: "/log"
+    owners :  ["tensorchen", "nickzydeng"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["tensorchen", "nickzydeng"]
+      necessary_reviewers :  ["tensorchen", "nickzydeng"]
+  - path: "/metrics"
+    owners :  ["zhijiezhang", "neilluo"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["zhijiezhang", "neilluo"]
+      necessary_reviewers :  ["zhijiezhang", "neilluo"]
+  - path: "/naming"
+    owners :  ["misakachen", "nickzydeng"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["misakachen", "nickzydeng"]
+      necessary_reviewers :  ["misakachen", "nickzydeng"]
+  - path: "/plugin"
+    owners :  ["tensorchen", "nickzydeng"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["tensorchen", "nickzydeng"]
+      necessary_reviewers :  ["tensorchen", "nickzydeng"]
+  - path: "/pool"
+    owners :  ["tensorchen", "misakachen"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["tensorchen", "misakachen"]
+      necessary_reviewers :  ["tensorchen", "misakachen"]
+  - path: "/server"
+    owners :  ["nickzydeng", "zhijiezhang"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["nickzydeng", "zhijiezhang"]
+      necessary_reviewers :  ["nickzydeng", "zhijiezhang"]
+  - path: "/testdata"
+    owners :  ["tensorchen", "misakachen"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["tensorchen", "misakachen"]
+      necessary_reviewers :  ["tensorchen", "misakachen"]
+  - path: "/transport"
+    owners :  ["tensorchen", "neilluo"]
+    owner_rule: 1
+    code_review:
+      reviewers :  ["tensorchen", "neilluo"]
+      necessary_reviewers :  ["tensorchen", "neilluo"]

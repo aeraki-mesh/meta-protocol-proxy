@@ -1,0 +1,25 @@
+
+global:                             #全局配置
+  namespace: development           #环境类型，分正式production和非正式development两种类型
+  env_name: test                    #环境名称，非正式环境下多环境的名称
+  container_name: "aaa" #容器名称
+
+server:
+  app: VideoPacketFirst                                         #业务的应用名
+  server: DemoTestServer                          #进程服务名
+  bin_path:  ./                   #二进制可执行文件和框架配置文件所在路径
+  conf_path: ./                 #业务配置文件所在路径
+  data_path: ./                 #数据文件所在路径
+  admin_port: 8001                  #管理命令服务端口
+  admin_ip: 127.0.0.1                            #管理命令服务监听ip地址
+  local_ip: 127.0.0.1                            #本地IP，容器内为容器ip，物理机或虚拟机为本机ip
+  service:                                         #业务服务提供的service，可以有多个
+    - name: TestDemo       #service的路由名称
+      ip: 127.0.0.1                                #服务监听ip地址 可使用占位符 ${ip},ip和nic二选一，优先ip
+      #nic: eth0                                    #服务监听的网卡地址 有ip就不需要配置
+      port: 8000                                   #服务监听端口 可使用占位符 ${port}
+      network: tcp                                 #网络监听类型  tcp udp
+      protocol: videopacket                               #应用层协议 trpc http
+      timeout: 3000                                #请求最长处理时间 单位 毫秒
+      idletime: 300000                             #连接空闲时间
+      registry: videopacket                            #服务启动时使用的服务注册方式

@@ -1,0 +1,266 @@
+/*
+ * 视频统一包头，定义为jce格式
+ * 
+ * 作者：cwyuan
+ * 最后变更时间：2014年3月13日
+ * 版本变更：
+ 1）创建jce文件；2014年3月13日，cwyuan
+ 2）讨论确定第一版本，2014年3月14日，xiuming/andybingeli;
+ 3）fix some bug, 2014年3月17日，cwyuan
+ 4）appid use string, 2014年3月17日，xiuming
+ */
+module videocomm
+{
+
+    /**
+     * 公共错误码定义
+     0-1000：保留错误码，方便后续统一接入层管理；业务侧请使用这些开外的错误码；
+
+     */
+    enum JceCommonCode
+    {
+        SUCC = 0,                         // 成功的状态码
+        FAIL = 1,                        // 通用错误
+        ERR_TIMEOUT_PROXY = 3,           // 无线预留定义：Proxy 返回的超时错误码
+        ERR_INTERFACE_MASS_REQUEST = 4,  // 表示该接口调用已超过申请的频率上限，server无法提供服务
+        ERR_FORBIDDEN = 5,               // session层如果发现请求是被大开关限制的，会予以拒绝
+        ERR_USER_MASS_REQUEST = 6,       // 该请求被频率限制
+        ERR_DELIVER_FAIL = 8,            // 接入层选择下发机器失败
+        ERR_SESSION_REFUSE = 9,          // 接入层session满导致请求被拒
+        ERR_INVALID_ARGUMENT = 10,       // 请求参数错误。请求方的请求不符合协议规范，或者参数填错，不符合字段定义等
+        ERR_PACKET_OVERLENGTH = 11,      // session层包过长
+        ERR_INVALID_UIN = 12,            // 表示uin为保留号码或者超过当前最大uin，也就是业务部门过来的uin并没有生成
+        ERR_OUT_OF_SERVICE_UIN = 13,     // 表示该uin所在的db处于维护状态，暂时不能提供服务
+        ERR_INACTIVE_UIN = 18,           // 表示这个号码被冻结
+        ERR_SYS_MAINTAIN = 22,           // 后台系统维护中
+    };
+
+    enum JceSpecUin
+    {
+        NOT_LOGIN_UIN_DEF = 2112, //无登录态uin，前端注意填写；
+    };
+
+    struct HBasicInfo {
+        0 	require  long		ReqUin;			//唯一的用户标识，如果前端无登录态，请填写2112；目前放号100W以上放号；
+        1	require  short		Command;		//分配的命令字；
+        2	require  byte		ServiceType;	//命令字下对应的服务类型；
+        3	require  byte		version;  		//业务版本；
+        4	require  int		Result;			//返回错误码，是由接入层或者业务接口机返回的；=SUCC表示成功
+        5	require  int		CallerID;		//调用者的ID，视频唯一分配的，唯一区分业务的ID，不同业务使用不同的ID；
+        6	require  long		SeqId;			//前端序列号
+        7 	optional int    	SubCmd;			//子命令字，目前为0
+        8 	optional int  		BodyFlag;		//默认为0，ACC接入层使用，BodyFlag为0x01，表示协议合并;BodyFlag为0x02，表示可以重试
+    };
+
+    //获取App分桶信息
+    struct BucketConfig
+    {
+        0 require int bucketId;	
+        1 optional string extra;
+        2 optional string strategyId; //策略id 
+    };
+
+    struct ExtentData
+    {
+        0 optional int checkFlag; //审核标志
+        1 optional byte flagByte; //统一标识位，[0x01]是否调试状态标识0表示否（不要下发调试信息）
+        2 optional string extent; 
+        3 optional int blankId; //详情页白名单id
+        4 optional BucketConfig bucketInfo; //接入层bucketid分配
+    };
+	
+	struct Coordinates
+	{
+		0 optional int type;//经纬度坐标系,0:[默认]腾讯、google地图产品(中国大陆)、高德坐标, 1:GPS坐标
+		1 optional float latitude; // 纬度
+		2 optional float longitude; // 经度
+		3 optional double accuracy; // 经纬度精度半径,单位为米
+	};
+	
+	struct SafeInfo
+	{
+		0 optional int type;  //校验安全类型
+		1 optional string SafeKey;
+		2 optional vector<byte> SafeResult; //安全结果	
+	};
+	
+    struct HQua
+    {
+        0 require string versionName;		//app的版本名称, 请将CGI参数的appver传入 
+        1 require string versionCode;		//app的版本号 , 请将CGI参数的version传入 
+        2 optional int screenWidth;		//屏幕宽度      
+        3 optional int screenHeight;		//屏幕高度      
+        4 optional int platform;		//平台编号        
+        5 optional string platformVersion;	//平台版本信息
+        6 optional int markerId;			//渠道信息，目前视频分配渠道为 1
+        7 optional int networkMode;			//网络类型: 1 2G; 2 3G; 3 WiFi; 4 Unknown
+        8 optional int densityDpi;			//屏幕像素密度: 160  240  480 ...
+        9 optional string channelId;		//渠道id
+        10 optional string imei;		    //android的imei
+        11 optional string imsi;		    //android的imsi
+        12 optional string idfa;       
+        13 optional string omgId;
+        14 optional string extent;//扩展字段,boxid
+        15 optional ExtentData extentData;//扩展字段，填充ExtentData的jce数据
+        16 optional int oemPlatForm; //区分oem厂线版本
+		17 optional string strategyControl; //播放规则控制字段
+		18 optional int isSupportDolby;          //设备是否支持杜比
+		19 optional string sClientKey;           //pc客户端的key
+		20 optional string sMac; //客户端mac地址
+        21 optional string serverId;
+		22 optional Coordinates coordinates; //经纬度坐标系
+		23 optional string deviceId;         //设备id
+		24 optional string deviceModel;      //设备型号
+		25 optional int deviceType;          //1:手机 2:平板 3:电视
+		26 optional int mobileISP;           //运营商信息 0:未知 1:移动 2:联通 3:电信 4:铁通
+		27 optional int areaMode;            //用户选择地域模式 0:未知(策略同内地) 1:内地 2:海外
+		28 optional SafeInfo safeInfo;      //安全信息
+		29 optional int launchType;          //表示用户这次前台的用户操作来源 1:点击icon打开；2:push拉起；3:url外部拉起；4:3Dtouch拉起
+		30 optional string sessionid;        //app 启动session信息
+		31 optional int countryCode;         //国际码
+		32 optional int langCode;            //语言编码，0：中国，1：英文
+		33 optional string appSubVersion;    //业务相关版本号
+		34 optional int retryFlag;           //重试标志
+		35 optional map<string,string> extInfo; //扩展信息，避免后续的字段膨胀；这里要严格控制字段的申请：
+		                                        //6.8.0版本新增：key:"qadId" AMS统一的用户设备ID; key:"manufacturer" OS:Apple Android:厂商，比如SMARTISAN ; key:"brandAndModel" : iOS:iPhone8,1 Android:OS105
+												//key: "user_safe_level" 用户安全等级；value: 0-5 key: "user_level" 用户地域等级；value:1-35  key: "dye_flag" 用户染色标志；value:1
+	};
+
+    //定义一个日志上报的统一包头
+    struct LogReport
+    {
+        0 optional string pageId;			//页面activity名称
+        1 optional string refPageId;		//上一个页面名称
+        2 optional int pageStep;			//页面跳数
+        3 optional string callType;			//打开方式
+        4 optional int isAuto;				//当前协议是否是自动请求 0 未知 ，1 主动， 2 自动
+        5 optional string vid;				//最后一次看过的点播id
+        6 optional string pid;				//最后一次看过的直播id
+        7 optional string sFromInfo;				//唤起的action里面的渠道信息
+        8 optional string channelId;		//app 发布的市场渠道编号
+        9 optional string mid;				// MTA 上报模块的id
+        10 optional string extent;
+    };
+
+    // 扩展帐号体系的帐号信息
+    struct ExtentAccount
+    {
+        0 require	int	type;				//1，表示饭团
+        1 require	string	accountId;
+    };
+
+
+    struct HAccessInfo {
+        0	optional int		ProxyIP	;		//CGI业务有代理层，请填写代理层的IP
+        1	optional int		ServerIP;		//CGI调用接口的serverip
+        2	optional long		ClientIP ;		//CGI用户的IP
+        3	optional short		ClientPort;		//CGI用户端口
+        4	optional int		ServiceTime;	//CGI前端Server访问接口的时间；
+        5	optional string		ServiceName;	//CGI如果是cgi，请填写cgi的name；如果是server请填写server的name
+        6	optional string		RtxName;		//CGI调用者的RTX名字；
+        7	optional string		FileName;		//CGI调用的文件名；
+        8	optional string		FuncName;		//CGI调用的函数名；
+        9	optional int		Line;			//CGI调用的行号；
+        10	optional string		CgiProcId;		//CGI处理标识
+        11  optional string 	FromInfo;		//对应CGI参数from，用于方便业务统计；
+        12  optional long		AccIP;			//ACC接入层的IP
+        13  optional int		AccPort;		//ACC接入层的PORT
+        14  optional long		AccId;			//ACC接入层的ID
+        15  optional long       ClientID;		//ACC调用方终端基于用户在某个设备的唯一标识
+        16  optional HQua    QUAInfo; //
+        17  optional string  Guid; 
+        18  optional LogReport BossReport;
+        19  optional int Flag; //染色标志,0x1表示染色
+        20  optional long Seq; //接入层seq
+        21  optional vector<ExtentAccount> extentAccountList;//扩展帐号列表
+        22  optional string AreaCodeInfo;
+        23  optional string HttpCookie;
+		24  optional string Ipv6Addr; //IPv6地址
+        25  optional string Ipv6tov4addr; //ipv6对应的v4地址
+    };
+
+    //TokenKeyType=1表示：TokenAppID为ptlogin业务ID，TokenValue为Skey (10)
+    //TokenKeyType=7表示：视频弱登录态，和1定义相同， TokenValue为弱登陆他LSkey
+    //TokenKeyType=9标识：视频圈登录态，视频内部使用的登录态，TokenValue为视频vuserkey
+    struct HLoginToken {
+        1	require	string		TokenAppID;			//登录态APPID
+        2	require	byte		TokenKeyType;		//登录态类型，微信的票据定义一个KeyType，和即通约定一下；
+        3	require string		TokenValue;			//登录态串(限长128字节)
+        4 	optional long   	TokenUin;			//登录态账号信息
+        5	optional string TokenID;       			//登陆账号信息，如openid
+        6 	optional unsigned int Result;			//登录态校验结果，0：表示成功。非0，表示失败。
+        7	optional bool bMainLogin;				//app端的主登录态表示，true：表示为主登录态。false:表示为从登录态
+    };
+	
+	struct ServerRoute {
+		0 optional string fromServerName;  //请求服务的服务名字
+		1 optional int fromServerSetId;    //请求服务的服务的setId   
+		2 optional string toServerName;    //被请求服务的服务名字
+		3 optional int toServerSetId;      //被请求服务的服务的setId
+		4 optional string FuncName;        //被请求服务的函数名字
+		5 optional string fromFuncName;    //请求服务的函数名字
+		};
+
+    //http请求的原始包头数据
+    struct HttpRequest
+    {
+        0 optional long ClientIP;                   //终端ip
+        1 optional int RequestType;                 //请求类型，1表示get，2表示post
+        2 optional string Url;                      //请求的url，如/abc.qq.com?key=124&value=456
+        3 optional string Accept;                   //浏览器接收的媒体类型，如*/*，text/html
+        4 optional string UserAgent;                //终端浏览器类型
+        5 optional string Host;                     //访问的主机名
+        6 optional string Referer;                  //来源url
+        7 optional string PostData;                 //post内容
+        8 optional map<string, string> Cookies;     //请求中带来的cookie
+        9 optional map<string, string> Queries;     //url中请求参数
+        10 optional map<string, string> MoreHeaders; //其他私有header
+    };
+
+    struct HttpKV
+    {
+        0 optional string httpKey;
+        1 optional string httpValue;
+    };
+
+    //http请求的返回包头数据
+    struct HttpResponse
+    {
+        0 optional vector<HttpKV> HttpActions;      //需要浏览器执行的动作
+        1 optional string ReturnBody;               //原样透传后台返回数据
+    };
+
+    //http请求和回包包头数据
+    struct HttpData
+    {
+        0 optional HttpRequest Request;               //http请求的原始包头数据
+        1 optional HttpResponse Response;             //http请求的返回包头数据
+    };
+
+    //ACC接入层专用，底层业务无需理解
+    struct HAccCmdBody{
+        1 optional short AccCmd;          	//命令字
+        2 optional int AccSubCmd;         	//子命令字
+        3 optional string AccBody;                	//命令协议体
+    };
+	
+	struct BusinessHead
+	{
+		0 require int type;   
+		1 require string body;  
+	};
+
+    struct VideoCommHeader {
+        0 require HBasicInfo  BasicInfo; 				//最基础的信息，回包时会原封不动的回过去；
+        1 require HAccessInfo AccessInfo; 				//上下文路由信息，方便监控和错误分析；
+        2 optional vector<HLoginToken>  LoginTokens; 	//调用方传递用户的登录态；
+        3 optional string body;
+        4 optional vector<HAccCmdBody> AccCmdBody;			//BodyFlag为1时，用户协议合并
+        5 optional HttpData HttpBody;
+		6 optional BusinessHead businessHead;
+		7 optional ServerRoute serverRoute;
+		//8 optional map<string, string> mapExtData;        //无用废弃
+		9 optional map<string, map<string,string> > mapExtReport;        // map的第一层key为后台系统层id(layerId 全局唯一）， map第一层的value为map结构，目前只上报策略id(stragyId), 后续增加新的第二层key必须报备到字典表中
+
+  };
+};
