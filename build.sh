@@ -18,4 +18,4 @@ fi
 
 target="envoy"
 
-bazel build ${buildFlags} //:$target --host_force_python=PY3
+bazel build ${buildFlags} //:$target --host_force_python=PY3 --cxxopt="-Wno-unused-parameter" --cxxopt="-Wno-error=old-style-cast" --cxxopt="-Wno-error=non-virtual-dtor"
