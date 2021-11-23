@@ -16,7 +16,7 @@ class CVideoPacket
 {
 public:
 	CVideoPacket();
-	~CVideoPacket();
+	virtual ~CVideoPacket();
 public:
 	virtual int decode(void);
 	virtual int encode(void);
@@ -102,7 +102,7 @@ public:
 		if(pData == NULL || wDataLen < MIN_PACKET_LEN)
 			return 0;
 		
-		unsigned short *pwCommand = (unsigned short *)&(pData[7]);
+		unsigned short *pwCommand = reinterpret_cast<unsigned short *>(&(pData[7]));
 
 		return ntohs(*pwCommand);
 	}
@@ -119,7 +119,7 @@ public:
 	inline void setReqUin(taf::Int64 ddwUin) {m_stVideoCommHeader.BasicInfo.ReqUin = ddwUin;}
 	inline void setCommand(unsigned short wCommand)
 	{
-		unsigned short *pwCommand = (unsigned short *)&(m_acReserved[1]);
+		unsigned short *pwCommand = reinterpret_cast<unsigned short *>(&(m_acReserved[1]));
 		m_stVideoCommHeader.BasicInfo.Command = wCommand;
 		*pwCommand = htons(wCommand);
 	}
@@ -228,7 +228,7 @@ public:
 private:
 	static inline uint32_t getPacketLenFromBuf(const char *pBuf)
 	{
-		return ntohl(*(uint32_t *)&pBuf[1]);
+		return ntohl(*reinterpret_cast<uint32_t *>(const_cast<char*>(&pBuf[1])));
 	}
 	virtual int is_valid_packet() const
 	{
@@ -293,10 +293,10 @@ private:
 		}
 		else
 		{
-			dwSize = dwSize;
+			// dwSize = dwSize;
 		}
 		
-		packet = (uint8_t *)malloc(dwSize);
+		packet = reinterpret_cast<uint8_t *>(malloc(dwSize));
 		if(packet == NULL)
 		{
 			return -1;

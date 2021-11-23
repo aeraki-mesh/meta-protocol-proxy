@@ -205,7 +205,7 @@ namespace taf
 			else
 			{
                 char s[64];
-                snprintf(s, sizeof(s), "buffer overflow when skip, over %u.", (uint32_t)_buf_len);
+                snprintf(s, sizeof(s), "buffer overflow when skip, over %u.", static_cast<uint32_t>(_buf_len));
                 throw JceDecodeException(s);
             }
 		}
@@ -216,7 +216,7 @@ namespace taf
 			if (_cur + offset + len > _buf_len)
 			{
 				char s[64];
-				snprintf(s, sizeof(s), "buffer overflow when peekBuf, over %u.", (uint32_t)_buf_len);
+				snprintf(s, sizeof(s), "buffer overflow when peekBuf, over %u.",static_cast<uint32_t>(_buf_len));
 				throw JceDecodeException(s);
 			}
 			::memcpy(buf, _buf + _cur + offset, len);
@@ -233,7 +233,7 @@ namespace taf
 			else
 			{
                 char s[64];
-                snprintf(s, sizeof(s), "buffer overflow when skip, over %u.", (uint32_t)_buf_len);
+                snprintf(s, sizeof(s), "buffer overflow when skip, over %u.", static_cast<uint32_t>(_buf_len));
                 throw JceDecodeException(s);
             }
 		}
@@ -298,7 +298,7 @@ namespace taf
 			if (_cur + len > _buf_len)
 			{
 				char s[64];
-				snprintf(s, sizeof(s), "MapBufferReader's buffer overflow when peekBuf, over %u.", (uint32_t)_buf_len);
+				snprintf(s, sizeof(s), "MapBufferReader's buffer overflow when peekBuf, over %u.", static_cast<uint32_t>(_buf_len));
 				throw JceDecodeException(s);
 			}
 			_cur += len;
@@ -660,9 +660,9 @@ namespace taf
 
 		void read(UInt8& n, uint8_t tag, bool isRequire = true)
 		{
-			Short i = (Short)n;
+			Short i = static_cast<Short>(n);
 			read(i,tag,isRequire);
-			n = (UInt8)i;
+			n = static_cast<UInt8>(i);
 		}
 
 		void read(Short& n, uint8_t tag, bool isRequire = true)
@@ -701,9 +701,9 @@ namespace taf
 
 		void read(UInt16& n, uint8_t tag, bool isRequire = true)
 		{
-			Int32 i = (Int32)n;
+			Int32 i = static_cast<Int32>(n);
 			read(i,tag,isRequire);
-			n = (UInt16)i;
+			n = static_cast<UInt16>(i);
 		}
 
 		void read(Int32& n, uint8_t tag, bool isRequire = true)
@@ -721,7 +721,7 @@ namespace taf
 					n = readByType<Char>();
 					break;
 				case DataHead::eShort:
-					n = (Short) ntohs(readByType<Short>());
+					n = static_cast<Short>(ntohs(readByType<Short>()));
 					break;
 				case DataHead::eInt32:
 					this->readBuf(&n, sizeof(n));
@@ -745,9 +745,9 @@ namespace taf
 
 		void read(UInt32& n, uint8_t tag, bool isRequire = true)
 		{
-			Int64 i = (Int64)n;
+			Int64 i = static_cast<Int64>(n);
 			read(i,tag,isRequire);
-			n = (UInt32)i;
+			n = static_cast<UInt32>(i);
 		}
 
 		void read(Int64& n, uint8_t tag, bool isRequire = true)
@@ -765,10 +765,10 @@ namespace taf
 					n = readByType<Char>();
 					break;
 				case DataHead::eShort:
-					n = (Short) ntohs(readByType<Short>());
+					n = static_cast<Short>( ntohs(readByType<Short>()));
 					break;
 				case DataHead::eInt32:
-					n = (Int32) ntohl(readByType<Int32>());
+					n = static_cast<Int32>( ntohl(readByType<Int32>()));
 					break;
 				case DataHead::eInt64:
 					this->readBuf(&n, sizeof(n));
@@ -1112,6 +1112,7 @@ namespace taf
 		template<typename T>
 		void read(T* v, const UInt32 len, UInt32 & readLen, uint8_t tag, bool isRequire = true)
 		{
+			(void)len;
 			if (skipToTag(tag))
 			{
 				DataHead h;
@@ -1152,15 +1153,17 @@ namespace taf
 		template<typename T>
 		void read(T& v, uint8_t tag, bool isRequire = true, typename jce::disable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
 		{
+			(void)dummy;
 			Int32 n = 0;
 			read(n, tag, isRequire);
-			v = (T) n;
+			v = static_cast<T>(n);
 		}
 
 		/// ��ȡ�ṹ
 		template<typename T>
 		void read(T& v, uint8_t tag, bool isRequire = true, typename jce::enable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
 		{
+			(void)dummy;
 			if (skipToTag(tag))
 			{
 				DataHead h;
@@ -1190,7 +1193,7 @@ namespace taf
 	public:
 		void write(Bool b, uint8_t tag)
 		{
-			write((Char) b, tag);
+			write(static_cast<Char>(b), tag);
 		}
 
 		void write(Char n, uint8_t tag)
@@ -1218,7 +1221,7 @@ namespace taf
 
 		void write(UInt8 n, uint8_t tag)
 		{
-			write((Short) n, tag);
+			write(static_cast<Short>(n), tag);
 		}
 
 		void write(Short n, uint8_t tag)
@@ -1226,7 +1229,7 @@ namespace taf
 			//if(n >= CHAR_MIN && n <= CHAR_MAX){
 			if (n >= (-128) && n <= 127)
 			{
-				write((Char) n, tag);
+				write(static_cast<Char>( n), tag);
 			}
 			else
 			{
@@ -1244,7 +1247,7 @@ namespace taf
 
 		void write(UInt16 n, uint8_t tag)
 		{
-			write((Int32) n, tag);
+			write(static_cast<Int32>(n), tag);
 		}
 
 		void write(Int32 n, uint8_t tag)
@@ -1252,7 +1255,7 @@ namespace taf
 			//if(n >= SHRT_MIN && n <= SHRT_MAX){
 			if (n >= (-32768) && n <= 32767)
 			{
-				write((Short) n, tag);
+				write(static_cast<Short>(n), tag);
 			}
 			else
 			{
@@ -1266,7 +1269,7 @@ namespace taf
 
 		void write(UInt32 n, uint8_t tag)
 		{
-			write((Int64) n, tag);
+			write(static_cast<Int64>(n), tag);
 		}
 
 		void write(Int64 n, uint8_t tag)
@@ -1274,7 +1277,7 @@ namespace taf
 			//if(n >= INT_MIN && n <= INT_MAX){
 			if (n >= (-2147483647-1) && n <= 2147483647)
 			{
-				write((Int32) n, tag);
+				write(static_cast<Int32>(n), tag);
 			}
 			else
 			{
@@ -1311,7 +1314,7 @@ namespace taf
 				if (s.size() > JCE_MAX_STRING_LENGTH)
 				{
 					char ss[128];
-					snprintf(ss, sizeof(ss), "invalid string size, tag: %d, size: %u", tag, (uint32_t)s.size());
+					snprintf(ss, sizeof(ss), "invalid string size, tag: %d, size: %u", tag, static_cast<uint32_t>(s.size()));
 					throw JceDecodeInvalidValue(ss);
 				}
 				DataHead::writeTo(*this, DataHead::eString4, tag);
@@ -1370,7 +1373,7 @@ namespace taf
 		{
 			DataHead::writeTo(*this, DataHead::eList, tag);
 			write(len, 0);
-			for (Int32 i = 0; i < (Int32)len; ++i)
+			for (Int32 i = 0; i < static_cast<Int32>(len); ++i)
 			{
 				write(v[i], 0);
 			}
@@ -1393,12 +1396,14 @@ namespace taf
 		template<typename T>
 		void write(const T& v, uint8_t tag, typename jce::disable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
 		{
-			write((Int32) v, tag);
+			(void)dummy;
+			write(static_cast<Int32>(v), tag);
 		}
 
 		template<typename T>
 		void write(const T& v, uint8_t tag, typename jce::enable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
 		{
+			(void)dummy;
 			//DataHead h(DataHead::eStructBegin, tag);
 			//h.writeTo(*this);
 			DataHead::writeTo(*this, DataHead::eStructBegin, tag);
@@ -1418,7 +1423,7 @@ namespace taf
 #ifdef __APPLE__
 	#include "JceDisplayer.h"
 #else
-	#include "jce/JceDisplayer.h"
+	#include "src/application_protocols/videopacket/jce/JceDisplayer.h"
 #endif
 
 #endif

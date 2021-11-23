@@ -12,17 +12,17 @@
 #include <string.h>
 #include <limits.h>
 
-//Ö§³Öiphone
+//Ö§ï¿½ï¿½iphone
 #ifdef __APPLE__
 #include "JceType.h"
 #else
-#include "jce/JceType.h"
+#include "src/application_protocols/videopacket/jce/JceType.h"
 #endif
 
 namespace taf
 {
 //////////////////////////////////////////////////////////////////////
-/// ÓÃÓÚÊä³ö
+/// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 class JceDisplayer
 {
     std::ostream&   _os;
@@ -51,14 +51,14 @@ public:
     JceDisplayer& display(Char n, const char * fieldName)
     {
         ps(fieldName);
-        _os << (short)n << std::endl;
+        _os << static_cast<short>(n) << std::endl;
         return *this;
     }
 
     JceDisplayer& display(UInt8 n, const char * fieldName)
     {
         ps(fieldName);
-        _os << (short)n << std::endl;
+        _os << static_cast<short>(n) << std::endl;
         return *this;
     }
 
@@ -189,12 +189,14 @@ public:
     template < typename T >
     JceDisplayer& display(const T& v, const char * fieldName, typename jce::disable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
     {
-        return display((Int32) v, fieldName);
+        (void)dummy;
+        return display(static_cast<Int32>(v), fieldName);
     }
 
     template < typename T >
     JceDisplayer& display(const T& v, const char * fieldName, typename jce::enable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
     {
+        (void)dummy;
         display('{', fieldName);
         v.display(_os, _level + 1);
         display('}', NULL);
@@ -209,13 +211,13 @@ public:
 
     JceDisplayer& displaySimple(Char n, bool bSep)
     {
-        _os << (short)n << (bSep ? "|" : "");
+        _os << static_cast<short>(n) << (bSep ? "|" : "");
         return *this;
     }
 
     JceDisplayer& displaySimple(UInt8 n, bool bSep)
     {
-        _os << (short)n << (bSep ? "|" : "");
+        _os << static_cast<short>(n) << (bSep ? "|" : "");
         return *this;
     }
 
@@ -338,12 +340,14 @@ public:
     template < typename T >
     JceDisplayer& displaySimple(const T& v, bool bSep, typename jce::disable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
     {
-        return displaySimple((Int32) v, bSep);
+        (void)dummy;
+        return displaySimple(static_cast<Int32>(v), bSep);
     }
 
     template < typename T >
     JceDisplayer& displaySimple(const T& v, bool bSep, typename jce::enable_if<jce::is_convertible<T*, JceStructBase*>, void ***>::type dummy = 0)
     {
+        (void)dummy;
         _os << "{";
         v.displaySimple(_os, _level + 1);
         _os << "}" << (bSep ? "|" : "");

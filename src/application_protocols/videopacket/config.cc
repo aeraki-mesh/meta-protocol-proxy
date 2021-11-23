@@ -1,7 +1,6 @@
-#include "envoy/registry/registry.h"
-
-#include "src/meta_protocol_proxy/codec/factory.h"
 #include "src/application_protocols/videopacket/config.h"
+#include "envoy/registry/registry.h"
+#include "src/application_protocols/videopacket/videopacket_codec.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -16,7 +15,7 @@ namespace VideoPacket {
    /**
    * Static registration for the videopacket codec. @see RegisterFactory.
    */
-  REGISTER_FACTORY(VideoPacketCodecConfig, MetaProtocolProxy::NamedCodecConfigFactory);
+  REGISTER_FACTORY(VideoPacketCodecConfig, NamedProtocolConfigFactory);
 
 }   // namespace VideoPacket 
 }   // namespace MetaProtocolProxy

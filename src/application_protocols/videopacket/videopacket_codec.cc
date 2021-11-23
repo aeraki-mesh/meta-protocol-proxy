@@ -1,12 +1,8 @@
-#include <any>
-
-#include "envoy/buffer/buffer.h"
-
-#include "common/common/logger.h"
-
-#include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/application_protocols/videopacket/videopacket_codec.h"
-
+#include <any>
+#include "envoy/buffer/buffer.h"
+#include "common/common/logger.h"
+#include "src/meta_protocol_proxy/codec/codec.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -45,6 +41,9 @@ void VideoPacketCodec::encode(const MetaProtocolProxy::Metadata& metadata,
 
 void VideoPacketCodec::onError(const MetaProtocolProxy::Metadata& metadata,
                         const MetaProtocolProxy::Error& error, Buffer::Instance& buffer) {
+  (void)metadata;
+  (void)error;
+  (void)buffer;
   // FIXME: have been released in cvp.decode()
 }
 

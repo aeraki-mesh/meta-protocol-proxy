@@ -209,6 +209,7 @@ template<typename T> inline void jce_copy_struct(T& a, const T& b) { a = b; }
 template<typename T, typename U>
 inline void jce_copy_struct(std::vector<T>& a, const std::vector<U>& b, typename jce::disable_if<jce::is_same_type<T, U>, void ***>::type dummy = 0)
 {
+    (void)dummy;
     a.resize(b.size());
     for(size_t i = 0; i < a.size(); ++i)
         jce_copy_struct_impl(a[i], b[i]);
@@ -217,6 +218,7 @@ inline void jce_copy_struct(std::vector<T>& a, const std::vector<U>& b, typename
 template<typename K1, typename V1, typename K2, typename V2>
 inline void jce_copy_struct(std::map<K1, V1>& a, const std::map<K2, V2>& b, typename jce::disable_if<jce::is_same_type<std::map<K1, V1>, std::map<K2, V2> >, void ***>::type dummy = 0)
 {
+    (void)dummy;
     a.clear();
     std::pair<K1, V1> pr;
     typedef typename std::map<K2, V2>::const_iterator IT;

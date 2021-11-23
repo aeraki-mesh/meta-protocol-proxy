@@ -1,6 +1,7 @@
 #pragma once
 
-#include "src/meta_protocol_proxy/codec/factory.h"
+// #include "src/meta_protocol_proxy/codec/factory.h"
+#include "src/application_protocols/videopacket/protocol.h"
 #include "src/application_protocols/videopacket/video_packet.h"
 
 namespace Envoy {
@@ -10,9 +11,9 @@ namespace MetaProtocolProxy {
 namespace VideoPacket {
 
 class VideoPacketCodecConfig
-    : public MetaProtocolProxy::CodecFactoryBase<aeraki::meta_protocol::codec::VideoPacketCodec> {
+    : public ProtocolFactoryBase<CVideoPacket> {
 public:
-  VideoPacketCodecConfig() : CodecFactoryBase("aeraki.meta_protocol.codec.videopacket") {}
+  VideoPacketCodecConfig() : ProtocolFactoryBase("aeraki.meta_protocol.codec.videopacket") {}
   MetaProtocolProxy::CodecPtr createCodec(const Protobuf::Message& config) override;
 };
 
