@@ -26,7 +26,7 @@ MetaProtocolProxy::DecodeStatus VideoPacketCodec::decode(Buffer::Instance& buffe
   cvp.set_packet(reinterpret_cast<uint8_t*>(buffer.toString().data()), buffer.length());
   cvp.decode();
 
-  toMetadata(cvp, metadata);
+  toMetadata(cvp, metadata, buffer);
 
   return DecodeStatus::Done;
 }
@@ -47,10 +47,12 @@ void VideoPacketCodec::onError(const MetaProtocolProxy::Metadata& metadata,
   // FIXME: have been released in cvp.decode()
 }
 
-void VideoPacketCodec::toMetadata(CVideoPacket& cvp, MetaProtocolProxy::Metadata& metadata) {
+void VideoPacketCodec::toMetadata(CVideoPacket& cvp, MetaProtocolProxy::Metadata& metadata, Buffer::Instance& buffer) {
     metadata.setRequestId(cvp.getReqUin());
     metadata.put("service_type",cvp.getServiceType());
     metadata.put("command",cvp.getCommand());
+
+    metadata.setOriginMessage(buffer);
 }
 
 }   // namespace VideoPacket 

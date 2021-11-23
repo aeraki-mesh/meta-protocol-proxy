@@ -27,7 +27,7 @@ public:
    */
   virtual CodecPtr createCodec(const Protobuf::Message& config) PURE;
 
-  std::string category() const override { return "envoy.video_packet_proxy.protocols"; }
+  std::string category() const override { return "envoy.videopacket_proxy.protocols"; }
 };
 
 template <class ProtoImpl> class ProtocolFactoryBase : public NamedProtocolConfigFactory {
