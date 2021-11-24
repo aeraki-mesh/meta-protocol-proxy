@@ -6,14 +6,19 @@ load(
 # compile proto
 load("@envoy_api//bazel:api_build_system.bzl", "api_proto_package")
 
+api_proto_package(
+    deps = ["@com_github_cncf_udpa//udpa/annotations:pkg"],
+)
+
 envoy_cc_library(
     name = "config",
     visibility = ["//:__pkg__"],
     repository = "@envoy",
     srcs = ["config.cc"],
-    hdrs = ["config.h", "protocol.h"],
+    hdrs = ["config.h"],
     deps = [
         ":codec_lib",
+        ":pkg_cc_proto",
         "@envoy//include/envoy/registry",
         "//src/meta_protocol_proxy/codec:factory_lib",
     ],
@@ -34,10 +39,20 @@ envoy_cc_library(
     ],
 )
 
-cc_import(
+envoy_cc_library(
     name = "static",
-    # hdrs = ["src/application_protocols/videopacket/video_packet.h"],
+    repository = "@envoy",
+    srcs = ["video_packet.cc"],
     hdrs = ["video_packet.h", "VideoCommHead.h"],
-    # static_library = "src/application_protocols/videopacket/libvideo_packet.a",
-    static_library = "libvideo_packet.a",
+    deps = [
+        "//src/application_protocols/videopacket/jce:jce",
+    ],
 )
+
+# cc_import(
+#     name = "static",
+#     # hdrs = ["src/application_protocols/videopacket/video_packet.h"],
+#     hdrs = ["video_packet.h", "VideoCommHead.h"],
+#     # static_library = "src/application_protocols/videopacket/libvideo_packet.a",
+#     static_library = "libvideo_packet.a",
+# )

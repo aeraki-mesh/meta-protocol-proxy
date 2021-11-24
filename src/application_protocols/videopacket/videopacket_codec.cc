@@ -14,20 +14,21 @@ MetaProtocolProxy::DecodeStatus VideoPacketCodec::decode(Buffer::Instance& buffe
                                                   MetaProtocolProxy::Metadata& metadata) {
   ENVOY_LOG(debug, "videopacket decoder: {} bytes available", buffer.length());
   // https://km.woa.com/articles/show/311763?kmref=search&from_page=1&no=1
-  int hasfinished;
-  // 表示是否还需要再从缓冲区读取数据；如果值是-1/0则当前数据不完整
-  hasfinished = CVideoPacket::checkPacket(const_cast<char*>(buffer.toString().data()), buffer.length());
+  // 表示从缓冲区读取数据的长度；如果值是-1/0则当前数据不完整
+  int len = CVideoPacket::checkPacket(const_cast<char*>(buffer.toString().data()), buffer.length());
 
-  if (hasfinished <= 0) {
+  if (len <= 0) {
     ENVOY_LOG(debug, "videopacket decoder: wait for data");
     return DecodeStatus::WaitForData;
   }
+
+  std::string data = std::string(buffer.toString(), len);
+
+  // video packet 协议解码
   CVideoPacket cvp;
-  cvp.set_packet(reinterpret_cast<uint8_t*>(buffer.toString().data()), buffer.length());
+  cvp.set_packet(reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.toString().data())), len);
   cvp.decode();
-
   toMetadata(cvp, metadata, buffer);
-
   return DecodeStatus::Done;
 }
 
@@ -41,18 +42,49 @@ void VideoPacketCodec::encode(const MetaProtocolProxy::Metadata& metadata,
 
 void VideoPacketCodec::onError(const MetaProtocolProxy::Metadata& metadata,
                         const MetaProtocolProxy::Error& error, Buffer::Instance& buffer) {
-  (void)metadata;
-  (void)error;
-  (void)buffer;
-  // FIXME: have been released in cvp.decode()
+                          (void)metadata;
+  // 从metadata 获取 command, 字符串类型
+  int cmd = strtol(metadata.getString("command").c_str(), nullptr, 0);
+  if (cmd <= 0) {
+    cmd = 1;
+  }
+ 
+  CVideoPacket cvp;
+  cvp.setCommand(cmd);
+
+  switch (error.type) {
+    case ErrorType::RouteNotFound: {
+      std::cout << "Route Nod Found" << std::endl << std::endl << std::endl;
+      cvp.setResult(videocomm::FAIL);
+      break;
+    }
+    default: {
+      std::cout << "Other" << std::endl << std::endl << std::endl;
+      cvp.setResult(videocomm::FAIL);
+      break;
+    }
+  }
+
+  int ret = cvp.encode();
+  if (ret != 0) {
+    ENVOY_LOG(debug, "videopacket onError: encode failed ret = {}", ret);
+  }
+
+  // 写回buffer, 返回客户端的内容
+  buffer.add(cvp.getPacket(), cvp.getLength());
 }
 
-void VideoPacketCodec::toMetadata(CVideoPacket& cvp, MetaProtocolProxy::Metadata& metadata, Buffer::Instance& buffer) {
+void VideoPacketCodec::toMetadata(CVideoPacket& cvp, MetaProtocolProxy::Metadata& metadata,
+      Buffer::Instance& buffer) {
     metadata.setRequestId(cvp.getReqUin());
     metadata.put("service_type",cvp.getServiceType());
-    metadata.put("command",cvp.getCommand());
-
+    // metadata.put("command",cvp.getCommand());
+    // 路由匹配需要 string 类型的 key-value
+    metadata.putString("command", std::to_string(cvp.getCommand()));
     metadata.setOriginMessage(buffer);
+
+    // 清空缓存
+    buffer.drain(cvp.getPacketLen());
 }
 
 }   // namespace VideoPacket 

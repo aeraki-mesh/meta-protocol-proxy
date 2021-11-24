@@ -4,12 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-
-
 enum {
 	VIDEO_STX = 0x26,
 	VIDEO_ETX = 0x28
-	
 }; 
 
 class CVideoPacket
@@ -22,27 +19,28 @@ public:
 	virtual int encode(void);
 	virtual int set_packet(uint8_t *pData, uint32_t wDataLen);
 
-	/*
-		@biref:�԰��ĺϷ��Խ��м��
-		@return:
-		<0, �����������Ϸ�
-		=0, ����û�н�������,����0��spp_proxy������������
-		>0, ���ذ���ĳ���
-		@process:
-		1���ȼ����Ƿ��������
-		2��Ȼ������Ƿ�Ϸ�
-	*/
-	static inline int checkPacket(const char *pBuf, uint32_t dwReciveLen)
-	{	
-		if(dwReciveLen < 3)
+	// 
+	static inline int checkPacket(const char *pBuf, uint32_t dwReciveLen) {	
+		if (dwReciveLen < 17) {
 			return 0;
-		
-		uint32_t dwRealPacketLen = getPacketLenFromBuf(pBuf);
-		if(dwRealPacketLen > dwReciveLen)
-			return 0;
-		
-		if(dwRealPacketLen < MIN_PACKET_LEN || pBuf[0] != VIDEO_STX || pBuf[dwRealPacketLen - 1] != VIDEO_ETX)
+		}
+			
+		if(pBuf[0] != VIDEO_STX) {
 			return -1;
+		}
+		
+		if(dwReciveLen > 2*1024*1024) {
+			return -1;
+		}
+			
+		uint32_t dwRealPacketLen = getPacketLenFromBuf(pBuf);
+		if(dwRealPacketLen > dwReciveLen) {
+			return 0;
+		}
+		
+		if(pBuf[0] != VIDEO_STX || pBuf[dwRealPacketLen - 1] != VIDEO_ETX) {
+			return -1;
+		}
 	
 		return dwRealPacketLen;
 	}
@@ -81,13 +79,6 @@ public:
 		m_stVideoCommHeader = stVideoCommHeader;
 	}
 	
-	/*
-	*	��ȡ���޸�VideoCommHeader��ϵ�к�����Ҳ����ͨ��getVideoCommHead�������޸�
-	*/
-	
-	/*
-		@biref:HBasicInfo��Ա�Ķ�д����
-	*/
 	inline taf::Int64 getReqUin() const {return m_stVideoCommHeader.BasicInfo.ReqUin;}
 	inline unsigned short getCommand() const
 	{
@@ -96,9 +87,6 @@ public:
 	
 	static unsigned short getCommand(uint8_t *pData, uint32_t wDataLen)
 	{
-		//��Ϊ֮ǰ�н��а������Լ�飬����ͼ򵥵ļ����ָ������ĺϷ��Լ���
-		//���ȷ��ع̶��ֽڵط���������
-
 		if(pData == NULL || wDataLen < MIN_PACKET_LEN)
 			return 0;
 		
@@ -130,9 +118,7 @@ public:
 	inline void setSeqId(taf::Int64 ddwSeqId){m_stVideoCommHeader.BasicInfo.SeqId = ddwSeqId;}
 	inline void setSubCmd(int iSubCmd) {m_stVideoCommHeader.BasicInfo.SubCmd = iSubCmd;}
 	inline void setBodyFlag(int iBodyFlag) {m_stVideoCommHeader.BasicInfo.BodyFlag = iBodyFlag;}
-	/*
-		@biref:HAccessInfo��Ա�Ķ�д����
-	*/
+
 	inline unsigned int getProxyIP() const {return m_stVideoCommHeader.AccessInfo.ProxyIP;}
 	inline unsigned int getServerIP() const {return m_stVideoCommHeader.AccessInfo.ServerIP;}
 	inline taf::Int64 getClientIP() const {return m_stVideoCommHeader.AccessInfo.ClientIP;}
@@ -189,9 +175,7 @@ public:
 	{
 		m_stVideoCommHeader.AccessInfo.extentAccountList.assign(vecExtentAccountList.begin(), vecExtentAccountList.end());
 	}
-	/*
-		@biref:HLoginToken��Ա�Ķ�д����
-	*/
+
 	inline taf::Int64 getLoginUserid()
 	{
 		for(uint32_t i=0; i<m_stVideoCommHeader.LoginTokens.size(); i++)
@@ -319,20 +303,8 @@ private:
 	}
 private:
 	static const uint16_t MIN_PACKET_LEN;
-	uint32_t m_wVideoCommHeaderLen; //�洢m_stVideoCommHeader�ĳ��ȣ����ǲ�����CVideoPacket
+	uint32_t m_wVideoCommHeaderLen;
 	
-	/*
-		��������ṹ���壬��ȥm_stVideoCommHeader�ĳ���Ϊ17�ֽ�
-		@brief:
-		1��m_acReserved�ĵ�һ���ֽ�������������id��redoid=m_acReserved[0]
-		redoid=0,�����������
-		redoid>0�����԰�,redoidΪ���Դ���
-		2��m_acReserved�ĵڶ��������ֽ���������ҵ�������֣����㲻�ý�jce���Ϳ���ȡ��������
-		3��m_acReserved�ĵ����ֽ��������������id��ctrlid=m_acReserved[3],��λȡֵ
-		ctrlid=0,�����������
-		ctrlid=0x01�����԰�
-			
-	*/
 	unsigned char m_cStx;
 	unsigned int m_dwPacketLen;
 	unsigned char m_cVersion;
@@ -343,4 +315,3 @@ private:
 	uint32_t packet_len; 
 	uint8_t *packet;
 };
-

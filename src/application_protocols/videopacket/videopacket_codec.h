@@ -36,6 +36,8 @@ public:
 
 private:
  void toMetadata(CVideoPacket& cvp, MetaProtocolProxy::Metadata& metadata, Buffer::Instance& buffer);
+private:  
+ //CVideoPacket req_packet_;
 }; 
 
 }   // namespace VideoPacket 
