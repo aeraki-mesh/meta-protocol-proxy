@@ -21,6 +21,23 @@ static_resources:
                 name: aeraki.meta_protocol.codec.videopacket
               metaProtocolFilters:
                 - name: aeraki.meta_protocol.filters.router
+                - name: aeraki.meta_protocol.filters.ratelimit
+                  config:
+                    '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.ratelimit.v1alpha.RateLimit
+                    rate_limit_service:
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: ratelimit
+                      transport_api_version: V3
+                    items:
+                    # 多个item表示或者
+                    - domain: limit_tst
+                      failure_mode_deny: false
+                      match:
+                      # 多个match表示并且  
+                      - key: command
+                        value: 1
+                      
               routeConfig:
                 routes:
                   - name: default
@@ -33,7 +50,7 @@ static_resources:
               statPrefix: trpc.videopacket.command
 
   clusters:
-    name: trpc.videopacket.command.
+  - name: trpc.videopacket.command
     type: STATIC
     connect_timeout: 5s
     load_assignment:
@@ -45,3 +62,15 @@ static_resources:
                   socket_address:
                     address: 127.0.0.1
                     port_value: 8000
+  - name: ratelimit
+    type: STATIC
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: ratelimit
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 9.134.187.103
+                    port_value: 25000
