@@ -12,20 +12,29 @@ namespace LocalRateLimit {
 
 LocalRateLimitManager::LocalRateLimitManager(Stats::Scope& scope, const LocalRateLimitConfig& config,Event::Dispatcher& dispatcher)
         :config_(config) {
-  
-  // TODO scope using for metric in future 
-  std::cout << "scope: " << &scope << std::endl;
+
   // create ratelimit impl
   for (auto item : config.items()) { 
     std::string final_prefix = "local_rate_limit." + item.stat_prefix();
 
+    // 禁止重复的 stat_prefix
+    if (rate_limiter_map_.find(final_prefix) != rate_limiter_map_.end()) {
+      throw EnvoyException("local rate limit config: stat_prefix already exists! prefix=" + item.stat_prefix());
+    }
+
+    // limiter map
     rate_limiter_map_[final_prefix] = new LocalRateLimiterImpl(
       std::chrono::milliseconds(PROTOBUF_GET_MS_REQUIRED(item.token_bucket(), fill_interval)),
       item.token_bucket().max_tokens(),
       PROTOBUF_GET_WRAPPED_OR_DEFAULT(item.token_bucket(), tokens_per_fill, 1),
       dispatcher,
-      config
+      item
     );
+    
+    // stats
+    stats_map_[final_prefix] = new LocalRateLimitStats{
+      ALL_LOCAL_RATE_LIMIT_STATS(POOL_COUNTER_PREFIX(scope, final_prefix))
+    };
   }
 }
 

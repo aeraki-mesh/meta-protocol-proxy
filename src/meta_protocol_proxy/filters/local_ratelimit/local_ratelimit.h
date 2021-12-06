@@ -23,28 +23,10 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
-// /**
-//  * All local rate limit stats. @see stats_macros.h
-//  */
-// #define ALL_LOCAL_RATE_LIMIT_STATS(COUNTER) COUNTER(rate_limited)
-
-// /**
-//  * Struct definition for all local rate limit stats. @see stats_macros.h
-//  */
-// struct LocalRateLimitStats {
-//   ALL_LOCAL_RATE_LIMIT_STATS(GENERATE_COUNTER_STRUCT)
-// };
-
-// using ConfigSharedPtr = std::shared_ptr<Envoy::Extensions::NetworkFilters::MetaProtocolProxy::LocalRateLimit::LocalRateLimiterImpl>;
-
-// using LocalRateLimitStatsPtr = std::shared_ptr<LocalRateLimitStats>;
-
 class LocalRateLimit : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
 public:
-  // LocalRateLimit(Stats::Scope& scope, 
-  // const aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit& proto_config, 
-  // Event::Dispatcher& dispatcher);
-  LocalRateLimit(LocalRateLimitManager* manager) : manager_(manager) {};
+
+  LocalRateLimit(std::shared_ptr<LocalRateLimitManager> manager) : manager_(manager) {};
   ~LocalRateLimit() override = default;
 
   void onDestroy() override;
@@ -60,17 +42,12 @@ private:
 
   void cleanup();
 
-  // void generateRateLimitMap(
-  //     const aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit& config,
-  //     Stats::Scope& scope, Event::Dispatcher& dispatcher);
-
-  // LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
   bool getLocalRateLimit(MetadataSharedPtr metadata);
 
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
 
-  LocalRateLimitManager* manager_{};
+  std::shared_ptr<LocalRateLimitManager> manager_;
 };
 
 

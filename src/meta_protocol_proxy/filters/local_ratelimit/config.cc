@@ -13,8 +13,8 @@ FilterFactoryCb LocalRateLimitFilterConfig::createFilterFactoryFromProtoTyped(
     const aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit& cfg, const std::string&,
     Server::Configuration::FactoryContext& context) {
 
-  auto manager = new LocalRateLimitManager(context.scope(), cfg, context.dispatcher());
-  
+  auto manager = std::make_shared<LocalRateLimitManager>(context.scope(), cfg, context.dispatcher());
+
   // cfg is changed
   return [cfg, manager](FilterChainFactoryCallbacks& callbacks) -> void {
     callbacks.addFilter(std::make_shared<LocalRateLimit>(manager));

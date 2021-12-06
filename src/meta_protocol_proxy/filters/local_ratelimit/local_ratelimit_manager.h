@@ -32,9 +32,7 @@ struct LocalRateLimitStats {
   ALL_LOCAL_RATE_LIMIT_STATS(GENERATE_COUNTER_STRUCT)
 };
 
-// using ConfigSharedPtr = std::shared_ptr<Envoy::Extensions::NetworkFilters::MetaProtocolProxy::LocalRateLimit::LocalRateLimiterImpl>;
 using LocalRateLimitStatsPtr = std::shared_ptr<LocalRateLimitStats>;
-using LocalRateLimitConfig = aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit;
 
 class LocalRateLimitManager {
     friend class LocalRateLimit;
@@ -44,7 +42,7 @@ public:
 
 private:
   std::map<std::string, LocalRateLimiterImpl*> rate_limiter_map_;
-  // std::map<std::string, LocalRateLimitStats*> stats_map_;
+  std::map<std::string, LocalRateLimitStats*> stats_map_;
   LocalRateLimitConfig config_;
   std::vector<RateLimit::LocalDescriptor> descriptors_;
 };

@@ -17,14 +17,13 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
+using LocalRateLimitConfig = aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit;
+using LocalRateLimitItem = ::aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimitItem;
+
 class LocalRateLimiterImpl {
 public:
-  LocalRateLimiterImpl(
-      const std::chrono::milliseconds fill_interval, const uint32_t max_tokens,
-      const uint32_t tokens_per_fill, Event::Dispatcher& dispatcher,
-      const aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit& cfg);
-      // const Protobuf::RepeatedPtrField<
-      //     envoy::extensions::common::ratelimit::v3::LocalRateLimitDescriptor>& descriptors);
+  LocalRateLimiterImpl(std::chrono::milliseconds fill_interval, uint32_t max_tokens, uint32_t tokens_per_fill,
+    Event::Dispatcher& dispatcher, const LocalRateLimitItem& item);
 
   ~LocalRateLimiterImpl();
 

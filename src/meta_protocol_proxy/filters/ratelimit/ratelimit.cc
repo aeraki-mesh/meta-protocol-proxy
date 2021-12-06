@@ -17,12 +17,32 @@ void RateLimit::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
 }
 
 FilterStatus RateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
-  // TODO 创建connection 后 关闭，待优化
-  auto conn = cluster_manager_.getThreadLocalCluster(config_.rate_limit_service().grpc_service().envoy_grpc().cluster_name())->tcpConn(this);
-  auto addr = conn.host_description_->address();
-  conn.connection_->close(Envoy::Network::ConnectionCloseType::NoFlush);
+  auto name = config_.rate_limit_service().grpc_service().envoy_grpc().cluster_name();
+  auto cluster = cluster_manager_.getThreadLocalCluster(name);
+  if (cluster == nullptr) {
+    // TODO cluster not found
+    ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  cluster not found '{}'", *callbacks_, name);
+    callbacks_->sendLocalReply(
+        AppException(Error{ErrorType::ClusterNotFound,
+                           fmt::format("meta protocol ratelimit: no cluster match for request '{}'",
+                                       metadata->getRequestId())}),
+        false);
+    return FilterStatus::StopIteration;
+  }
 
-  if (getRateLimit(addr->asString(), metadata)) {
+  auto host = cluster->loadBalancer().chooseHost(this);
+  if (!host) {
+    // TODO host not found
+    ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  host not found cluster='{}'", *callbacks_, name);
+    callbacks_->sendLocalReply(
+        AppException(Error{ErrorType::ClusterNotFound,
+                           fmt::format("meta protocol ratelimit: no host found for request '{}'",
+                                       metadata->getRequestId())}),
+        false);
+    return FilterStatus::StopIteration;
+  }
+
+  if (getRateLimit(host->address()->asString(), metadata)) {
     // 限流成功， 直接返回客户端
     ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
     callbacks_->sendLocalReply(
@@ -70,31 +90,13 @@ bool RateLimit::getRateLimit(const std::string& addr, MetadataSharedPtr metadata
         auto entry = desc->add_entries();
         entry->set_key(match.key());
         entry->set_value(value);
-      } else {
-        isMatch = false;
-        break;
       }
     }
 
-    if (!isMatch) {
-      continue;
-    }
-
+    // TODO grpc 请求， timeout功能待实现，  调用方式待优化
+    //   item.timeout()
     auto stub = envoy::service::ratelimit::v3::RateLimitService::NewStub(grpc::CreateChannel(addr, grpc::InsecureChannelCredentials()));
     auto st =  stub->ShouldRateLimit(&ctx, request, &response);
-
-    // std::cout << std::endl << std::endl;
-    // std::cout << std::endl << std::endl;
-    // std::cout << "ret:" << st.ok() << std::endl;
-    // std::cout << "code:" << st.error_code() << std::endl;
-    // std::cout << "msg:" << st.error_message() << std::endl;
-    // std::cout << "detail:" << st.error_details() << std::endl;
-    // std::cout << "rate limit ... " << std::endl;
-    // std::cout << "rsp" << response << std::endl;
-    // std::cout << "req" << request << std::endl;
-    // std::cout << "cfg" << config_ << std::endl;
-    // std::cout << std::endl << std::endl;
-    // std::cout << std::endl << std::endl;
 
     // 请求 ratelimit 失败处理
     if (!st.ok() && item.failure_mode_deny()) {

@@ -7,14 +7,9 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
-LocalRateLimiterImpl::LocalRateLimiterImpl(
-    const std::chrono::milliseconds fill_interval, const uint32_t max_tokens,
-    const uint32_t tokens_per_fill, Event::Dispatcher& dispatcher,
-    // const Protobuf::RepeatedPtrField<envoy::extensions::common::ratelimit::v3::LocalRateLimitDescriptor>& descriptors)
-    const aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit& cfg)
-    : fill_timer_(fill_interval > std::chrono::milliseconds(0)
-                      ? dispatcher.createTimer([this] { onFillTimer(); })
-                      : nullptr),
+LocalRateLimiterImpl::LocalRateLimiterImpl(std::chrono::milliseconds fill_interval, uint32_t max_tokens, uint32_t tokens_per_fill,
+                                           Event::Dispatcher& dispatcher, const LocalRateLimitItem& item)
+    : fill_timer_(fill_interval > std::chrono::milliseconds(0) ? dispatcher.createTimer([this] {onFillTimer();}) : nullptr),
       time_source_(dispatcher.timeSource()) {
 
   if (fill_timer_ && fill_interval < std::chrono::milliseconds(50)) {
@@ -30,32 +25,29 @@ LocalRateLimiterImpl::LocalRateLimiterImpl(
     fill_timer_->enableTimer(fill_interval);
   }
 
-  for (const auto& item : cfg.items()) {
-    LocalDescriptorImpl new_descriptor;
-    for (const auto& entry : item.match()) {
-      new_descriptor.entries_.push_back({entry.key(), entry.value()});
-    }
-    RateLimit::TokenBucket token_bucket;
-    token_bucket.fill_interval_ = absl::Milliseconds(PROTOBUF_GET_MS_OR_DEFAULT(item.token_bucket(), fill_interval, 0));
-    if (token_bucket.fill_interval_ % token_bucket_.fill_interval_ != absl::ZeroDuration()) {
-      throw EnvoyException(
-          "local rate descriptor limit is not a multiple of token bucket fill timer");
-    }
-    token_bucket.max_tokens_ = item.token_bucket().max_tokens();
-    token_bucket.tokens_per_fill_ =
-        PROTOBUF_GET_WRAPPED_OR_DEFAULT(item.token_bucket(), tokens_per_fill, 1);
-    new_descriptor.token_bucket_ = token_bucket;
+  LocalDescriptorImpl new_descriptor;
+  for (const auto& entry : item.match()) {
+    new_descriptor.entries_.push_back({entry.key(), entry.value()});
+  }
+  RateLimit::TokenBucket token_bucket;
+  token_bucket.fill_interval_ = absl::Milliseconds(PROTOBUF_GET_MS_OR_DEFAULT(item.token_bucket(), fill_interval, 0));
+  if (token_bucket.fill_interval_ % token_bucket_.fill_interval_ != absl::ZeroDuration()) {
+    throw EnvoyException("local rate descriptor limit is not a multiple of token bucket fill timer");
+  }
+  token_bucket.max_tokens_ = item.token_bucket().max_tokens();
+  token_bucket.tokens_per_fill_ =
+      PROTOBUF_GET_WRAPPED_OR_DEFAULT(item.token_bucket(), tokens_per_fill, 1);
+  new_descriptor.token_bucket_ = token_bucket;
 
-    auto token_state = std::make_unique<TokenState>();
-    token_state->tokens_ = token_bucket.max_tokens_;
-    token_state->fill_time_ = time_source_.monotonicTime();
-    new_descriptor.token_state_ = std::move(token_state);
+  auto token_state = std::make_unique<TokenState>();
+  token_state->tokens_ = token_bucket.max_tokens_;
+  token_state->fill_time_ = time_source_.monotonicTime();
+  new_descriptor.token_state_ = std::move(token_state);
 
-    auto result = descriptors_.emplace(std::move(new_descriptor));
-    if (!result.second) {
-      throw EnvoyException(absl::StrCat("duplicate descriptor in the local rate descriptor: ",
-                                        result.first->toString()));
-    }
+  auto result = descriptors_.emplace(std::move(new_descriptor));
+  if (!result.second) {
+    throw EnvoyException(absl::StrCat("duplicate descriptor in the local rate descriptor: ",
+                                      result.first->toString()));
   }
 }
 

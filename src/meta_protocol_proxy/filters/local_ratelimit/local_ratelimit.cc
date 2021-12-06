@@ -23,7 +23,7 @@ void LocalRateLimit::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks
 FilterStatus LocalRateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
 
   if (getLocalRateLimit(metadata)) {
-    // 限流成功， 直接返回客户端
+    // 限流， 直接返回客户端
     ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
     callbacks_->sendLocalReply(
         AppException(Error{ErrorType::OverLimit,
@@ -47,6 +47,7 @@ FilterStatus LocalRateLimit::onMessageEncoded(MetadataSharedPtr, MutationSharedP
 
 void LocalRateLimit::cleanup() {}
 
+// TODO
 bool LocalRateLimit::getLocalRateLimit(MetadataSharedPtr metadata) {
   for (auto item : manager_->config_.items()) {
     std::string final_prefix = "local_rate_limit." + item.stat_prefix();
@@ -77,7 +78,7 @@ bool LocalRateLimit::getLocalRateLimit(MetadataSharedPtr metadata) {
     descriptors.emplace_back(descriptor);
 
     if (isMatch) {
-      // manager_->stats_map_[final_prefix]->rate_limited_.inc();
+      manager_->stats_map_[final_prefix]->rate_limited_.inc();
       if(!manager_->rate_limiter_map_[final_prefix]->requestAllowed(descriptors)) {
           return true;
       }
