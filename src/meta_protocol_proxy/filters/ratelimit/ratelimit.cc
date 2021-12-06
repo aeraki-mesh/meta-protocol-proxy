@@ -80,8 +80,6 @@ bool RateLimit::getRateLimit(const std::string& addr, MetadataSharedPtr metadata
       continue;
     }
 
-    // TODO grpc 请求， timeout功能待实现，  调用方式待优化
-    //   item.timeout()
     auto stub = envoy::service::ratelimit::v3::RateLimitService::NewStub(grpc::CreateChannel(addr, grpc::InsecureChannelCredentials()));
     auto st =  stub->ShouldRateLimit(&ctx, request, &response);
 

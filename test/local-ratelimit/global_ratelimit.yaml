@@ -1,0 +1,7 @@
+domain: limit_tst
+descriptors:
+  - key: command
+    value: "1"
+    rate_limit:
+      unit: minute
+      requests_per_unit: 10
