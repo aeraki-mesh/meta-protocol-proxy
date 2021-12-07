@@ -20,7 +20,6 @@ static_resources:
               codec:
                 name: aeraki.meta_protocol.codec.videopacket
               metaProtocolFilters:
-                - name: aeraki.meta_protocol.filters.router
                 - name: aeraki.meta_protocol.filters.local_ratelimit
                   config:
                     '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.local_ratelimit.v1alpha.LocalRateLimit
@@ -34,7 +33,8 @@ static_resources:
                       # 多个match表示并且  
                       - key: command
                         value: "1"
-                      
+
+                - name: aeraki.meta_protocol.filters.router
               routeConfig:
                 routes:
                   - name: default
