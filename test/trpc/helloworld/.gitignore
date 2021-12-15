@@ -1,6 +1,0 @@
-stub/**/*_mock.go
-
-server/trpc.app.Greeter
-client/trpc.app.Greeter
-
-server/trpc.log
