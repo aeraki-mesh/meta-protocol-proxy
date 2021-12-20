@@ -72,5 +72,5 @@ static_resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: 9.134.187.103
-                    port_value: 25000
+                    address: $RATELIMIT-SERVER-ADDRESS
+                    port_value: $RATELIMIT-SERVER-PORT
