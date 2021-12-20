@@ -58,15 +58,3 @@ static_resources:
                   socket_address:
                     address: 127.0.0.1
                     port_value: 8000
-  - name: ratelimit
-    type: STATIC
-    connect_timeout: 5s
-    load_assignment:
-      cluster_name: ratelimit
-      endpoints:
-        - lb_endpoints:
-            - endpoint:
-                address:
-                  socket_address:
-                    address: 9.134.187.103
-                    port_value: 25000
