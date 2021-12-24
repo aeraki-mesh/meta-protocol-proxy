@@ -21,6 +21,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/filters:factory_base_lib",
         "//src/meta_protocol_proxy/filters/router:config",
         "//src/meta_protocol_proxy/filters/router:router_lib",
+        "//src/meta_protocol_proxy/filters/local_ratelimit:config",
         "@envoy//include/envoy/registry",
         "@envoy//include/envoy/stats:stats_interface",
         "@envoy//include/envoy/stats:stats_macros",
