@@ -12,7 +12,7 @@
 #include "common/http/header_utility.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
 
-#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_rls.pb.h"
+#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_ratelimit.pb.h"
 
 namespace Envoy {
 namespace Extensions {

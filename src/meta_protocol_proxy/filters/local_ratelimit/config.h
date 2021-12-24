@@ -1,7 +1,7 @@
 #pragma once
 
-#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_rls.pb.h"
-#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_rls.pb.validate.h"
+#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_ratelimit.pb.h"
+#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_ratelimit.pb.validate.h"
 #include "src/meta_protocol_proxy/filters/factory_base.h"
 
 namespace Envoy {

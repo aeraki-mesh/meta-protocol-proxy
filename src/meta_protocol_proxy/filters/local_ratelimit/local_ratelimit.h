@@ -10,7 +10,7 @@
 #include "envoy/ratelimit/ratelimit.h"
 #include "envoy/event/timer.h"
 
-#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_rls.pb.h"
+#include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_ratelimit.pb.h"
 
 #include "src/meta_protocol_proxy/filters/filter.h"
 
