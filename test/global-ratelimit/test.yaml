@@ -38,14 +38,6 @@ static_resources:
                         envoy_grpc:
                           cluster_name: ratelimit
                       transport_api_version: V3
-                      # items:
-                      # # 多个item表示或者
-                      # - domain: limit_tst
-                      #   failure_mode_deny: false
-                      #   match:
-                      #   # 多个match表示并且  
-                      #   - key: func
-                      #     value: /trpc.test.helloworld.Greeter/SayHello
                       
               routeConfig:
                 routes:
