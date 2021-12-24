@@ -12,6 +12,7 @@ envoy_cc_binary(
         "//src/meta_protocol_proxy:config",
         "//src/application_protocols/dubbo:config",
         "//src/application_protocols/thrift:config",
+        "//src/application_protocols/trpc:config",
 	"@io_istio_proxy//extensions/access_log_policy:access_log_policy_lib",
         "@io_istio_proxy//extensions/attributegen:attributegen_plugin",
         "@io_istio_proxy//extensions/metadata_exchange:metadata_exchange_lib",
