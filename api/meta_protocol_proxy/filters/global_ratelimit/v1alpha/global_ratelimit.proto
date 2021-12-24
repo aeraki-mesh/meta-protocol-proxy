@@ -37,7 +37,7 @@ message RateLimit {
   // success.
   envoy.config.ratelimit.v3.RateLimitServiceConfig rate_limit_service = 5 [(validate.rules).message = {required: true}];
 
-  repeated Action actions = 6;
+  repeated Action actions = 6 [(validate.rules).repeated = {min_items: 1}];;
 }
 
 message GlobalRatelimitMatch {

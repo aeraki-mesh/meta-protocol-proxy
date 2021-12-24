@@ -43,7 +43,7 @@ FilterStatus RateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSha
     return FilterStatus::StopIteration;
   }
 
-  if (getRateLimit(host->address()->asString(), metadata)) {
+  if (shouldRateLimit(host->address()->asString(), metadata)) {
     // 限流成功， 直接返回客户端
     ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
     callbacks_->sendLocalReply(
@@ -70,7 +70,7 @@ void RateLimit::cleanup() {
 
 }
 
-bool RateLimit::getRateLimit(const std::string& addr, MetadataSharedPtr metadata) {
+bool RateLimit::shouldRateLimit(const std::string& addr, MetadataSharedPtr metadata) {
   ::grpc::ClientContext ctx;
   ::envoy::service::ratelimit::v3::RateLimitRequest request;
   ::envoy::service::ratelimit::v3::RateLimitResponse response;

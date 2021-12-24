@@ -44,7 +44,7 @@ private:
 
   void cleanup();
 
-  bool getRateLimit(const std::string& addr, MetadataSharedPtr metadata);
+  bool shouldRateLimit(const std::string& addr, MetadataSharedPtr metadata);
 
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
