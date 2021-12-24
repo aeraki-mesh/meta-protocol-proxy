@@ -41,26 +41,6 @@ envoy_cc_library(
     ],
 )
 
-# envoy_cc_library(
-#     name = "local_ratelimit_manager",
-#     repository = "@envoy",
-#     srcs = ["local_ratelimit_manager.cc"],
-#     hdrs = ["local_ratelimit_manager.h"],
-#     deps = [
-#         ":local_ratelimit_impl",
-#         "//api/meta_protocol_proxy/filters/local_ratelimit/v1alpha:pkg_cc_proto",
-#         "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
-#         "//src/meta_protocol_proxy:app_exception_lib",
-#         "//src/meta_protocol_proxy/filters:filter_interface",
-#         "@envoy//source/common/common:logger_lib",
-#         "@envoy_api//envoy/extensions/filters/network/local_ratelimit/v3:pkg_cc_proto",
-#         "@envoy//include/envoy/network:filter_interface",
-#         "@envoy//include/envoy/ratelimit:ratelimit_interface",
-#         "@envoy//include/envoy/stats:stats_macros",
-#         "@envoy//include/envoy/stats:stats_interface",
-#     ],
-# )
-
 envoy_cc_library(
     name = "local_ratelimit_impl",
     repository = "@envoy",
