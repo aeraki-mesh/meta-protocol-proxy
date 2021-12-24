@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package aeraki.meta_protocol_proxy.filters.ratelimit.v1alpha;
+
+import "envoy/config/core/v3/base.proto";
+import "envoy/config/route/v3/route_components.proto";
+import "envoy/config/ratelimit/v3/rls.proto";
+
+import "google/protobuf/duration.proto";
+import "udpa/annotations/status.proto";
+import "validate/validate.proto";
+
+option java_package = "io.aeraki.meta_protocol_proxy.filters.ratelimit.v1alpha";
+option java_outer_classname = "RateLimitProto";
+option java_multiple_files = true;
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// [#protodoc-title: global rate limit]
+
+message RateLimit {
+  GlobalRatelimitMatch match = 1;
+
+  // The rate limit domain to use when calling the rate limit service.
+  string domain = 2 [(validate.rules).string = {min_len: 1}];
+
+  // The timeout in milliseconds for the rate limit service RPC. If not
+  // set, this defaults to 20ms.
+  google.protobuf.Duration timeout = 3;
+
+  // The filter's behaviour in case the rate limiting service does
+  // not respond back. When it is set to true, Envoy will not allow traffic in case of
+  // communication failure between rate limiting service and the proxy.
+  bool failure_mode_deny = 4;
+
+  // Configuration for an external rate limit service provider. If not
+  // specified, any calls to the rate limit service will immediately return
+  // success.
+  envoy.config.ratelimit.v3.RateLimitServiceConfig rate_limit_service = 5 [(validate.rules).message = {required: true}];
+
+  repeated Action actions = 6;
+}
+
+message GlobalRatelimitMatch {
+  repeated envoy.config.route.v3.HeaderMatcher metadata = 1;
+}
+
+message Action {
+  string property = 1 [(validate.rules).string = {min_len: 1}];
+  string descriptor_key = 2 [(validate.rules).string = {min_len: 1}];
+}

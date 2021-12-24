@@ -112,6 +112,7 @@ enum class ErrorType {
   NoHealthyUpstream = 2,
   BadResponse = 3,
   Unspecified = 4,
+  OverLimit = 5,
 };
 
 struct Error {
