@@ -3,19 +3,11 @@ services:
   redis:
     network_mode: "host"
     image: redis:alpine
-    expose:
-      - 6379
-    ports:
-      - 6379:6379
 
   ratelimit:
     network_mode: "host"
     image: envoyproxy/ratelimit:master
     command: /bin/ratelimit
-    ports:
-      - 8080:8080
-      - 8081:8081
-      - 6070:6070
     depends_on:
       - redis
     volumes:
