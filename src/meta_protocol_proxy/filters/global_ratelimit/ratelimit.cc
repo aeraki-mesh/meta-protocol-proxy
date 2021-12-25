@@ -22,10 +22,10 @@ FilterStatus RateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSha
   auto cluster = cluster_manager_.getThreadLocalCluster(name);
   if (cluster == nullptr) {
     // cluster not found
-    ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  cluster not found '{}'", *callbacks_, name);
+    ENVOY_STREAM_LOG(debug, "meta protocol global ratelimit: rate limit server cluster not found '{}'", *callbacks_, name);
     callbacks_->sendLocalReply(
         AppException(Error{ErrorType::ClusterNotFound,
-                           fmt::format("meta protocol ratelimit: no cluster match for request '{}'",
+                           fmt::format("meta protocol global ratelimit: rate limit server cluster not found '{}'",
                                        metadata->getRequestId())}),
         false);
     return FilterStatus::StopIteration;
@@ -34,10 +34,10 @@ FilterStatus RateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSha
   auto host = cluster->loadBalancer().chooseHost(this);
   if (!host) {
     // host not found
-    ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  host not found cluster='{}'", *callbacks_, name);
+    ENVOY_STREAM_LOG(debug, "meta protocol global ratelimit: rate limit server host not found cluster='{}'", *callbacks_, name);
     callbacks_->sendLocalReply(
         AppException(Error{ErrorType::ClusterNotFound,
-                           fmt::format("meta protocol ratelimit: no host found for request '{}'",
+                           fmt::format("meta protocol global ratelimit: rate limit server host not found for request '{}'",
                                        metadata->getRequestId())}),
         false);
     return FilterStatus::StopIteration;
@@ -45,16 +45,16 @@ FilterStatus RateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSha
 
   if (shouldRateLimit(host->address()->asString(), metadata)) {
     // 限流成功， 直接返回客户端
-    ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
+    ENVOY_STREAM_LOG(debug, "meta protocol global ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
     callbacks_->sendLocalReply(
         AppException(Error{ErrorType::OverLimit,
-                           fmt::format("meta protocol router: no cluster match for request '{}'",
+                           fmt::format("meta protocol global ratelimit: request '{}' has been rate limited",
                                        metadata->getRequestId())}),
         false);
     return FilterStatus::StopIteration;
   }
 
-  ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
+  ENVOY_STREAM_LOG(debug, "meta protocol local ratelimit: onMessageDecoded", *callbacks_);
   return FilterStatus::Continue;
 }
 
@@ -105,6 +105,7 @@ bool RateLimit::shouldRateLimit(const std::string& addr, MetadataSharedPtr metad
 
   // 请求 ratelimit 失败处理
   if (!st.ok() && config_.failure_mode_deny()) {
+    ENVOY_STREAM_LOG(debug, "meta protocol global ratelimit: failed to call reatlimit service", *callbacks_);
     return true;
   }
 

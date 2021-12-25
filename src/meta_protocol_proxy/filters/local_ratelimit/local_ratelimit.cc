@@ -40,13 +40,13 @@ FilterStatus LocalRateLimit::onMessageDecoded(MetadataSharedPtr metadata, Mutati
     ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
     callbacks_->sendLocalReply(
         AppException(Error{ErrorType::OverLimit,
-                           fmt::format("meta protocol router: no cluster match for request '{}'",
+                           fmt::format("meta protocol local ratelimit: request '{}' has been rate limited",
                                        metadata->getRequestId())}),
         false);
     return FilterStatus::StopIteration;
   }
 
-  ENVOY_STREAM_LOG(debug, "meta protocol local ratelimit: decoding request", *callbacks_);
+  ENVOY_STREAM_LOG(debug, "meta protocol local ratelimit: onMessageDecoded", *callbacks_);
   return FilterStatus::Continue;
 }
 

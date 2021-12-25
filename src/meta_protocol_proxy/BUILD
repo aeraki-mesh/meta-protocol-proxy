@@ -20,7 +20,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/route:route_config_lib",
         "//src/meta_protocol_proxy/filters:factory_base_lib",
         "//src/meta_protocol_proxy/filters/router:config",
-        "//src/meta_protocol_proxy/filters/router:router_lib"
+        "//src/meta_protocol_proxy/filters/router:router_lib",
         "//src/meta_protocol_proxy/filters/global_ratelimit:config",
         "//src/meta_protocol_proxy/filters/local_ratelimit:config",
         "@envoy//include/envoy/registry",
