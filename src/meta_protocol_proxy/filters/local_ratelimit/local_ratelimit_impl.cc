@@ -137,12 +137,8 @@ bool LocalRateLimiterImpl::requestAllowed(
       }
     }
   }
-  // 如果外层token_bucket不存在，则直接放行
+  // Allow this request if the global token bucket is not specified 
   if (!config_.has_token_bucket()) {
-    return true;
-  }
-  // 如果外层token_bucket存在，请求数据和match配置规则未匹配，则直接放行
-  if (config_headers_.empty()) {
     return true;
   }
   const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&(*metadata));
