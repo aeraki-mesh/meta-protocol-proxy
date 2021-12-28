@@ -25,24 +25,26 @@ namespace LocalRateLimit {
 /**
  * All local rate limit stats. @see stats_macros.h
  */
-#define ALL_LOCAL_RATE_LIMIT_STATS(COUNTER) COUNTER(rate_limited)  \
-        COUNTER(ok)
+#define ALL_LOCAL_RATE_LIMIT_STATS(COUNTER)                                                        \
+  COUNTER(rate_limited)                                                                            \
+  COUNTER(ok)
 
 /**
  * Struct definition for all local rate limit stats. @see stats_macros.h
  */
 struct LocalRateLimitStats {
   ALL_LOCAL_RATE_LIMIT_STATS(GENERATE_COUNTER_STRUCT)
-};  
+};
 
 class FilterConfig {
-    friend class LocalRateLimit;
+  friend class LocalRateLimit;
+
 public:
   FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope, Event::Dispatcher& dispatcher);
   ~FilterConfig() = default;
 
 private:
-  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);  
+  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
 
   mutable LocalRateLimitStats stats_;
   LocalRateLimiterImpl rate_limiter_;
@@ -51,8 +53,7 @@ private:
 
 class LocalRateLimit : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
 public:
-
-  LocalRateLimit(std::shared_ptr<FilterConfig> filter_config) : filter_config_(filter_config) {};
+  LocalRateLimit(std::shared_ptr<FilterConfig> filter_config) : filter_config_(filter_config){};
   ~LocalRateLimit() override = default;
 
   void onDestroy() override;
@@ -65,15 +66,11 @@ public:
   FilterStatus onMessageEncoded(MetadataSharedPtr, MutationSharedPtr) override;
 
 private:
-
   void cleanup();
 
-  bool getLocalRateLimit(MetadataSharedPtr metadata);
+  bool shouldRateLimit(MetadataSharedPtr metadata);
 
-  void populateDescriptors(std::vector<RateLimit::LocalDescriptor>& descriptors,
-                           MetadataSharedPtr metadata);
-       
-  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);                    
+  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
 
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
@@ -81,9 +78,9 @@ private:
   std::shared_ptr<FilterConfig> filter_config_;
 };
 
-
 } // namespace LocalRateLimit
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

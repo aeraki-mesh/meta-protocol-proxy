@@ -4,8 +4,9 @@ package aeraki.meta_protocol_proxy.filters.local_ratelimit.v1alpha;
 
 import "envoy/config/core/v3/base.proto";
 import "envoy/type/v3/token_bucket.proto";
-import "envoy/extensions/common/ratelimit/v3/ratelimit.proto";
 import "envoy/config/route/v3/route_components.proto";
+
+import "api/meta_protocol_proxy/config/route/v1alpha/route.proto";
 
 import "udpa/annotations/status.proto";
 import "validate/validate.proto";
@@ -20,11 +21,27 @@ option (udpa.annotations.file_status).package_version_status = ACTIVE;
 message LocalRateLimit {
   // The human readable prefix to use when emitting stats.
   string stat_prefix = 1 [(validate.rules).string = {min_len: 1}];
-  LocalRatelimitMatch match = 2;
-  envoy.type.v3.TokenBucket token_bucket = 3;
-  repeated envoy.extensions.common.ratelimit.v3.LocalRateLimitDescriptor descriptors = 4;
+
+  // The default token bucket configuration to use for rate limiting requests that are processed by
+  // this filter.
+  // Local rate limiter will first check the conditions, if a specific condition matches, then the token
+  // bucket within that condition will be applied to the incoming request. All the other requests
+  // that don't match the conditions will be rate limited by the default token bucket.
+  // If the default token bucket is not specified, then the requests that don't match the conditions
+  // will not be rate limited.
+  // At least one of token_bucket or conditions should have value.
+  envoy.type.v3.TokenBucket token_bucket = 2;
+  
+  // The more specific rate limit conditions
+  repeated LocalRateLimitCondition conditions = 3;
 }
 
-message LocalRatelimitMatch {
-  repeated envoy.config.route.v3.HeaderMatcher metadata = 1;
+message LocalRateLimitCondition {
+  // Match conditions to be satisfied for the rate limit rule to be activated.
+  // All conditions inside a single match block have AND semantic.
+  // If the match is not specified, then all the incoming requests will be considered matched.
+  config.route.v1alpha.RouteMatch match = 1 [(validate.rules).message = {required: true}];
+  
+  // The token bucket for this particular condition
+  envoy.type.v3.TokenBucket token_bucket = 2 [(validate.rules).message = {required: true}];
 }

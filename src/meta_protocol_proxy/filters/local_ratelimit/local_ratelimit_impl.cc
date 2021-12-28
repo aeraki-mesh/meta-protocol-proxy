@@ -13,54 +13,45 @@ LocalRateLimiterImpl::LocalRateLimiterImpl(
     const std::chrono::milliseconds fill_interval, const uint32_t max_tokens,
     const uint32_t tokens_per_fill, Event::Dispatcher& dispatcher,
     const Protobuf::RepeatedPtrField<
-        envoy::extensions::common::ratelimit::v3::LocalRateLimitDescriptor>& descriptors,
-        const LocalRateLimitConfig& cfg)
+        aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimitCondition>&
+        conditions,
+    const LocalRateLimitConfig& cfg)
     : fill_timer_(fill_interval > std::chrono::milliseconds(0)
                       ? dispatcher.createTimer([this] { onFillTimer(); })
                       : nullptr),
-      time_source_(dispatcher.timeSource()),
-      config_headers_(Http::HeaderUtility::buildHeaderDataVector(cfg.match().metadata())),
-      config_(cfg) {
+      time_source_(dispatcher.timeSource()), config_(cfg) {
   if (fill_timer_ && fill_interval < std::chrono::milliseconds(50)) {
     throw EnvoyException("local rate limit token bucket fill timer must be >= 50ms");
   }
 
-  token_bucket_.max_tokens_ = max_tokens;
-  token_bucket_.tokens_per_fill_ = tokens_per_fill;
-  token_bucket_.fill_interval_ = absl::FromChrono(fill_interval);
-  tokens_.tokens_ = max_tokens;
+  // The global token bucket for the whole service
+  global_token_bucket_.max_tokens_ = max_tokens;
+  global_token_bucket_.tokens_per_fill_ = tokens_per_fill;
+  global_token_bucket_.fill_interval_ = absl::FromChrono(fill_interval);
+  global_tokens_.tokens_ = max_tokens;
 
   if (fill_timer_) {
     fill_timer_->enableTimer(fill_interval);
   }
 
-  for (const auto& descriptor : descriptors) {
-    LocalDescriptorImpl new_descriptor;
-    for (const auto& entry : descriptor.entries()) {
-      new_descriptor.entries_.push_back({entry.key(), entry.value()});
-    }
-    RateLimit::TokenBucket token_bucket;
+  // The more specified rate limit conditions
+  for (const auto& condition : conditions) {
+    LocalRateLimitCondition new_condition;
+    new_condition.match_ = Http::HeaderUtility::buildHeaderDataVector(condition.match().metadata());
+        RateLimit::TokenBucket token_bucket;
     token_bucket.fill_interval_ =
-        absl::Milliseconds(PROTOBUF_GET_MS_OR_DEFAULT(descriptor.token_bucket(), fill_interval, 0));
-    // if (token_bucket.fill_interval_ % token_bucket_.fill_interval_ != absl::ZeroDuration()) {
-    //   throw EnvoyException(
-    //       "local rate descriptor limit is not a multiple of token bucket fill timer");
-    // }
-    token_bucket.max_tokens_ = descriptor.token_bucket().max_tokens();
+        absl::Milliseconds(PROTOBUF_GET_MS_OR_DEFAULT(condition.token_bucket(), fill_interval, 0));
+    token_bucket.max_tokens_ = condition.token_bucket().max_tokens();
     token_bucket.tokens_per_fill_ =
-        PROTOBUF_GET_WRAPPED_OR_DEFAULT(descriptor.token_bucket(), tokens_per_fill, 1);
-    new_descriptor.token_bucket_ = token_bucket;
+        PROTOBUF_GET_WRAPPED_OR_DEFAULT(condition.token_bucket(), tokens_per_fill, 1);
+    new_condition.token_bucket_ = token_bucket;
 
     auto token_state = std::make_unique<TokenState>();
     token_state->tokens_ = token_bucket.max_tokens_;
     token_state->fill_time_ = time_source_.monotonicTime();
-    new_descriptor.token_state_ = std::move(token_state);
+    new_condition.token_state_ = std::move(token_state);
 
-    auto result = descriptors_.emplace(std::move(new_descriptor));
-    if (!result.second) {
-      throw EnvoyException(absl::StrCat("duplicate descriptor in the local rate descriptor: ",
-                                        result.first->toString()));
-    }
+    conditions_.emplace_back(std::move(new_condition));
   }
 }
 
@@ -71,9 +62,9 @@ LocalRateLimiterImpl::~LocalRateLimiterImpl() {
 }
 
 void LocalRateLimiterImpl::onFillTimer() {
-  onFillTimerHelper(tokens_, token_bucket_);
-  onFillTimerDescriptorHelper();
-  fill_timer_->enableTimer(absl::ToChronoMilliseconds(token_bucket_.fill_interval_));
+  onFillTimerHelper(global_tokens_, global_token_bucket_);
+  onFillTimerConditionHelper();
+  fill_timer_->enableTimer(absl::ToChronoMilliseconds(global_token_bucket_.fill_interval_));
 }
 
 void LocalRateLimiterImpl::onFillTimerHelper(const TokenState& tokens,
@@ -94,14 +85,14 @@ void LocalRateLimiterImpl::onFillTimerHelper(const TokenState& tokens,
                                                  std::memory_order_relaxed));
 }
 
-void LocalRateLimiterImpl::onFillTimerDescriptorHelper() {
+void LocalRateLimiterImpl::onFillTimerConditionHelper() {
   auto current_time = time_source_.monotonicTime();
-  for (const auto& descriptor : descriptors_) {
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(
-            current_time - descriptor.token_state_->fill_time_) >=
-        absl::ToChronoMilliseconds(descriptor.token_bucket_.fill_interval_)) {
-      onFillTimerHelper(*descriptor.token_state_, descriptor.token_bucket_);
-      descriptor.token_state_->fill_time_ = current_time;
+  for (const auto& condition : conditions_) {
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
+                                                              condition.token_state_->fill_time_) >=
+        absl::ToChronoMilliseconds(condition.token_bucket_.fill_interval_)) {
+      onFillTimerHelper(*condition.token_state_, condition.token_bucket_);
+      condition.token_state_->fill_time_ = current_time;
     }
   }
 }
@@ -127,27 +118,24 @@ bool LocalRateLimiterImpl::requestAllowedHelper(const TokenState& tokens) const 
   return true;
 }
 
-bool LocalRateLimiterImpl::requestAllowed(
-    absl::Span<const RateLimit::LocalDescriptor> request_descriptors, MetadataSharedPtr metadata) const {
-  if (!descriptors_.empty() && !request_descriptors.empty()) {
-    for (const auto& request_descriptor : request_descriptors) {
-      auto it = descriptors_.find(request_descriptor);
-      if (it != descriptors_.end()) {
-        return requestAllowedHelper(*it->token_state_);
-      }
+bool LocalRateLimiterImpl::requestAllowed(MetadataSharedPtr metadata) const {
+  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&(*metadata));
+  const auto& headers = metadataImpl->getHeaders();
+
+  // The more specific rate limit conditions are the first priority
+  for (const auto& condition : conditions_) {
+    if (Http::HeaderUtility::matchHeaders(headers, condition.match_)) {
+      return requestAllowedHelper(*condition.token_state_);
     }
   }
-  // Allow this request if the global token bucket is not specified 
+
+  // Allow the requests if no global token bucket
   if (!config_.has_token_bucket()) {
     return true;
   }
-  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&(*metadata));
-  const auto& headers = metadataImpl->getHeaders();
-  if (!Http::HeaderUtility::matchHeaders(headers, config_headers_)) {
-    return true;
-  }
 
-  return requestAllowedHelper(tokens_);
+  // Use the global token bucket as the fallback rate limit policy
+  return requestAllowedHelper(global_tokens_);
 }
 
 } // namespace LocalRateLimit
@@ -155,3 +143,4 @@ bool LocalRateLimiterImpl::requestAllowed(
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

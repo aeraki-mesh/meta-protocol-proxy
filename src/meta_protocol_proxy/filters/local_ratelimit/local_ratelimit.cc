@@ -10,24 +10,23 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
-FilterConfig::FilterConfig(const LocalRateLimitConfig& cfg,
-  Stats::Scope& scope, Event::Dispatcher& dispatcher) : stats_(generateStats(cfg.stat_prefix(), scope)),
-  rate_limiter_(LocalRateLimiterImpl(
+FilterConfig::FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope,
+                           Event::Dispatcher& dispatcher)
+    : stats_(generateStats(cfg.stat_prefix(), scope)),
+      rate_limiter_(LocalRateLimiterImpl(
           std::chrono::milliseconds(
               PROTOBUF_GET_MS_OR_DEFAULT(cfg.token_bucket(), fill_interval, 0)),
           cfg.token_bucket().max_tokens(),
           PROTOBUF_GET_WRAPPED_OR_DEFAULT(cfg.token_bucket(), tokens_per_fill, 1), dispatcher,
-          cfg.descriptors(), cfg) ),
-          config_(cfg) {}  
+          cfg.conditions(), cfg)),
+      config_(cfg) {}
 
 LocalRateLimitStats FilterConfig::generateStats(const std::string& prefix, Stats::Scope& scope) {
   const std::string final_prefix = prefix + ".local_rate_limit";
   return {ALL_LOCAL_RATE_LIMIT_STATS(POOL_COUNTER_PREFIX(scope, final_prefix))};
-}  
-
-void LocalRateLimit::onDestroy() {
-  cleanup();
 }
+
+void LocalRateLimit::onDestroy() { cleanup(); }
 
 void LocalRateLimit::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
   callbacks_ = &callbacks;
@@ -35,18 +34,19 @@ void LocalRateLimit::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks
 
 FilterStatus LocalRateLimit::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
 
-  if (getLocalRateLimit(metadata)) {
-    // 限流， 直接返回限流状态码给到客户端
-    ENVOY_STREAM_LOG(debug, "meta protocol ratelimit:  '{}'", *callbacks_, metadata->getRequestId());
+  if (shouldRateLimit(metadata)) {
+    ENVOY_STREAM_LOG(debug, "meta protocol local rate limit:  '{}'", *callbacks_,
+                     metadata->getRequestId());
     callbacks_->sendLocalReply(
-        AppException(Error{ErrorType::OverLimit,
-                           fmt::format("meta protocol local ratelimit: request '{}' has been rate limited",
-                                       metadata->getRequestId())}),
+        AppException(
+            Error{ErrorType::OverLimit,
+                  fmt::format("meta protocol local rate limit: request '{}' has been rate limited",
+                              metadata->getRequestId())}),
         false);
     return FilterStatus::StopIteration;
   }
 
-  ENVOY_STREAM_LOG(debug, "meta protocol local ratelimit: onMessageDecoded", *callbacks_);
+  ENVOY_STREAM_LOG(debug, "meta protocol local rate limit: onMessageDecoded", *callbacks_);
   return FilterStatus::Continue;
 }
 
@@ -60,43 +60,18 @@ FilterStatus LocalRateLimit::onMessageEncoded(MetadataSharedPtr, MutationSharedP
 
 void LocalRateLimit::cleanup() {}
 
-bool LocalRateLimit::getLocalRateLimit(MetadataSharedPtr metadata) {
-  std::vector<RateLimit::LocalDescriptor> descriptors;
-  if (filter_config_->config_.GetDescriptor()) {
-    populateDescriptors(descriptors, metadata);
-  }
-  if (filter_config_->rate_limiter_.requestAllowed(descriptors, metadata)) {
+bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
+  if (filter_config_->rate_limiter_.requestAllowed(metadata)) {
     filter_config_->stats_.ok_.inc();
     return false;
-  } else {
-    filter_config_->stats_.rate_limited_.inc();
-    return true;
   }
-
-  return false;
+  filter_config_->stats_.rate_limited_.inc();
+  return true;
 };
-
-void LocalRateLimit::populateDescriptors(std::vector<RateLimit::LocalDescriptor>& descriptors,
-                           MetadataSharedPtr metadata) {                          
-  for (auto descriptorCfg : filter_config_->config_.descriptors()) {
-    RateLimit::LocalDescriptor descriptor;
-    std::vector<RateLimit::DescriptorEntry> entriesNew; 
-
-    for (auto entry : descriptorCfg.entries()) {
-      RateLimit::DescriptorEntry entryNew;
-      entryNew.key_ = entry.key();
-      entryNew.value_ = metadata->getString(entry.key());
-      entriesNew.emplace_back(entryNew);
-    }
-
-    descriptor.entries_ = entriesNew;
-    descriptors.emplace_back(descriptor);
-  }
-}
-
 
 } // namespace LocalRateLimit
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

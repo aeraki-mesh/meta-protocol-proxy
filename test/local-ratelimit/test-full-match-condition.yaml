@@ -24,14 +24,19 @@ static_resources:
             config:
               '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.local_ratelimit.v1alpha.LocalRateLimit
               stat_prefix: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
-              descriptors:
-                - token_bucket:
-                    max_tokens: 2
-                    tokens_per_fill: 2
-                    fill_interval: 10s
-                  entries:
-                    - key: method
-                      value: sayHello
+              token_bucket:
+                max_tokens: 5
+                tokens_per_fill: 5
+                fill_interval: 60s
+              conditions:
+              - match:
+                  metadata:
+                  - name: method
+                    exact_match: sayHello
+                token_bucket:
+                  max_tokens: 2
+                  tokens_per_fill: 2
+                  fill_interval: 60s
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:
