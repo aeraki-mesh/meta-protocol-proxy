@@ -36,7 +36,6 @@ static_resources:
                 grpc_service:
                   envoy_grpc:
                     cluster_name: ratelimit
-                transport_api_version: V3
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:

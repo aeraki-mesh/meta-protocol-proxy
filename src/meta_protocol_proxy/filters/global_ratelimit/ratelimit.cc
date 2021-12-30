@@ -90,13 +90,13 @@ bool RateLimit::shouldRateLimit(const std::string& addr, MetadataSharedPtr metad
   // request.set_hits_addend(1);
 
   // 发请求
-  for (auto action : config_.actions()) {
-    std::string key = action.property();
+  for (auto descriptor : config_.descriptors()) {
+    std::string key = descriptor.property();
     std::string value = metadata->getString(key);
 
     auto desc = request.add_descriptors();
     auto entry = desc->add_entries();
-    entry->set_key(action.descriptor_key());
+    entry->set_key(descriptor.descriptor_key());
     entry->set_value(value);
   }
 
