@@ -13,7 +13,7 @@ api_proto_package(
 envoy_cc_library(
     name = "config",
     repository = "@envoy",
-    visibility = ["//:__pkg__"],
+    visibility = ["//visibility:public"],
     srcs = ["config.cc"],
     hdrs = ["config.h"],
     deps = [
