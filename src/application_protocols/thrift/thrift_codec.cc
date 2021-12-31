@@ -203,6 +203,7 @@ void ThriftCodec::toMsgMetadata(const Metadata& metadata,
   if (method != "") {
     msgMetadata.setMethodName(method);
   }
+  msgMetadata.setSequenceId(metadata.getRequestId());
 }
 
 // PassthroughData -> PassthroughData
@@ -589,3 +590,4 @@ ProtocolState DecoderStateMachine::run(Buffer::Instance& buffer) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

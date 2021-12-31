@@ -29,7 +29,7 @@ static_resources:
                     exact_match: sayHello
               domain: production
               failure_mode_deny: true
-              actions:
+              descriptors:
                 - property: method
                   descriptor_key: method
               rate_limit_service:
