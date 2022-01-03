@@ -31,13 +31,14 @@ StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     ProtobufMessage::ValidationVisitor&, // TODO Remove validator parameter
     RouteConfigProviderManagerImpl& route_config_provider_manager)
     : config_(new ConfigImpl(config, factory_context)), route_config_proto_{config},
-      last_updated_(factory_context.timeSource().systemTime()),
-      route_config_provider_manager_(route_config_provider_manager) {
-  route_config_provider_manager_.static_route_config_providers_.insert(this);
+      last_updated_(factory_context.timeSource().systemTime()){
+ //     route_config_provider_manager_(route_config_provider_manager) {
+ // route_config_provider_manager_.static_route_config_providers_.insert(this);
+    (void)route_config_provider_manager;
 }
 
 StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
-  route_config_provider_manager_.static_route_config_providers_.erase(this);
+  //route_config_provider_manager_.static_route_config_providers_.erase(this);
 }
 
 // TODO(htuch): If support for multiple clusters is added per #1170 cluster_name_
@@ -300,7 +301,7 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
     ProtobufMessage::ValidationVisitor& validator) {
   auto provider = std::make_unique<StaticRouteConfigProviderImpl>(
       route_config, factory_context, validator, *this); // TODO remove validator
-  static_route_config_providers_.insert(provider.get());
+  //static_route_config_providers_.insert(provider.get());
   return provider;
 }
 
