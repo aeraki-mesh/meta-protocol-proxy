@@ -1,2 +1,3 @@
 import %workspace%/envoy.bazelrc
 import %workspace%/proxy.bazelrc
+try-import %workspace%/user.bazelrc

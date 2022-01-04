@@ -32,7 +32,7 @@ static_resources:
                 token_bucket:
                   max_tokens: 2
                   tokens_per_fill: 2
-                  fill_interval: 60s
+                  fill_interval: 10s
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:

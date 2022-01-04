@@ -21,7 +21,7 @@ namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
 using LocalRateLimitConfig =
-    aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit;
+aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimit;
 
 class LocalRateLimiterImpl {
 public:
@@ -30,7 +30,7 @@ public:
       const uint32_t tokens_per_fill, Event::Dispatcher& dispatcher,
       const Protobuf::RepeatedPtrField<
           aeraki::meta_protocol_proxy::filters::local_ratelimit::v1alpha::LocalRateLimitCondition>&
-          conditions,
+      conditions,
       const LocalRateLimitConfig& cfg);
   ~LocalRateLimiterImpl();
 
@@ -54,10 +54,11 @@ private:
   bool requestAllowedHelper(const TokenState& tokens) const;
 
   RateLimit::TokenBucket global_token_bucket_; // The global token bucket for the whole service
-  TokenState global_tokens_;                   // The global token for the whole service
+  TokenState global_token_state_;                   // The global token for the whole service
   const Event::TimerPtr fill_timer_;
   TimeSource& time_source_;
   std::vector<LocalRateLimitCondition> conditions_;
+  std::chrono::milliseconds timer_duration_;
 
   mutable Thread::ThreadSynchronizer synchronizer_; // Used for testing only.
 
@@ -71,4 +72,3 @@ private:
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
