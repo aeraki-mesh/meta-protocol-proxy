@@ -24,7 +24,7 @@ constexpr char CanonicalName[] = "aeraki.meta_protocol_proxy";
  * Config registration for the meta protocol proxy filter. @see NamedNetworkFilterConfigFactory.
  */
 class MetaProtocolProxyFilterConfigFactory
-    : public Common::FactoryBase<aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy> {
+    : public Common::FactoryBase<aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy>,Logger::Loggable<Logger::Id::config>  {
 public:
   MetaProtocolProxyFilterConfigFactory() : FactoryBase(CanonicalName, true) {}
 
@@ -37,7 +37,7 @@ private:
 /**
  * Utility class for shared logic between meta protocol connection manager factories.
  */
-class Utility {
+class Utility:Logger::Loggable<Logger::Id::config>  {
 public:
   struct Singletons {
     Route::RouteConfigProviderManagerSharedPtr route_config_provider_manager_;
@@ -100,3 +100,4 @@ private:
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

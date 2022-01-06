@@ -21,6 +21,7 @@ namespace MetaProtocolProxy {
 SINGLETON_MANAGER_REGISTRATION(meta_route_config_provider_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX createSingletons");
   Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
       context.singletonManager().getTyped<Route::RouteConfigProviderManager>(
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
@@ -32,11 +33,17 @@ Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryCont
 Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped(
     const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy& proto_config,
     Server::Configuration::FactoryContext& context) {
+
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped 1", proto_config.stat_prefix());
   Utility::Singletons singletons = Utility::createSingletons(context);
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped 2", proto_config.stat_prefix());
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
       proto_config, context, *singletons.route_config_provider_manager_));
 
-  return [filter_config, &context](Network::FilterManager& filter_manager) -> void {
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped 3", proto_config.stat_prefix());
+  return [filter_config, &context, proto_config](Network::FilterManager& filter_manager) -> void {
+    
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  create ConnectionManager", proto_config.stat_prefix());
     filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
         *filter_config, context.api().randomGenerator(), context.dispatcher().timeSource()));
   };
@@ -60,10 +67,12 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       route_config_provider_manager_(route_config_provider_manager) {
   switch (config.route_specifier_case()) {
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRds:
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  createRdsRouteConfigProvider", config.stat_prefix());
     route_config_provider_ = route_config_provider_manager_.createRdsRouteConfigProvider(
         config.rds(), context_.getServerFactoryContext(), stats_prefix_, context_.initManager());
     break;
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRouteConfig:
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  createStaticRouteConfigProvider", config.stat_prefix());
     route_config_provider_ = route_config_provider_manager_.createStaticRouteConfigProvider(
         config.route_config(), context_.getServerFactoryContext(),
         context_.messageValidationVisitor());

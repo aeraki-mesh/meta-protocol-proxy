@@ -32,12 +32,13 @@ StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     RouteConfigProviderManagerImpl& route_config_provider_manager)
     : config_(new ConfigImpl(config, factory_context)), route_config_proto_{config},
       last_updated_(factory_context.timeSource().systemTime()){
- //     route_config_provider_manager_(route_config_provider_manager) {
- // route_config_provider_manager_.static_route_config_providers_.insert(this);
-    (void)route_config_provider_manager;
+  //     route_config_provider_manager_(route_config_provider_manager) {
+  // route_config_provider_manager_.static_route_config_providers_.insert(this);
+  (void)route_config_provider_manager;
 }
 
 StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX ~StaticRouteConfigProviderImpl()");
   //route_config_provider_manager_.static_route_config_providers_.erase(this);
 }
 
@@ -46,12 +47,12 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
     const aeraki::meta_protocol_proxy::v1alpha::Rds& rds, const uint64_t manager_identifier,
     Server::Configuration::ServerFactoryContext& factory_context, const std::string& stat_prefix,
     RouteConfigProviderManagerImpl& route_config_provider_manager)
-    // The real configuration type is
-    // aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
-    // RouteConfiguration is used here because we want to reuse the http rds grpc service
+// The real configuration type is
+// aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
+// RouteConfiguration is used here because we want to reuse the http rds grpc service
     : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>(
-          rds.config_source().resource_api_version(),
-          factory_context.messageValidationContext().dynamicValidationVisitor(), "name"),
+    rds.config_source().resource_api_version(),
+    factory_context.messageValidationContext().dynamicValidationVisitor(), "name"),
       route_config_name_(rds.route_config_name()),
       scope_(factory_context.scope().createScope(stat_prefix + "rds." + route_config_name_ + ".")),
       factory_context_(factory_context),
@@ -84,7 +85,15 @@ RdsRouteConfigSubscription::~RdsRouteConfigSubscription() {
   // hold a shared_ptr to it. The RouteConfigProviderManager holds weak_ptrs to the
   // RdsRouteConfigProviders. Therefore, the map entry for the RdsRouteConfigProvider has to get
   // cleaned by the RdsRouteConfigProvider's destructor.
-  route_config_provider_manager_.dynamic_route_config_providers_.erase(manager_identifier_);
+
+  const void * address = static_cast<const void*>(&route_config_provider_manager_);
+  std::stringstream ss;
+  ss << address;
+  std::string name = ss.str();
+
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} thread id {}  instance{} start ~RdsRouteConfigSubscription()", manager_identifier_, std::this_thread::get_id(), name);
+  //route_config_provider_manager_.dynamic_route_config_providers_.erase(manager_identifier_);
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX end ~RdsRouteConfigSubscription()");
 }
 
 void RdsRouteConfigSubscription::onConfigUpdate(
@@ -132,7 +141,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
 void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
     const envoy::config::route::v3::RouteConfiguration& http_route_config,
     aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration&
-        meta_protocol_route_config) {
+    meta_protocol_route_config) {
   ASSERT(http_route_config.virtual_hosts_size() == 1);
   auto routeSize = http_route_config.virtual_hosts(0).routes_size();
   ASSERT(routeSize > 0);
@@ -232,6 +241,7 @@ RdsRouteConfigProviderImpl::RdsRouteConfigProviderImpl(
 }
 
 RdsRouteConfigProviderImpl::~RdsRouteConfigProviderImpl() {
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX ~RdsRouteConfigProviderImpl()");
   ASSERT(subscription_->routeConfigProvider().has_value());
   subscription_->routeConfigProvider().reset();
 }
@@ -240,7 +250,7 @@ ConfigConstSharedPtr RdsRouteConfigProviderImpl::config() { return tls_->config_
 
 void RdsRouteConfigProviderImpl::onConfigUpdate() {
   tls_.runOnAllThreads([new_config = config_update_info_->parsedConfiguration()](
-                           OptRef<ThreadLocalConfig> tls) { tls->config_ = new_config; });
+      OptRef<ThreadLocalConfig> tls) { tls->config_ = new_config; });
 }
 
 void RdsRouteConfigProviderImpl::validateConfig(
@@ -256,6 +266,7 @@ RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin&) {
   // ConfigTracker keys must be unique. We are asserting that no one has stolen the "routes" key
   // from us, since the returned entry will be nullptr if the key already exists.
   // RELEASE_ASSERT(config_tracker_entry_, "");
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX RouteConfigProviderManagerImpl");
 }
 
 RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
@@ -264,9 +275,10 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     Init::Manager& init_manager) {
   // RdsRouteConfigSubscriptions are unique based on their serialized RDS config.
   const uint64_t manager_identifier = MessageUtil::hash(rds);
-  auto it = dynamic_route_config_providers_.find(manager_identifier);
+  //ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} createRdsRouteConfigProvider find", stat_prefix);
+  //auto it = dynamic_route_config_providers_.find(manager_identifier);
 
-  if (it == dynamic_route_config_providers_.end()) {
+  //if (it == dynamic_route_config_providers_.end()) {
     // std::make_shared does not work for classes with private constructors. There are ways
     // around it. However, since this is not a performance critical path we err on the side
     // of simplicity.
@@ -280,10 +292,16 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     init_manager.add(subscription->parent_init_target_);
     RdsRouteConfigProviderImplSharedPtr new_provider{
         new RdsRouteConfigProviderImpl(std::move(subscription), factory_context)};
-    dynamic_route_config_providers_.insert(
-        {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
+
+    const void * address = static_cast<const void*>(this);
+    std::stringstream ss;
+    ss << address;
+    std::string name = ss.str();
+    ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} thread id {}  {} instance{}createRdsRouteConfigProvider insert", stat_prefix,std::this_thread::get_id(), manager_identifier,name );
+    //dynamic_route_config_providers_.insert(
+    //    {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
     return new_provider;
-  } else {
+  /*} else {
     // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
     // in the RdsRouteConfigSubscription destructor, and the single threaded nature
     // of this code, locking the weak_ptr will not fail.
@@ -292,7 +310,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
                    absl::StrCat("cannot find subscribed rds resource ", rds.route_config_name()));
     init_manager.add(existing_provider->subscription_->parent_init_target_);
     return existing_provider;
-  }
+  }*/
 }
 
 RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigProvider(
@@ -309,6 +327,7 @@ std::unique_ptr<envoy::admin::v3::RoutesConfigDump>
 RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
   auto config_dump = std::make_unique<envoy::admin::v3::RoutesConfigDump>();
 
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX Dump ");
   for (const auto& element : dynamic_route_config_providers_) {
     const auto& subscription = element.second.lock()->subscription_;
     // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
@@ -327,14 +346,14 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
     }
   }
 
-  for (const auto& provider : static_route_config_providers_) {
+  /*for (const auto& provider : static_route_config_providers_) {
     ASSERT(provider->configInfo());
     auto* static_config = config_dump->mutable_static_route_configs()->Add();
     static_config->mutable_route_config()->PackFrom(
         API_RECOVER_ORIGINAL(provider->configInfo().value().config_));
     TimestampUtil::systemClockToTimestamp(provider->lastUpdated(),
                                           *static_config->mutable_last_updated());
-  }
+  }*/
 
   return config_dump;
 }

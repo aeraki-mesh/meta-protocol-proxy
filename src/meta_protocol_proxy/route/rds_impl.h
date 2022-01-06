@@ -53,7 +53,7 @@ class RouteConfigProviderManagerImpl;
 /**
  * Implementation of RouteConfigProvider that holds a static route configuration.
  */
-class StaticRouteConfigProviderImpl : public RouteConfigProvider {
+class StaticRouteConfigProviderImpl : public RouteConfigProvider,Logger::Loggable<Logger::Id::router>  {
 public:
   StaticRouteConfigProviderImpl(
       const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration& config,
@@ -236,7 +236,7 @@ private:
   // Then the lifetime management stuff is centralized and opaque.
   absl::node_hash_map<uint64_t, std::weak_ptr<RdsRouteConfigProviderImpl>>
       dynamic_route_config_providers_;
-  absl::node_hash_set<RouteConfigProvider*> static_route_config_providers_;
+  //absl::node_hash_set<RouteConfigProvider*> static_route_config_providers_;
   Server::ConfigTracker::EntryOwnerPtr config_tracker_entry_;
 
   friend class RdsRouteConfigSubscription;
@@ -250,3 +250,4 @@ using RouteConfigProviderManagerImplPtr = std::unique_ptr<RouteConfigProviderMan
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
