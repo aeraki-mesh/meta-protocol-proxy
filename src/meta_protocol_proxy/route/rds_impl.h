@@ -77,7 +77,7 @@ private:
   ConfigConstSharedPtr config_;
   aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration route_config_proto_;
   SystemTime last_updated_;
-  //RouteConfigProviderManagerImpl& route_config_provider_manager_;
+  RouteConfigProviderManagerImpl& route_config_provider_manager_;
 };
 
 /**
