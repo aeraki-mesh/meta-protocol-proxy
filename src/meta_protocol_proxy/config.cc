@@ -21,12 +21,27 @@ namespace MetaProtocolProxy {
 SINGLETON_MANAGER_REGISTRATION(meta_route_config_provider_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
-  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX createSingletons");
   Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
       context.singletonManager().getTyped<Route::RouteConfigProviderManager>(
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
+            const void * address = static_cast<const void*>(&context);
+            std::stringstream ss;
+            ss << address;
+            std::string name = ss.str();
+            ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX context {} inside providerManager create callback", name);
             return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.admin());
           });
+
+  const void * address = static_cast<const void*>(meta_route_config_provider_manager.get());
+  std::stringstream ss;
+  ss << address;
+  std::string name = ss.str();
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX {} createSingletons providerManager", name);
+  const void * address1 = static_cast<const void*>(&context.singletonManager());
+  std::stringstream ss1;
+  ss1 << address1;
+  std::string name1 = ss1.str();
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX {} context.singletonManager()",name1 );
   return {meta_route_config_provider_manager};
 }
 
@@ -34,15 +49,11 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
     const aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy& proto_config,
     Server::Configuration::FactoryContext& context) {
 
-  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped 1", proto_config.stat_prefix());
   Utility::Singletons singletons = Utility::createSingletons(context);
-  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped 2", proto_config.stat_prefix());
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
       proto_config, context, *singletons.route_config_provider_manager_));
 
-  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped 3", proto_config.stat_prefix());
-  return [filter_config, &context, proto_config](Network::FilterManager& filter_manager) -> void {
-    
+  return [singletons, filter_config, &context, proto_config](Network::FilterManager& filter_manager) -> void {
   ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{}  create ConnectionManager", proto_config.stat_prefix());
     filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
         *filter_config, context.api().randomGenerator(), context.dispatcher().timeSource()));
@@ -146,3 +157,4 @@ void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

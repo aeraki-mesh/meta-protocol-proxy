@@ -77,7 +77,7 @@ private:
   ConfigConstSharedPtr config_;
   aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration route_config_proto_;
   SystemTime last_updated_;
-  //RouteConfigProviderManagerImpl& route_config_provider_manager_;
+  RouteConfigProviderManagerImpl& route_config_provider_manager_;
 };
 
 /**
@@ -215,6 +215,9 @@ class RouteConfigProviderManagerImpl : public RouteConfigProviderManager,
                                        Logger::Loggable<Logger::Id::router> {
 public:
   RouteConfigProviderManagerImpl(Server::Admin& admin);
+  ~RouteConfigProviderManagerImpl() override{
+    ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX ~RdsRouteConfigProviderImpl()");
+  };
 
   std::unique_ptr<envoy::admin::v3::RoutesConfigDump> dumpRouteConfigs() const;
 
@@ -236,7 +239,7 @@ private:
   // Then the lifetime management stuff is centralized and opaque.
   absl::node_hash_map<uint64_t, std::weak_ptr<RdsRouteConfigProviderImpl>>
       dynamic_route_config_providers_;
-  //absl::node_hash_set<RouteConfigProvider*> static_route_config_providers_;
+  absl::node_hash_set<RouteConfigProvider*> static_route_config_providers_;
   Server::ConfigTracker::EntryOwnerPtr config_tracker_entry_;
 
   friend class RdsRouteConfigSubscription;
@@ -250,4 +253,5 @@ using RouteConfigProviderManagerImplPtr = std::unique_ptr<RouteConfigProviderMan
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
 

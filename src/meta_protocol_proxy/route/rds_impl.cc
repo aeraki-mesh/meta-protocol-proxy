@@ -31,15 +31,14 @@ StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     ProtobufMessage::ValidationVisitor&, // TODO Remove validator parameter
     RouteConfigProviderManagerImpl& route_config_provider_manager)
     : config_(new ConfigImpl(config, factory_context)), route_config_proto_{config},
-      last_updated_(factory_context.timeSource().systemTime()){
-  //     route_config_provider_manager_(route_config_provider_manager) {
-  // route_config_provider_manager_.static_route_config_providers_.insert(this);
-  (void)route_config_provider_manager;
+      last_updated_(factory_context.timeSource().systemTime()),
+       route_config_provider_manager_(route_config_provider_manager) {
+  route_config_provider_manager_.static_route_config_providers_.insert(this);
 }
 
 StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
   ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX ~StaticRouteConfigProviderImpl()");
-  //route_config_provider_manager_.static_route_config_providers_.erase(this);
+  route_config_provider_manager_.static_route_config_providers_.erase(this);
 }
 
 // TODO(htuch): If support for multiple clusters is added per #1170 cluster_name_
@@ -91,8 +90,7 @@ RdsRouteConfigSubscription::~RdsRouteConfigSubscription() {
   ss << address;
   std::string name = ss.str();
 
-  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} thread id {}  instance{} start ~RdsRouteConfigSubscription()", manager_identifier_, std::this_thread::get_id(), name);
-  //route_config_provider_manager_.dynamic_route_config_providers_.erase(manager_identifier_);
+  route_config_provider_manager_.dynamic_route_config_providers_.erase(manager_identifier_);
   ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX end ~RdsRouteConfigSubscription()");
 }
 
@@ -275,11 +273,11 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     Init::Manager& init_manager) {
   // RdsRouteConfigSubscriptions are unique based on their serialized RDS config.
   const uint64_t manager_identifier = MessageUtil::hash(rds);
-  //ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} createRdsRouteConfigProvider find", stat_prefix);
-  //auto it = dynamic_route_config_providers_.find(manager_identifier);
+  ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} createRdsRouteConfigProvider find", stat_prefix);
+  auto it = dynamic_route_config_providers_.find(manager_identifier);
 
-  //if (it == dynamic_route_config_providers_.end()) {
-    // std::make_shared does not work for classes with private constructors. There are ways
+  if (it == dynamic_route_config_providers_.end()) {
+     //std::make_shared does not work for classes with private constructors. There are ways
     // around it. However, since this is not a performance critical path we err on the side
     // of simplicity.
 
@@ -298,10 +296,10 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
     ss << address;
     std::string name = ss.str();
     ENVOY_LOG(info, "XXXXXXXXXXXXXXXXXXXXXX{} thread id {}  {} instance{}createRdsRouteConfigProvider insert", stat_prefix,std::this_thread::get_id(), manager_identifier,name );
-    //dynamic_route_config_providers_.insert(
-    //    {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
+    dynamic_route_config_providers_.insert(
+        {manager_identifier, std::weak_ptr<RdsRouteConfigProviderImpl>(new_provider)});
     return new_provider;
-  /*} else {
+  } else {
     // Because the RouteConfigProviderManager's weak_ptrs only get cleaned up
     // in the RdsRouteConfigSubscription destructor, and the single threaded nature
     // of this code, locking the weak_ptr will not fail.
@@ -310,7 +308,7 @@ RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfi
                    absl::StrCat("cannot find subscribed rds resource ", rds.route_config_name()));
     init_manager.add(existing_provider->subscription_->parent_init_target_);
     return existing_provider;
-  }*/
+  }
 }
 
 RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigProvider(
@@ -363,3 +361,4 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
