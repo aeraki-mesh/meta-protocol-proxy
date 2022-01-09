@@ -6,6 +6,7 @@ export CXX=clang++-10
 export USE_BAZEL_VERSION=$(cat .bazelversion)
 
 bazel build //api/meta_protocol_proxy/v1alpha:pkg_go_proto
+bazel build //api/meta_protocol_proxy/admin/v1alpha:pkg_go_proto
 bazel build //api/meta_protocol_proxy/filters/router/v1alpha:pkg_go_proto
 bazel build //api/meta_protocol_proxy/filters/local_ratelimit/v1alpha:pkg_go_proto
 bazel build //api/meta_protocol_proxy/filters/global_ratelimit/v1alpha:pkg_go_proto

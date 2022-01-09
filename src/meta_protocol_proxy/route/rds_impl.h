@@ -33,6 +33,7 @@
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
 
+#include "api/meta_protocol_proxy/admin/v1alpha/config_dump.pb.h"
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.validate.h"
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
@@ -216,7 +217,7 @@ class RouteConfigProviderManagerImpl : public RouteConfigProviderManager,
 public:
   RouteConfigProviderManagerImpl(Server::Admin& admin);
 
-  std::unique_ptr<envoy::admin::v3::RoutesConfigDump> dumpRouteConfigs() const;
+  std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump> dumpRouteConfigs() const;
 
   // RouteConfigProviderManager
   RouteConfigProviderSharedPtr

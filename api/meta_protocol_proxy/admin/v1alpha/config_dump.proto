@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package aeraki.meta_protocol_proxy.admin.v1alpha;
+
+import "envoy/admin/v3/config_dump.proto";
+import "envoy/config/bootstrap/v3/bootstrap.proto";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+import "udpa/annotations/status.proto";
+import "udpa/annotations/versioning.proto";
+
+option java_package = "io.aeraki.meta_protocol_proxy.admin.v3";
+option java_outer_classname = "ConfigDumpProto";
+option java_multiple_files = true;
+option go_package = "github.com/aeraki-framework/meta-protocol-control-plane-api/meta_protocol_proxy/admin/v1alpha;adminv1alpha";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// [#protodoc-title: ConfigDump]
+
+// MetaProtocol's RDS implementation fills this message with all currently loaded routes, as described by
+// their RouteConfiguration objects. Static routes that are defined inline while configuring listeners are
+// separated from those configured dynamically via RDS.
+// Route configuration information can be used to recreate an Envoy configuration by populating all routes
+// as static routes or by returning them in RDS responses.
+message RoutesConfigDump {
+
+  message StaticRouteConfig {
+    // The route config.
+    google.protobuf.Any route_config = 1;
+
+    // The timestamp when the Route was last updated.
+    google.protobuf.Timestamp last_updated = 2;
+  }
+
+  // [#next-free-field: 6]
+  message DynamicRouteConfig {
+    // This is the per-resource version information. This version is currently taken from the
+    // :ref:`version_info <envoy_v3_api_field_service.discovery.v3.DiscoveryResponse.version_info>` field at the time that
+    // the route configuration was loaded.
+    string version_info = 1;
+
+    // The route config.
+    google.protobuf.Any route_config = 2;
+
+    // The timestamp when the Route was last updated.
+    google.protobuf.Timestamp last_updated = 3;
+
+    // Set if the last update failed, cleared after the next successful update.
+    // The *error_state* field contains the rejected version of this particular
+    // resource along with the reason and timestamp. For successfully updated or
+    // acknowledged resource, this field should be empty.
+    // [#not-implemented-hide:]
+    envoy.admin.v3.UpdateFailureState error_state = 4;
+
+    // The client status of this resource.
+    // [#not-implemented-hide:]
+    envoy.admin.v3.ClientResourceStatus client_status = 5;
+  }
+
+  // The statically loaded route configs.
+  repeated StaticRouteConfig static_route_configs = 2;
+
+  // The dynamically loaded route configs.
+  repeated DynamicRouteConfig dynamic_route_configs = 3;
+}

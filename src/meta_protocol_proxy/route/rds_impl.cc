@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 
-#include "envoy/admin/v3/config_dump.pb.h"
 #include "envoy/config/core/v3/config_source.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
@@ -33,7 +32,7 @@ StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     : config_(new ConfigImpl(config, factory_context)), route_config_proto_{config},
       last_updated_(factory_context.timeSource().systemTime()),
       route_config_provider_manager_(route_config_provider_manager) {
-    route_config_provider_manager_.static_route_config_providers_.insert(this);
+  route_config_provider_manager_.static_route_config_providers_.insert(this);
 }
 
 StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
@@ -248,13 +247,13 @@ void RdsRouteConfigProviderImpl::validateConfig(
   ConfigImpl validation_config(config, factory_context_);
 }
 
-RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin&) {
-  // TODO print config
-  // config_tracker_entry_ =
-  //    admin.getConfigTracker().add("routes", [this] { return dumpRouteConfigs(); });
-  // ConfigTracker keys must be unique. We are asserting that no one has stolen the "routes" key
-  // from us, since the returned entry will be nullptr if the key already exists.
-  // RELEASE_ASSERT(config_tracker_entry_, "");
+RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& admin) {
+  config_tracker_entry_ =
+      admin.getConfigTracker().add("meta_protocol_routes", [this] { return dumpRouteConfigs(); });
+  // ConfigTracker keys must be unique. We are asserting that no one has stolen the
+  // "meta_protocol_routes" key from us, since the returned entry will be nullptr if the key already
+  // exists.
+  RELEASE_ASSERT(config_tracker_entry_, "");
 }
 
 RouteConfigProviderSharedPtr RouteConfigProviderManagerImpl::createRdsRouteConfigProvider(
@@ -304,9 +303,9 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
   return provider;
 }
 
-std::unique_ptr<envoy::admin::v3::RoutesConfigDump>
+std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>
 RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
-  auto config_dump = std::make_unique<envoy::admin::v3::RoutesConfigDump>();
+  auto config_dump = std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
 
   for (const auto& element : dynamic_route_config_providers_) {
     const auto& subscription = element.second.lock()->subscription_;

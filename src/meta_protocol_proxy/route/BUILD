@@ -96,6 +96,7 @@ envoy_cc_library(
     srcs = ["rds_impl.cc"],
     hdrs = ["rds_impl.h"],
     deps = [
+        "//api/meta_protocol_proxy/admin/v1alpha:pkg_cc_proto",
         ":route_config_lib",
         ":route_config_update_impl_lib",
         ":rds_interface",
