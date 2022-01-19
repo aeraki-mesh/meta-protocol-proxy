@@ -13,7 +13,9 @@ namespace MetaProtocolProxy {
 namespace Router {
 
 void Router::onDestroy() {
+    ENVOY_LOG(debug, "1 ********** destory router");
   if (upstream_request_) {
+    ENVOY_LOG(debug, "2 ********** destory router");
     upstream_request_->resetStream();
   }
   cleanup();
@@ -185,7 +187,17 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 
 void Router::cleanup() {
+  ENVOY_LOG(debug, "5 ********** destory router");
   if (upstream_request_) {
+    ENVOY_LOG(debug, "6 ********** destory router");
+    if(upstream_request_->conn_pool_handle_!= nullptr) {
+      ENVOY_LOG(debug, "7 ********** destory router");
+      //close the connection, don't reuse it //TODO make it an option
+      ENVOY_LOG(debug, "close the connection");
+      upstream_request_->conn_data_->connection().close(Network::ConnectionCloseType::NoFlush);
+      upstream_request_->conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::CloseExcess);
+      upstream_request_->conn_data_.reset();
+    }
     upstream_request_.reset();
   }
 }
@@ -200,20 +212,22 @@ Router::UpstreamRequest::~UpstreamRequest() = default;
 FilterStatus Router::UpstreamRequest::start() {
   Tcp::ConnectionPool::Cancellable* handle = conn_pool_.newConnection(*this);
   if (handle) {
+    ENVOY_LOG(debug, "10 ********** new conn");
     // Pause while we wait for a connection.
     conn_pool_handle_ = handle;
     return FilterStatus::StopIteration;
   }
-
+  ENVOY_LOG(debug, "11 ********** new conn");
   return FilterStatus::Continue;
 }
 
 void Router::UpstreamRequest::resetStream() {
   stream_reset_ = true;
-
-  if (conn_pool_handle_) {
+  ENVOY_LOG(debug, "3 ********** destory router");
+  if (conn_pool_handle_ != nullptr) {
+    ENVOY_LOG(debug, "4 ********** destory conn");
     ASSERT(!conn_data_);
-    conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::Default);
+    conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::CloseExcess);
     conn_pool_handle_ = nullptr;
     ENVOY_LOG(debug, "meta protocol upstream request: reset connection pool handler");
   }
@@ -228,7 +242,7 @@ void Router::UpstreamRequest::resetStream() {
 
 void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(conn_data_);
-  ASSERT(!conn_pool_handle_);
+  //ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", *parent_.callbacks_, data.length());
   conn_data_->connection().write(data, false);
@@ -236,6 +250,7 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
 
 void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason,
                                             Upstream::HostDescriptionConstSharedPtr host) {
+  ENVOY_LOG(debug, "**** pool failure");
   conn_pool_handle_ = nullptr;
 
   // Mimic an upstream reset.
@@ -272,7 +287,7 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
 
   conn_data_ = std::move(conn_data);
   conn_data_->addUpstreamCallbacks(parent_);
-  conn_pool_handle_ = nullptr;
+  //conn_pool_handle_ = nullptr;
 
   onRequestStart(continue_decoding);
   encodeData(parent_.upstream_request_buffer_);
@@ -292,7 +307,7 @@ void Router::UpstreamRequest::onRequestComplete() { request_complete_ = true; }
 
 void Router::UpstreamRequest::onResponseComplete() {
   response_complete_ = true;
-  conn_data_.reset();
+  //conn_data_.reset();
 }
 
 void Router::UpstreamRequest::onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) {
@@ -363,3 +378,4 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
