@@ -190,10 +190,13 @@ ActiveMessage::ActiveMessage(ConnectionManager& parent)
 }
 
 ActiveMessage::~ActiveMessage() {
+  ENVOY_LOG(debug, "***** 1 ~ActiveMessage");
   parent_.stats().request_active_.dec();
+  ENVOY_LOG(debug, "***** 2 ~ActiveMessage");
   request_timer_->complete();
+  ENVOY_LOG(debug, "***** 3 ~ActiveMessage");
   for (auto& filter : decoder_filters_) {
-    ENVOY_LOG(debug, "destroy decoder filter");
+    ENVOY_LOG(debug, "***** 4 ~ActiveMessage");
     filter->handler()->onDestroy();
   }
 
@@ -243,18 +246,21 @@ void ActiveMessage::onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPt
   parent_.stats().request_decoding_success_.inc();
 
   metadata_ = metadata;
+  ENVOY_LOG(debug, "***** 1 onStreamDecoded");
   filter_action_ = [metadata, mutation](DecoderFilter* filter) -> FilterStatus {
     return filter->onMessageDecoded(metadata, mutation);
   };
+  ENVOY_LOG(debug, "***** 2 onStreamDecoded");
 
   auto status = applyDecoderFilters(nullptr, FilterIterationStartState::CanStartFromCurrent);
+  ENVOY_LOG(debug, "***** 3 onStreamDecoded");
   if (status == FilterStatus::StopIteration) {
     ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
               parent_.config().applicationProtocol(), metadata->getRequestId());
     pending_stream_decoded_ = true;
     return;
   }
-
+  ENVOY_LOG(debug, "***** 4 onStreamDecoded");
   finalizeRequest();
 
   ENVOY_LOG(
@@ -471,3 +477,4 @@ void ActiveMessage::onError(const std::string& what) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

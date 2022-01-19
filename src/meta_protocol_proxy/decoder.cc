@@ -48,6 +48,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
 
   // Start to decode a message
   if (!decode_started_) {
+    ENVOY_LOG(debug, "******** 1 DecoderBase start" );
     start();
   }
   ASSERT(state_machine_ != nullptr);
@@ -68,6 +69,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
   ASSERT(state == ProtocolState::Done);
 
   // Clean up after finishing decoding a message
+  ENVOY_LOG(debug, "******** 2 DecoderBase end" );
   complete();
   buffer_underflow = (data.length() == 0);
   ENVOY_LOG(debug, "MetaProtocol decoder: data length {}", data.length());
@@ -97,3 +99,4 @@ void DecoderBase::reset() { complete(); }
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
