@@ -13,9 +13,7 @@ namespace MetaProtocolProxy {
 namespace Router {
 
 void Router::onDestroy() {
-    ENVOY_LOG(debug, "1 ********** destory router");
   if (upstream_request_) {
-    ENVOY_LOG(debug, "2 ********** destory router");
     upstream_request_->resetStream();
   }
   cleanup();
@@ -119,10 +117,6 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
 }
 
 void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
-  if (!upstream_request_){
-    ENVOY_STREAM_LOG(debug, "meta protocol router: request has completed, ignore!", *callbacks_);
-    return;
-  }
   ASSERT(!upstream_request_->response_complete_);
 
   ENVOY_STREAM_LOG(trace, "meta protocol router: reading response: {} bytes", *callbacks_,
@@ -191,22 +185,8 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 
 void Router::cleanup() {
-  ENVOY_LOG(debug, "5 ********** destory router");
   if (upstream_request_) {
-    ENVOY_LOG(debug, "6 ********** destory router");
-    if(upstream_request_->conn_pool_handle_!= nullptr) {
-      ENVOY_LOG(debug, "7 ********** destory router");
-      //close the connection, don't reuse it //TODO make it an option
-      ENVOY_LOG(debug, "close the connection");
-      upstream_request_->conn_data_->connection().close(Network::ConnectionCloseType::NoFlush);
-      ENVOY_LOG(debug, "8 ********** destory router");
-      //upstream_request_->conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::CloseExcess);
-      ENVOY_LOG(debug, "9 ********** destory router");
-      upstream_request_->conn_data_.reset();
-      ENVOY_LOG(debug, "10 ********** destory router");
-    }
     upstream_request_.reset();
-    ENVOY_LOG(debug, "11 ********** destory router");
   }
 }
 
@@ -219,45 +199,21 @@ Router::UpstreamRequest::~UpstreamRequest() = default;
 
 FilterStatus Router::UpstreamRequest::start() {
   Tcp::ConnectionPool::Cancellable* handle = conn_pool_.newConnection(*this);
-  // The newConnection method of Connection Pool returns a handle if no available connection, the
-  // handle can be used to cancel the request.
   if (handle) {
-    ENVOY_LOG(debug, "********** create new connection");
+    // Pause while we wait for a connection.
     conn_pool_handle_ = handle;
-    // Pause the processing of the request, the onPoolReady callback will be called when the newly
-    // created connection is ready
     return FilterStatus::StopIteration;
   }
 
-  // We get an existing connection from the pool, the onPoolReady method will be called immediately
   return FilterStatus::Continue;
-}
-
-void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
-                                          Upstream::HostDescriptionConstSharedPtr host) {
-  ENVOY_LOG(debug, "meta protocol upstream request: tcp connection has ready");
-
-  // Only invoke continueDecoding if we'd previously stopped the filter chain.
-  bool continue_decoding = conn_pool_handle_ != nullptr;
-
-  onUpstreamHostSelected(host);
-  host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectSuccess);
-
-  conn_data_ = std::move(conn_data);
-  conn_data_->addUpstreamCallbacks(parent_);
-  //conn_pool_handle_ = nullptr;
-
-  onRequestStart(continue_decoding);
-  encodeData(parent_.upstream_request_buffer_);
 }
 
 void Router::UpstreamRequest::resetStream() {
   stream_reset_ = true;
-  ENVOY_LOG(debug, "3 ********** destory router");
-  if (conn_pool_handle_ != nullptr) {
-    ENVOY_LOG(debug, "4 ********** destory conn");
+
+  if (conn_pool_handle_) {
     ASSERT(!conn_data_);
-    conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::CloseExcess);
+    conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::Default);
     conn_pool_handle_ = nullptr;
     ENVOY_LOG(debug, "meta protocol upstream request: reset connection pool handler");
   }
@@ -272,7 +228,7 @@ void Router::UpstreamRequest::resetStream() {
 
 void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(conn_data_);
-  //ASSERT(!conn_pool_handle_);
+  ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", *parent_.callbacks_, data.length());
   conn_data_->connection().write(data, false);
@@ -280,7 +236,6 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
 
 void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason,
                                             Upstream::HostDescriptionConstSharedPtr host) {
-  ENVOY_LOG(debug, "**** pool failure");
   conn_pool_handle_ = nullptr;
 
   // Mimic an upstream reset.
@@ -305,6 +260,31 @@ void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason re
   }
 }
 
+void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
+                                          Upstream::HostDescriptionConstSharedPtr host) {
+  ENVOY_LOG(debug, "meta protocol upstream request: tcp connection has ready");
+
+  // Only invoke continueDecoding if we'd previously stopped the filter chain.
+  bool continue_decoding = conn_pool_handle_ != nullptr;
+
+  onUpstreamHostSelected(host);
+  host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectSuccess);
+
+  conn_data_ = std::move(conn_data);
+  conn_data_->addUpstreamCallbacks(parent_);
+
+  // new connection
+  if (conn_pool_handle_) {
+    std::shared_ptr<IdleTimeoutChecker> checker = std::make_shared<IdleTimeoutChecker>(
+        conn_data_->connection(), conn_data_->connection().dispatcher());
+    conn_data_->connection().addConnectionCallbacks(*checker);
+    conn_data_->connection().addWriteFilter(checker);
+  }
+  conn_pool_handle_ = nullptr;
+  onRequestStart(continue_decoding);
+  encodeData(parent_.upstream_request_buffer_);
+}
+
 void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {
   ENVOY_LOG(debug, "meta protocol upstream request: start sending data to the server {}",
             upstream_host_->address()->asString());
@@ -319,7 +299,7 @@ void Router::UpstreamRequest::onRequestComplete() { request_complete_ = true; }
 
 void Router::UpstreamRequest::onResponseComplete() {
   response_complete_ = true;
-  //conn_data_.reset();
+  conn_data_.reset();
 }
 
 void Router::UpstreamRequest::onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) {
@@ -382,6 +362,56 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
     // call resetStream to release the current stream.
     // the resetStream eventually triggers the onDestroy function call.
     parent_.callbacks_->resetStream();
+  }
+}
+
+IdleTimeoutChecker::IdleTimeoutChecker(Network::ClientConnection& connection,
+                                       Event::Dispatcher& dispatcher)
+    : connection_(connection) {
+  idle_timer_ = dispatcher.createTimer([this]() -> void { onIdleTimeout(); });
+  enableIdleTimer();
+}
+
+void IdleTimeoutChecker::onEvent(Network::ConnectionEvent event) {
+  switch (event) {
+  case Network::ConnectionEvent::Connected:
+    ENVOY_LOG(debug, "XXXXXXXXXX Connected XXXXXXXXXXX");
+    break;
+  case Network::ConnectionEvent::RemoteClose:
+    ENVOY_LOG(debug, "XXXXXXXXXX RemoteClose XXXXXXXXXXX");
+    connection_.removeConnectionCallbacks(*this);
+    break;
+  case Network::ConnectionEvent::LocalClose:
+    ENVOY_LOG(debug, "XXXXXXXXXX LocalClose XXXXXXXXXXX");
+    connection_.removeConnectionCallbacks(*this);
+    break;
+  default:
+    // Connected is consumed by the connection pool.
+    NOT_REACHED_GCOVR_EXCL_LINE;
+  }
+}
+
+Network::FilterStatus IdleTimeoutChecker::onWrite(Buffer::Instance& , bool ) {
+  ENVOY_LOG(debug, "XXXXXXXXXX onWrite XXXXXXXXXXX");
+  disableIdleTimer();
+  enableIdleTimer();
+  return Network::FilterStatus::Continue;
+}
+
+void IdleTimeoutChecker::onIdleTimeout() {
+  ENVOY_LOG(debug, "XXXXXXXXXX Timeout, destroy connection XXXXXXXXXXX");
+  connection_.close(Network::ConnectionCloseType::NoFlush);
+}
+
+void IdleTimeoutChecker::disableIdleTimer() {
+  if (idle_timer_ != nullptr) {
+    idle_timer_->disableTimer();
+  }
+}
+
+void IdleTimeoutChecker::enableIdleTimer() {
+  if (idle_timer_ != nullptr) {
+    idle_timer_->enableTimer(std::chrono::milliseconds(10 * 1000));
   }
 }
 
