@@ -32,7 +32,7 @@ StaticRouteConfigProviderImpl::StaticRouteConfigProviderImpl(
     : config_(new ConfigImpl(config, factory_context)), route_config_proto_{config},
       last_updated_(factory_context.timeSource().systemTime()),
       route_config_provider_manager_(route_config_provider_manager) {
-  route_config_provider_manager_config.static_route_config_providers_.insert(this);
+  route_config_provider_manager_.static_route_config_providers_.insert(this);
 }
 
 StaticRouteConfigProviderImpl::~StaticRouteConfigProviderImpl() {
@@ -305,8 +305,7 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
 
 std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>
 RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
-  auto config_dump =
-      std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
+  auto config_dump = std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
 
   for (const auto& element : dynamic_route_config_providers_) {
     const auto& subscription = element.second.lock()->subscription_;
@@ -343,3 +342,4 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

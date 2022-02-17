@@ -86,7 +86,7 @@ private:
 
   class MutationEntry {
   public:
-    MutationEntry(std::string key, std::string value) : key_(key), value_(value_);
+    MutationEntry(std::string key, std::string value) : key_(key), value_(value){}
     const std::string& key() const { return key_; }
     const std::string& value() const { return value_; }
 
