@@ -26,9 +26,23 @@ RouteEntryImplBase::RouteEntryImplBase(
     ENVOY_LOG(debug, "meta protocol route matcher: weighted_clusters_size {}",
               weighted_clusters_.size());
   }
+
+  for (const auto& keyValue : route.request_mutation()) {
+    request_mutation_.emplace_back(
+        std::make_shared<MutationEntry>(keyValue.key(), keyValue.value()));
+  }
+
+  for (const auto& keyValue : route.response_mutation()) {
+    response_mutation_.emplace_back(
+        std::make_shared<MutationEntry>(keyValue.key(), keyValue.value()));
+  }
 }
 
 const std::string& RouteEntryImplBase::clusterName() const { return cluster_name_; }
+
+void RouteEntryImplBase::requestMutation(MutationSharedPtr& mutation) const {}
+
+void RouteEntryImplBase::responseMutation(MutationSharedPtr& mutation) const {}
 
 const RouteEntry* RouteEntryImplBase::routeEntry() const { return this; }
 

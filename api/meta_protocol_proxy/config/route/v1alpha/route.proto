@@ -34,6 +34,13 @@ message Route {
 
   // Route request to some upstream cluster.
   RouteAction route = 3 [(validate.rules).message = {required: true}];
+
+  // Specifies a list of key-value pairs that should be mutated for each request. How to interpret the key-value pairs
+  // depends on the codec implementation
+  repeated KeyValue request_mutation = 4 [(validate.rules).repeated = {max_items: 1000}];
+  // Specifies a list of key-value pairs that should be mutated for each response. How to interpret the key-value pairs
+  // depends on the codec implementation
+  repeated KeyValue response_mutation = 5 [(validate.rules).repeated = {max_items: 1000}];
 }
 
 message RouteMatch {
@@ -59,3 +66,11 @@ message RouteAction {
   }
 }
 
+// Key /value pair.
+message KeyValue {
+  // Key name.
+  string key = 1 [(validate.rules).string =  {min_len: 1 max_bytes: 16384 }];
+
+  // alue.
+  string value = 2 [(validate.rules).string = {max_bytes: 16384 }];
+}

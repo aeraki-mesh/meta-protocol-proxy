@@ -100,6 +100,7 @@ public:
   void startUpstreamResponse() override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
+  CodecPtr createCodec() override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
 
@@ -173,6 +174,7 @@ public:
   void startUpstreamResponse() override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
+  CodecPtr createCodec() override;
   Event::Dispatcher& dispatcher() override;
   void resetStream() override;
 
