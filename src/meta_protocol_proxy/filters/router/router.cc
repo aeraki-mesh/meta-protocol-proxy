@@ -232,8 +232,8 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", *parent_.callbacks_, data.length());
-  auto codec = *parent_.callbacks_->createCodec();//TODO just create codec once
-  codec->encode(metadata_, mutation_, data);
+  auto codec = parent_.callbacks_->createCodec();//TODO just create codec once
+  codec->encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }
 
