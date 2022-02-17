@@ -23,7 +23,7 @@ void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
   callbacks_ = &callbacks;
 }
 
-FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
+FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr requestMutation) {
   route_ = callbacks_->route();
   if (!route_) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'", *callbacks_,
@@ -76,10 +76,11 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationShared
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
 
-  // TODO encode mutation into the outgoing request
+  // TODO move buffer into the upstream request
   upstream_request_buffer_.move(metadata->getOriginMessage(),
                                 metadata->getOriginMessage().length());
-  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool, metadata);
+  route_entry_->requestMutation(requestMutation);
+  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool, metadata, requestMutation);
   return upstream_request_->start();
 }
 
@@ -191,8 +192,8 @@ void Router::cleanup() {
 }
 
 Router::UpstreamRequest::UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool,
-                                         MetadataSharedPtr& metadata)
-    : parent_(parent), conn_pool_(pool), metadata_(metadata), request_complete_(false),
+                                         MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
+    : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation), request_complete_(false),
       response_started_(false), response_complete_(false), stream_reset_(false) {}
 
 Router::UpstreamRequest::~UpstreamRequest() = default;
@@ -231,6 +232,8 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", *parent_.callbacks_, data.length());
+  auto codec = *parent_.callbacks_->createCodec();//TODO just create codec once
+  codec->encode(metadata_, mutation_, data);
   conn_data_->connection().write(data, false);
 }
 

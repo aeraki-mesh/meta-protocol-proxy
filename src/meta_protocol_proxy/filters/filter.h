@@ -137,6 +137,12 @@ public:
    * Reset the downstream connection.
    */
   virtual void resetDownstreamConnection() PURE;
+
+  /**
+   * Create a codec, which will be used by the router to encode request and response
+   * @return CodecPtr
+   */
+  virtual CodecPtr createCodec() PURE;
 };
 
 /**

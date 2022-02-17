@@ -159,6 +159,10 @@ void ActiveMessageDecoderFilter::resetDownstreamConnection() {
   parent_.resetDownstreamConnection();
 }
 
+CodecPtr ActiveMessageDecoderFilter::createCodec() {
+  return parent_.createCodec();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
@@ -408,6 +412,10 @@ UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
 
 void ActiveMessage::resetDownstreamConnection() {
   parent_.connection().close(Network::ConnectionCloseType::NoFlush);
+}
+
+CodecPtr ActiveMessage::createCodec() {
+  return parent_.config().createCodec();
 }
 
 void ActiveMessage::resetStream() { parent_.deferredMessage(*this); }

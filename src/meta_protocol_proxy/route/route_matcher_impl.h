@@ -39,6 +39,8 @@ public:
   const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() const override {
     return metadata_match_criteria_.get();
   }
+  void requestMutation(MutationSharedPtr& mutation) const override;
+  void responseMutation(MutationSharedPtr& mutation) const override;
 
   // Router::Route
   const RouteEntry* routeEntry() const override;
@@ -63,6 +65,12 @@ private:
       return metadata_match_criteria_ ? metadata_match_criteria_.get()
                                       : parent_.metadataMatchCriteria();
     }
+    void requestMutation(MutationSharedPtr& mutation) const override {
+      return parent_.requestMutation(mutation);
+    }
+    void responseMutation(MutationSharedPtr& mutation) const override {
+      return parent_.responseMutation(mutation);
+    }
 
     // Router::Route
     const RouteEntry* routeEntry() const override { return this; }
@@ -76,10 +84,25 @@ private:
 
   using WeightedClusterEntrySharedPtr = std::shared_ptr<WeightedClusterEntry>;
 
+  class MutationEntry {
+  public:
+    MutationEntry(std::string key, std::string value) : key_(key), value_(value_);
+    const std::string& key() const { return key_; }
+    const std::string& value() const { return value_; }
+
+  private:
+    const std::string key_;
+    const std::string value_;
+  };
+
+  using MutationEntrySharedPtr = std::shared_ptr<MutationEntry>;
+
   uint64_t total_cluster_weight_;
   const std::string cluster_name_;
   const std::vector<Http::HeaderUtility::HeaderDataPtr> config_headers_;
   std::vector<WeightedClusterEntrySharedPtr> weighted_clusters_;
+  std::vector<MutationEntrySharedPtr> request_mutation_;
+  std::vector<MutationEntrySharedPtr> response_mutation_;
 
   // TODO(gengleilei) Implement it.
   Envoy::Router::MetadataMatchCriteriaConstPtr metadata_match_criteria_;
