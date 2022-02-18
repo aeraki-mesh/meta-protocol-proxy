@@ -82,22 +82,6 @@ private:
   Http::HeaderMapPtr headers_;
 };
 
-class MutationImpl : public Mutation { //@TODO
-public:
-  MutationImpl() = default;
-  ~MutationImpl() = default;
-
-  void put(std::string key, std::any value) override { properties_.put(key, value); };
-  AnyOptConstRef get(std::string key) const override { return properties_.get(key); };
-  void putString(std::string key, std::string value) override { this->put(key, value); };
-  std::string getString(std::string key) const override { return properties_.getString(key); };
-  bool getBool(std::string key) const override { return properties_.getBool(key); };
-  uint32_t getUint32(std::string key) const override { return properties_.getUint32(key); };
-
-private:
-  PropertiesImpl properties_;
-};
-
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
