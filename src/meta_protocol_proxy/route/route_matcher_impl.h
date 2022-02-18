@@ -65,10 +65,10 @@ private:
       return metadata_match_criteria_ ? metadata_match_criteria_.get()
                                       : parent_.metadataMatchCriteria();
     }
-    void requestMutation(MutationSharedPtr& mutation) const override {
+    void requestMutation(MutationSharedPtr mutation) const override {
       return parent_.requestMutation(mutation);
     }
-    void responseMutation(MutationSharedPtr& mutation) const override {
+    void responseMutation(MutationSharedPtr mutation) const override {
       return parent_.responseMutation(mutation);
     }
 
