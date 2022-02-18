@@ -39,8 +39,8 @@ public:
   const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() const override {
     return metadata_match_criteria_.get();
   }
-  void requestMutation(MutationSharedPtr& mutation) const override;
-  void responseMutation(MutationSharedPtr& mutation) const override;
+  void requestMutation(MutationSharedPtr mutation) const override;
+  void responseMutation(MutationSharedPtr mutation) const override;
 
   // Router::Route
   const RouteEntry* routeEntry() const override;

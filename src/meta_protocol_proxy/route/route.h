@@ -36,14 +36,14 @@ public:
    * The mutation is supposed to be encoded into the request by the codec.
    * @param mutation supplies the request mutation, which may be modified during this call.
    */
-  virtual void requestMutation(MutationSharedPtr& mutation) const PURE;
+  virtual void requestMutation(MutationSharedPtr mutation) const PURE;
 
   /**
    * Fill the key-value pairs in the mutation structure based on route configuration,
    * The mutation is supposed to be encoded into the response by the codec.
    * @param mutation supplies the response mutation, which may be modified during this call.
    */
-  virtual void responseMutation(MutationSharedPtr& mutation) const PURE;
+  virtual void responseMutation(MutationSharedPtr mutation) const PURE;
 };
 
 using RouteEntryPtr = std::shared_ptr<RouteEntry>;

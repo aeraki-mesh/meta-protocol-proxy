@@ -40,13 +40,13 @@ RouteEntryImplBase::RouteEntryImplBase(
 
 const std::string& RouteEntryImplBase::clusterName() const { return cluster_name_; }
 
-void RouteEntryImplBase::requestMutation(MutationSharedPtr& mutation) const {
+void RouteEntryImplBase::requestMutation(MutationSharedPtr mutation) const {
   for (const auto& keyValue : request_mutation_) {
     mutation.insert(keyValue->key(), keyValue->value());
   }
 }
 
-void RouteEntryImplBase::responseMutation(MutationSharedPtr& mutation) const {
+void RouteEntryImplBase::responseMutation(MutationSharedPtr mutation) const {
   for (const auto& keyValue : response_mutation_) {
     mutation.insert(keyValue->key(), keyValue->value());
   }
