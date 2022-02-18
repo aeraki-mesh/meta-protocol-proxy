@@ -95,10 +95,7 @@ public:
 };
 using MetadataSharedPtr = std::shared_ptr<Metadata>;
 
-class Mutation : public Properties {
-public:
-  virtual ~Mutation() = default;
-};
+using Mutation = std::map<std::string, std::string>;
 using MutationSharedPtr = std::shared_ptr<Mutation>;
 
 enum class DecodeStatus {
