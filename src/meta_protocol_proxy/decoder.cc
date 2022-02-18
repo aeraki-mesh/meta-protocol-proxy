@@ -20,7 +20,7 @@ ProtocolState DecoderStateMachine::onDecodeStream(Buffer::Instance& buffer) {
     return ProtocolState::Done;
   }
 
-  auto mutation = std::make_shared<MutationImpl>();
+  auto mutation = std::make_shared<Mutation>();
   auto active_stream_ = delegate_.newStream(metadata, mutation);
   ASSERT(active_stream_);
   active_stream_->onStreamDecoded();

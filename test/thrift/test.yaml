@@ -30,6 +30,11 @@ static_resources:
                       exact_match: sayHello
                 route:
                   cluster: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+                request_mutation:
+                  - key: foo
+                    value: bar
+                  - key: foo1
+                    value: bar1
           statPrefix: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
   clusters:
     name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local

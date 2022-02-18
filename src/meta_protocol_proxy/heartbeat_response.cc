@@ -10,7 +10,7 @@ namespace MetaProtocolProxy {
 DirectResponse::ResponseType HeartbeatResponse::encode(Metadata& metadata, Codec& codec,
                                                        Buffer::Instance& buffer) const {
   metadata.setMessageType(MessageType::Heartbeat);
-  codec.encode(metadata, MutationImpl{}, buffer);
+  codec.encode(metadata, Mutation{}, buffer);
   ENVOY_LOG(debug, "buffer length {}", buffer.length());
   return DirectResponse::ResponseType::SuccessReply;
 }
