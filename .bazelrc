@@ -1,3 +1,9 @@
+# Keep envoy.bazelrc up-to-date by run:
+# curl -sSL https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelrc > envoy.bazelrc
 import %workspace%/envoy.bazelrc
+
+# Keep proxy.bazelrc up-to-date by run:
+# curl -sSL https://raw.githubusercontent.com/istio/proxy/master/.bazelrc > proxy.bazelrc
 import %workspace%/proxy.bazelrc
+
 try-import %workspace%/user.bazelrc
