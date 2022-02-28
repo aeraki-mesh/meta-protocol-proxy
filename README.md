@@ -35,7 +35,7 @@ allowing users to write their own layer-7 filters to add custom logic into MetaP
 
 Follow this guide [Building Envoy with Bazel](https://github.com/envoyproxy/envoy/blob/main/bazel/README.md) to install the required software.
 
-Below is how to build on Ubuntu 18.04：
+Below is how to build on Ubuntu 18.04
 
 ### Install Bazelisk as Bazel
 
@@ -72,8 +72,10 @@ sudo apt-get install llvm-10 lldb-10 llvm-10-dev libllvm10 llvm-10-runtime clang
 ```
 
 ### Build
-Run  ```./build.sh```, if the build completes successfully, the generated binary will be at ```bazel-bin/envoy```, which contains 
+Run  ```make build```, if the build completes successfully, the generated binary will be at ```bazel-bin/envoy```, which contains 
 the MetaProtocol Proxy and the codecs of the application protocols.
+
+To build MetaProtocol proxy for production, run ```make build_release```.
 
 ## Test MetaProtocol Proxy
 
@@ -82,7 +84,7 @@ Two layer-7 protocols, [Dubbo](src/application_protocols/dubbo) and [Thrift](src
 
 ### Dubbo
 Since the dubbo test client will use dns name ```org.apache.dubbo.samples.basic.api.demoservice``` to access th dubbo test server, we need to
-add the below line to hte hosts file：
+add the below line to hte hosts file:
 
 ```bash
 127.0.0.1 org.apache.dubbo.samples.basic.api.demoservice
