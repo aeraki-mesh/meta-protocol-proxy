@@ -16,3 +16,4 @@ generate-srcs.sh
 **/*.swp
 **/*.log
 user.bazelrc
+clang.bazelrc
