@@ -15,11 +15,11 @@
 SHELL := /bin/bash
 CC := clang-10
 CXX := clang++-10
-PATH := /usr/lib/llvm-10/bin:$(PATH)
+PATH := /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04/bin:$(PATH)
 
 BAZEL_CONFIG = -s --sandbox_debug --verbose_failures --verbose_explanations --explain=build.log --host_force_python=PY3 
-BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG)
-BAZEL_CONFIG_REL  = $(BAZEL_CONFIG) --config=release
+BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=libc++
+BAZEL_CONFIG_REL  = $(BAZEL_CONFIG_DEV) --config=release
 BAZEL_TARGETS = envoy
 
 build:

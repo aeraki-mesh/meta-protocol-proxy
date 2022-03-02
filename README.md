@@ -49,18 +49,7 @@ sudo chmod +x /usr/local/bin/bazel
 ### Install external dependencies
 
 ```bash
-sudo apt-get install \
-autoconf \
-automake \
-cmake \
-curl \
-libtool \
-make \
-ninja-build \
-patch \
-python3-pip \
-unzip \
-virtualenv
+sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch python3-pip unzip virtualenv
 ```
 
 ### Install build toolchain
@@ -69,6 +58,12 @@ virtualenv
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt update
 sudo apt-get install llvm-10 lldb-10 llvm-10-dev libllvm10 llvm-10-runtime clang-10 clang++-10 lld-10 gcc-10 g++-10
+```
+
+### Setup clang
+
+```bash
+.\bazel/setup_clang.sh /usr/lib/llvm-10
 ```
 
 ### Build
