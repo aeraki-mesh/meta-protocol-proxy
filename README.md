@@ -49,21 +49,22 @@ sudo chmod +x /usr/local/bin/bazel
 ### Install external dependencies
 
 ```bash
-sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch python3-pip unzip virtualenv
+sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch python3-pip unzip virtualenv libc++-10-dev
 ```
 
-### Install build toolchain
+### Install LLVM
 
 ```bash
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt-get install llvm-10 lldb-10 llvm-10-dev libllvm10 llvm-10-runtime clang-10 clang++-10 lld-10 gcc-10 g++-10
+cd /home/ubuntu \
+  && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && rm clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
 ```
 
 ### Setup clang
 
 ```bash
-.\bazel/setup_clang.sh /usr/lib/llvm-10
+./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04
 ```
 
 ### Build
