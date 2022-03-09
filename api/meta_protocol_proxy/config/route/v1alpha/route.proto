@@ -37,10 +37,10 @@ message Route {
 
   // Specifies a list of key-value pairs that should be mutated for each request. How to interpret the key-value pairs
   // depends on the codec implementation
-  repeated KeyValue request_mutation = 4 [(validate.rules).repeated = {max_items: 1000}];
+  repeated KeyValue request_mutation = 19 [(validate.rules).repeated = {max_items: 1000}];
   // Specifies a list of key-value pairs that should be mutated for each response. How to interpret the key-value pairs
   // depends on the codec implementation
-  repeated KeyValue response_mutation = 5 [(validate.rules).repeated = {max_items: 1000}];
+  repeated KeyValue response_mutation = 20 [(validate.rules).repeated = {max_items: 1000}];
 }
 
 message RouteMatch {
