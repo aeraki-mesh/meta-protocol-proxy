@@ -54,8 +54,11 @@ void DubboCodec::complete() {
 
 void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
                         const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
-  (void)mutation;
   (void)buffer;
+  for (const auto& keyValue : mutation) {
+    ENVOY_LOG(info, "dubbo: codec mutation {} : {}", keyValue.first, keyValue.second);
+  }
+
   //ASSERT(buffer.length() == 0);
   switch (metadata.getMessageType()) {
   case MetaProtocolProxy::MessageType::Heartbeat: {
