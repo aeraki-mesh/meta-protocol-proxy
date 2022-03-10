@@ -167,6 +167,20 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
           new envoy::config::route::v3::WeightedCluster(httpRoute.route().weighted_clusters()));
     }
     metaRoute->set_allocated_route(action);
+
+    for (auto it = httpRoute.request_headers_to_add().begin();
+         it < httpRoute.request_headers_to_add().end(); it++) {
+      auto keyValue = metaRoute->add_request_mutation();
+      keyValue->set_key(it->header().key());
+      keyValue->set_value(it->header().value());
+    }
+
+    for (auto it = httpRoute.response_headers_to_add().begin();
+         it < httpRoute.response_headers_to_add().end(); it++) {
+      auto keyValue = metaRoute->add_response_mutation();
+      keyValue->set_key(it->header().key());
+      keyValue->set_value(it->header().value());
+    }
   }
 }
 
@@ -305,7 +319,8 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
 
 std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>
 RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
-  auto config_dump = std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
+  auto config_dump =
+      std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
 
   for (const auto& element : dynamic_route_config_providers_) {
     const auto& subscription = element.second.lock()->subscription_;

@@ -30,7 +30,16 @@ release:
 	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && \
 	bazel build $(BAZEL_CONFIG_REL) $(BAZEL_TARGETS)
 
+# output files are in this location: bazel-bin/api/meta_protocol_proxy
+api:
+	bazel build //api/meta_protocol_proxy/v1alpha:pkg_go_proto && \
+	bazel build //api/meta_protocol_proxy/admin/v1alpha:pkg_go_proto && \
+	bazel build //api/meta_protocol_proxy/filters/router/v1alpha:pkg_go_proto && \
+	bazel build //api/meta_protocol_proxy/filters/local_ratelimit/v1alpha:pkg_go_proto && \
+	bazel build //api/meta_protocol_proxy/filters/global_ratelimit/v1alpha:pkg_go_proto && \
+	bazel build //api/meta_protocol_proxy/config/route/v1alpha:pkg_go_proto
+
 clean:
 	@bazel clean
 
-.PHONY: build clean
+.PHONY: build clean api
