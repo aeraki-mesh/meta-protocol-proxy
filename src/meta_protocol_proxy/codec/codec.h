@@ -77,6 +77,8 @@ public:
 
 class Metadata : public Properties {
 public:
+  inline static const std::string HEADER_REAL_SERVER_IP = "x-meta-protocol-real-server-ip";
+
   virtual ~Metadata() = default;
 
   virtual void setOriginMessage(Buffer::Instance&) PURE;

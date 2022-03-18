@@ -23,7 +23,9 @@ void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
   callbacks_ = &callbacks;
 }
 
-FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr requestMutation) {
+FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
+                                      MutationSharedPtr requestMutation) {
+  requestMetadata_ = metadata;
   route_ = callbacks_->route();
   if (!route_) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'", *callbacks_,
@@ -80,7 +82,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata, MutationShared
   upstream_request_buffer_.move(metadata->getOriginMessage(),
                                 metadata->getOriginMessage().length());
   route_entry_->requestMutation(requestMutation);
-  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *conn_pool, metadata, requestMutation);
+  upstream_request_ =
+      std::make_unique<UpstreamRequest>(*this, *conn_pool, metadata, requestMutation);
   return upstream_request_->start();
 }
 
@@ -125,7 +128,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 
   // Handle normal response.
   if (!upstream_request_->response_started_) {
-    callbacks_->startUpstreamResponse();
+    callbacks_->startUpstreamResponse(*requestMetadata_);
     upstream_request_->response_started_ = true;
   }
 
@@ -193,8 +196,9 @@ void Router::cleanup() {
 
 Router::UpstreamRequest::UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool,
                                          MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
-    : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation), request_complete_(false),
-      response_started_(false), response_complete_(false), stream_reset_(false) {}
+    : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
+      request_complete_(false), response_started_(false), response_complete_(false),
+      stream_reset_(false) {}
 
 Router::UpstreamRequest::~UpstreamRequest() = default;
 
@@ -232,7 +236,7 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", *parent_.callbacks_, data.length());
-  auto codec = parent_.callbacks_->createCodec();//TODO just create codec once
+  auto codec = parent_.callbacks_->createCodec(); // TODO just create codec once
   codec->encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }
@@ -276,6 +280,11 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
   conn_data_ = std::move(conn_data);
   conn_data_->addUpstreamCallbacks(parent_);
   conn_pool_handle_ = nullptr;
+
+  // Store the upstream ip to the metadata, which will be used in the response
+  parent_.requestMetadata_->putString(
+      Metadata::HEADER_REAL_SERVER_IP,
+      conn_data_->connection().addressProvider().remoteAddress()->asString());
 
   onRequestStart(continue_decoding);
   encodeData(parent_.upstream_request_buffer_);

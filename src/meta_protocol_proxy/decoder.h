@@ -108,6 +108,7 @@ public:
    * Drains data from the given buffer
    *
    * @param data a Buffer containing protocol data
+   * as the server real ip address
    * @throw EnvoyException on protocol errors
    */
   FilterStatus onData(Buffer::Instance& data, bool& buffer_underflow);

@@ -120,10 +120,9 @@ public:
 
   /**
    * Indicates the start of an upstream response. May only be called once.
-   * @param transport_type TransportType the upstream is using
-   * @param protocol_type ProtocolType the upstream is using
+   * @param requestMetadata we need request metadata to encode response, such as the real server ip
    */
-  virtual void startUpstreamResponse() PURE;
+  virtual void startUpstreamResponse(Metadata& requestMetadata) PURE;
 
   /**
    * Called with upstream response data.
