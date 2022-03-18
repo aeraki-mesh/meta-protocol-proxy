@@ -283,7 +283,7 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
 
   // Store the upstream ip to the metadata, which will be used in the response
   parent_.requestMetadata_->putString(
-      Metadata::HEADER_REAL_SERVER_IP,
+      Metadata::HEADER_REAL_SERVER_ADDRESS,
       conn_data_->connection().addressProvider().remoteAddress()->asString());
 
   onRequestStart(continue_decoding);

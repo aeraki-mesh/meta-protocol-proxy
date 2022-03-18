@@ -77,7 +77,8 @@ public:
 
 class Metadata : public Properties {
 public:
-  inline static const std::string HEADER_REAL_SERVER_IP = "x-meta-protocol-real-server-ip";
+  inline static const std::string HEADER_REAL_SERVER_ADDRESS =
+      "x-meta-protocol-real-server-address";
 
   virtual ~Metadata() = default;
 
