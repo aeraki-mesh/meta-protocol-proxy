@@ -105,9 +105,9 @@ void ThriftCodec::encode(const MetaProtocolProxy::Metadata& metadata,
                          const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
   (void)buffer;
   for (const auto& keyValue : mutation) {
-    ENVOY_LOG(info, "thrift: codec mutation {} : {}", keyValue.first, keyValue.second);
+    ENVOY_LOG(debug, "thrift: codec mutation {} : {}", keyValue.first, keyValue.second);
   }
-  ENVOY_LOG(info, "thrift: codec server real ip {} ",
+  ENVOY_LOG(debug, "thrift: codec server real address: {} ",
             metadata.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
   // ASSERT(buffer.length() == 0);
   switch (metadata.getMessageType()) {
