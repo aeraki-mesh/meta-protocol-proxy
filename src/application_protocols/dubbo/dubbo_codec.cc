@@ -56,8 +56,10 @@ void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
                         const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
   (void)buffer;
   for (const auto& keyValue : mutation) {
-    ENVOY_LOG(info, "dubbo: codec mutation {} : {}", keyValue.first, keyValue.second);
+    ENVOY_LOG(debug, "dubbo: codec mutation {} : {}", keyValue.first, keyValue.second);
   }
+  ENVOY_LOG(debug, "dubbo: codec server real address: {} ",
+		              metadata.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
 
   //ASSERT(buffer.length() == 0);
   switch (metadata.getMessageType()) {
@@ -66,6 +68,10 @@ void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
     break;
   }
   case MetaProtocolProxy::MessageType::Request: {
+    // TODO
+    break;
+  }
+  case MetaProtocolProxy::MessageType::Response: {
     // TODO
     break;
   }

@@ -32,7 +32,7 @@ class ActiveResponseDecoder : public ResponseDecoderCallbacks,
 public:
   ActiveResponseDecoder(ActiveMessage& parent, MetaProtocolProxyStats& stats,
                         Network::Connection& connection, std::string applicationProtocol,
-                        CodecPtr&& codec);
+                        CodecPtr&& codec, Metadata& requestMetadata);
   ~ActiveResponseDecoder() override = default;
 
   UpstreamResponseStatus onData(Buffer::Instance& data);
@@ -54,6 +54,7 @@ private:
   Network::Connection& response_connection_;
   std::string application_protocol_;
   CodecPtr codec_;
+  Metadata& requestMetadata_;
   ResponseDecoderPtr decoder_;
   MetadataSharedPtr metadata_;
   bool complete_ : 1;
@@ -97,7 +98,7 @@ public:
 
   void continueDecoding() override;
   void sendLocalReply(const DirectResponse& response, bool end_stream) override;
-  void startUpstreamResponse() override;
+  void startUpstreamResponse(Metadata& requestMetadata) override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
   CodecPtr createCodec() override;
@@ -171,7 +172,7 @@ public:
   StreamInfo::StreamInfo& streamInfo() override;
   Route::RouteConstSharedPtr route() override;
   void sendLocalReply(const DirectResponse& response, bool end_stream) override;
-  void startUpstreamResponse() override;
+  void startUpstreamResponse(Metadata& requestMetadata) override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
   CodecPtr createCodec() override;
