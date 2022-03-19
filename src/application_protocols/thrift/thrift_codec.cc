@@ -183,10 +183,12 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
   ASSERT(msgMetadata.hasMessageType());
   switch (msgMetadata.messageType()) {
   case ThriftProxy::MessageType::Call: {
+    ENVOY_LOG(debug, "thrift: message type: Request");
     metadata.setMessageType(MessageType::Request);
     break;
   }
   case ThriftProxy::MessageType::Reply: {
+    ENVOY_LOG(debug, "thrift: message type: Response");
     metadata.setMessageType(MessageType::Response);
     break;
   }
@@ -195,6 +197,7 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
     break;
   }
   case ThriftProxy::MessageType::Exception: {
+    ENVOY_LOG(debug, "thrift: message type: Error");
     metadata.setMessageType(MessageType::Error);
 
     // Error ResponseStatus is used for outlier detection, maybe some of them should not be
