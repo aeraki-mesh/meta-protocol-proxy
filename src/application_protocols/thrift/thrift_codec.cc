@@ -196,19 +196,14 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
   }
   case ThriftProxy::MessageType::Exception: {
     metadata.setMessageType(MessageType::Error);
+
+    // Error ResponseStatus is used for outlier detection, maybe some of them should not be
+    // considered as error response?
+    metadata.setResponseStatus(ResponseStatus::Error);
     break;
   }
   default:
     NOT_REACHED_GCOVR_EXCL_LINE;
-  }
-
-  // These exceptions are considered as an error response, which should be used for outlier
-  // detection
-  if (msgMetadata.hasAppException() &&
-      (msgMetadata.appExceptionType() == ThriftProxy::AppExceptionType::InternalError ||
-       msgMetadata.appExceptionType() == ThriftProxy::AppExceptionType::Timeout ||
-       msgMetadata.appExceptionType() == ThriftProxy::AppExceptionType::Unknown)) {
-    metadata.setResponseStatus(ResponseStatus::Error);
   }
 
   transport_->encodeFrame(metadata.getOriginMessage(), msgMetadata,
