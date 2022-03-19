@@ -153,6 +153,7 @@ void ThriftCodec::onError(const MetaProtocolProxy::Metadata& metadata,
   }
 
   msgMetadata.setMessageType(ThriftProxy::MessageType::Exception);
+  msgMetadata.setAppException(ThriftProxy::AppExceptionType::InternalError, error.message);
 
   protocol_->writeMessageBegin(buffer, msgMetadata);
   protocol_->writeStructBegin(buffer, TApplicationException);
