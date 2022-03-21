@@ -15,26 +15,13 @@
 #include "src/meta_protocol_proxy/filters/filter.h"
 
 #include "src/meta_protocol_proxy/filters/local_ratelimit/local_ratelimit_impl.h"
+#include "src/meta_protocol_proxy/filters/local_ratelimit/stats.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace LocalRateLimit {
-
-/**
- * All local rate limit stats. @see stats_macros.h
- */
-#define ALL_LOCAL_RATE_LIMIT_STATS(COUNTER)                                                        \
-  COUNTER(rate_limited)                                                                            \
-  COUNTER(ok)
-
-/**
- * Struct definition for all local rate limit stats. @see stats_macros.h
- */
-struct LocalRateLimitStats {
-  ALL_LOCAL_RATE_LIMIT_STATS(GENERATE_COUNTER_STRUCT)
-};
 
 class FilterConfig {
   friend class LocalRateLimit;
@@ -46,7 +33,7 @@ public:
 private:
   LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
 
-  mutable LocalRateLimitStats stats_;
+  LocalRateLimitStats stats_;
   LocalRateLimiterImpl rate_limiter_;
   LocalRateLimitConfig config_;
 };
