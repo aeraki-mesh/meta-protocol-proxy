@@ -24,7 +24,7 @@ namespace LocalRateLimit {
 struct LocalRateLimitStats {
   ALL_LOCAL_RATE_LIMIT_STATS(GENERATE_COUNTER_STRUCT)
 
-  static LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope) {
+  static LocalRateLimitStats generateStats(const std::string& , Stats::Scope& scope) {
     const std::string final_prefix = "xxxxx.local_rate_limit";
     std::cout << final_prefix << std::endl << std::endl;
     std::cout << &scope << std::endl << std::endl;
