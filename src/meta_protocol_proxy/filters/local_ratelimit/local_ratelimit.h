@@ -33,7 +33,7 @@ public:
 
 private:
   mutable LocalRateLimitStats stats_;
-  LocalRateLimiterImpl rate_limiter_;
+  mutable LocalRateLimiterImpl rate_limiter_;
 };
 
 class LocalRateLimit : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
