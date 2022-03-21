@@ -57,12 +57,13 @@ void LocalRateLimit::cleanup() {}
 
 bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
   if (filter_config_->rate_limiter_.requestAllowed(metadata)) {
-    filter_config_->stats_.ok_.inc();
+    filter_config_->stats().ok_.inc();
     return false;
   }
-  std::cout << filter_config_->stats_.rate_limited_.value() << std::endl << std::endl;
+  std::cout << &filter_config_->stats() << std::endl << std::endl;
+  std::cout << filter_config_->stats().rate_limited_.value() << std::endl << std::endl;
 
-  filter_config_->stats_.rate_limited_.inc();
+  filter_config_->stats().rate_limited_.inc();
   return true;
 };
 
@@ -71,4 +72,3 @@ bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-

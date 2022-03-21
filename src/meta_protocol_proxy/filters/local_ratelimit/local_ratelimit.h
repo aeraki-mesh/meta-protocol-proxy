@@ -30,10 +30,12 @@ public:
   FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope, Event::Dispatcher& dispatcher);
   ~FilterConfig() = default;
 
+  LocalRateLimitStats& stats() const { return stats_; }
+
 private:
   LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
 
-  LocalRateLimitStats stats_;
+  mutable LocalRateLimitStats stats_;
   LocalRateLimiterImpl rate_limiter_;
   LocalRateLimitConfig config_;
 };
@@ -57,8 +59,6 @@ private:
 
   bool shouldRateLimit(MetadataSharedPtr metadata);
 
-  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
-
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
 
@@ -70,4 +70,3 @@ private:
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
