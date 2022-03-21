@@ -18,8 +18,7 @@ FilterConfig::FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope,
               PROTOBUF_GET_MS_OR_DEFAULT(cfg.token_bucket(), fill_interval, 0)),
           cfg.token_bucket().max_tokens(),
           PROTOBUF_GET_WRAPPED_OR_DEFAULT(cfg.token_bucket(), tokens_per_fill, 1), dispatcher,
-          cfg.conditions(), cfg)),
-      config_(cfg) {}
+          cfg.conditions(), cfg)) {}
 
 void LocalRateLimit::onDestroy() { cleanup(); }
 
@@ -56,7 +55,7 @@ FilterStatus LocalRateLimit::onMessageEncoded(MetadataSharedPtr, MutationSharedP
 void LocalRateLimit::cleanup() {}
 
 bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
-  if (filter_config_->rate_limiter_.requestAllowed(metadata)) {
+  if (filter_config_->rateLimiter().requestAllowed(metadata)) {
     filter_config_->stats().ok_.inc();
     return false;
   }

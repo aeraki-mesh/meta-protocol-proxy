@@ -24,20 +24,16 @@ namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
 class FilterConfig {
-  friend class LocalRateLimit;
-
 public:
   FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope, Event::Dispatcher& dispatcher);
   ~FilterConfig() = default;
 
   LocalRateLimitStats& stats() const { return stats_; }
+  LocalRateLimiterImpl& rateLimiter() const { return rate_limiter_; }
 
 private:
-  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
-
   mutable LocalRateLimitStats stats_;
   LocalRateLimiterImpl rate_limiter_;
-  LocalRateLimitConfig config_;
 };
 
 class LocalRateLimit : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
