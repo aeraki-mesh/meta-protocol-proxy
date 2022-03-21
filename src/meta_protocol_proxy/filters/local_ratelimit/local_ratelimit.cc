@@ -23,6 +23,8 @@ FilterConfig::FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope,
 
 LocalRateLimitStats FilterConfig::generateStats(const std::string& prefix, Stats::Scope& scope) {
   const std::string final_prefix = prefix + ".local_rate_limit";
+  std::cout << final_prefix << std::endl << std::endl;
+  std::cout << &scope << std::endl << std::endl;
   return {ALL_LOCAL_RATE_LIMIT_STATS(POOL_COUNTER_PREFIX(scope, final_prefix))};
 }
 
@@ -65,6 +67,8 @@ bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
     filter_config_->stats_.ok_.inc();
     return false;
   }
+  std::cout << filter_config_->stats_.rate_limited_.value() << std::endl << std::endl;
+  
   filter_config_->stats_.rate_limited_.inc();
   return true;
 };
@@ -74,4 +78,5 @@ bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
 
