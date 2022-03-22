@@ -59,11 +59,7 @@ bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
     filter_config_->stats().ok_.inc();
     return false;
   }
-  std::cout << &filter_config_->stats() << std::endl << std::endl;
-  std::cout << &filter_config_->stats().rate_limited_ << std::endl << std::endl;
-  std::cout << filter_config_->stats().rate_limited_.value() << std::endl << std::endl;
-  std::cout << filter_config_->stats().ok_.value() << std::endl << std::endl;
-  filter_config_->stats().rate_limited_.add(10);
+  filter_config_->stats().rate_limited_.inc(10);
   return true;
 };
 

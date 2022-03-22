@@ -28,12 +28,12 @@ public:
   FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope, Event::Dispatcher& dispatcher);
   ~FilterConfig() = default;
 
-  LocalRateLimitStats& stats() const { return stats_; }
-  LocalRateLimiterImpl& rateLimiter() const { return rate_limiter_; }
+  LocalRateLimitStats& stats() { return stats_; }
+  LocalRateLimiterImpl& rateLimiter() { return rate_limiter_; }
 
 private:
-  mutable LocalRateLimitStats stats_;
-  mutable LocalRateLimiterImpl rate_limiter_;
+  LocalRateLimitStats stats_;
+  LocalRateLimiterImpl rate_limiter_;
 };
 
 class LocalRateLimit : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
