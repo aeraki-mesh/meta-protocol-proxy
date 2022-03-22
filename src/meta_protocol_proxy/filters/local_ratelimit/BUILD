@@ -24,7 +24,7 @@ envoy_cc_library(
     name = "local_ratelimit",
     repository = "@envoy",
     srcs = ["local_ratelimit.cc"],
-    hdrs = ["local_ratelimit.h"],
+    hdrs = ["local_ratelimit.h", "stats.h"],
     deps = [
         # ":local_ratelimit_manager",
         ":local_ratelimit_impl",

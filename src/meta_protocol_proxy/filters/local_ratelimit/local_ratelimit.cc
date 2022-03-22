@@ -12,19 +12,13 @@ namespace LocalRateLimit {
 
 FilterConfig::FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope,
                            Event::Dispatcher& dispatcher)
-    : stats_(generateStats(cfg.stat_prefix(), scope)),
+    : stats_(LocalRateLimitStats::generateStats(cfg.stat_prefix(), scope)),
       rate_limiter_(LocalRateLimiterImpl(
           std::chrono::milliseconds(
               PROTOBUF_GET_MS_OR_DEFAULT(cfg.token_bucket(), fill_interval, 0)),
           cfg.token_bucket().max_tokens(),
           PROTOBUF_GET_WRAPPED_OR_DEFAULT(cfg.token_bucket(), tokens_per_fill, 1), dispatcher,
-          cfg.conditions(), cfg)),
-      config_(cfg) {}
-
-LocalRateLimitStats FilterConfig::generateStats(const std::string& prefix, Stats::Scope& scope) {
-  const std::string final_prefix = prefix + ".local_rate_limit";
-  return {ALL_LOCAL_RATE_LIMIT_STATS(POOL_COUNTER_PREFIX(scope, final_prefix))};
-}
+          cfg.conditions(), cfg)) {}
 
 void LocalRateLimit::onDestroy() { cleanup(); }
 
@@ -61,11 +55,11 @@ FilterStatus LocalRateLimit::onMessageEncoded(MetadataSharedPtr, MutationSharedP
 void LocalRateLimit::cleanup() {}
 
 bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
-  if (filter_config_->rate_limiter_.requestAllowed(metadata)) {
-    filter_config_->stats_.ok_.inc();
+  if (filter_config_->rateLimiter().requestAllowed(metadata)) {
+    filter_config_->stats().ok_.inc();
     return false;
   }
-  filter_config_->stats_.rate_limited_.inc();
+  filter_config_->stats().rate_limited_.inc();
   return true;
 };
 

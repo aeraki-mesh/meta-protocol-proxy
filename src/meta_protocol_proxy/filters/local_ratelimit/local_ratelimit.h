@@ -15,6 +15,7 @@
 #include "src/meta_protocol_proxy/filters/filter.h"
 
 #include "src/meta_protocol_proxy/filters/local_ratelimit/local_ratelimit_impl.h"
+#include "src/meta_protocol_proxy/filters/local_ratelimit/stats.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -22,33 +23,17 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace LocalRateLimit {
 
-/**
- * All local rate limit stats. @see stats_macros.h
- */
-#define ALL_LOCAL_RATE_LIMIT_STATS(COUNTER)                                                        \
-  COUNTER(rate_limited)                                                                            \
-  COUNTER(ok)
-
-/**
- * Struct definition for all local rate limit stats. @see stats_macros.h
- */
-struct LocalRateLimitStats {
-  ALL_LOCAL_RATE_LIMIT_STATS(GENERATE_COUNTER_STRUCT)
-};
-
 class FilterConfig {
-  friend class LocalRateLimit;
-
 public:
   FilterConfig(const LocalRateLimitConfig& cfg, Stats::Scope& scope, Event::Dispatcher& dispatcher);
   ~FilterConfig() = default;
 
-private:
-  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
+  LocalRateLimitStats& stats() { return stats_; }
+  LocalRateLimiterImpl& rateLimiter() { return rate_limiter_; }
 
-  mutable LocalRateLimitStats stats_;
+private:
+  LocalRateLimitStats stats_;
   LocalRateLimiterImpl rate_limiter_;
-  LocalRateLimitConfig config_;
 };
 
 class LocalRateLimit : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
@@ -70,8 +55,6 @@ private:
 
   bool shouldRateLimit(MetadataSharedPtr metadata);
 
-  LocalRateLimitStats generateStats(const std::string& prefix, Stats::Scope& scope);
-
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
 
@@ -83,4 +66,3 @@ private:
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
