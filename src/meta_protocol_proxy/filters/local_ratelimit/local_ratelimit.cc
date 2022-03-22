@@ -59,7 +59,7 @@ bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
     filter_config_->stats().ok_.inc();
     return false;
   }
-  filter_config_->stats().rate_limited_.inc(10);
+  filter_config_->stats().rate_limited_.inc();
   return true;
 };
 
