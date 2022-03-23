@@ -21,18 +21,19 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
 // Singleton registration via macro defined in envoy/singleton/manager.h
-SINGLETON_MANAGER_REGISTRATION(meta_route_config_provider_manager);
-SINGLETON_MANAGER_REGISTRATION(http_tracer_manager);
+SINGLETON_MANAGER_REGISTRATION(meta_protocol_route_config_provider_manager);
+SINGLETON_MANAGER_REGISTRATION(meta_protocol_tracer_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
   Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
       context.singletonManager().getTyped<Route::RouteConfigProviderManager>(
-          SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
+          SINGLETON_MANAGER_REGISTERED_NAME(meta_protocol_route_config_provider_manager),
+          [&context] {
             return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.admin());
           });
 
   auto http_tracer_manager = context.singletonManager().getTyped<Tracing::HttpTracerManagerImpl>(
-      SINGLETON_MANAGER_REGISTERED_NAME(http_tracer_manager), [&context] {
+      SINGLETON_MANAGER_REGISTERED_NAME(meta_protocol_tracer_manager), [&context] {
         return std::make_shared<Tracing::HttpTracerManagerImpl>(
             std::make_unique<Tracing::TracerFactoryContextImpl>(
                 context.getServerFactoryContext(), context.messageValidationVisitor()));
