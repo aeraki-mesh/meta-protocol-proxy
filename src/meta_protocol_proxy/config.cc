@@ -69,7 +69,7 @@ REGISTER_FACTORY(MetaProtocolProxyFilterConfigFactory,
 ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
                        Server::Configuration::FactoryContext& context,
                        Route::RouteConfigProviderManager& route_config_provider_manager,
-                       Tracing::HttpTracerManager& http_tracer_manager)
+                       Tracing::HttpTracerManager& )
     : context_(context),
       stats_prefix_(
           fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
@@ -102,7 +102,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
     }
   }
 
-  tracer_ = http_tracer_manager.getOrCreateHttpTracer();
+  //tracer_ = http_tracer_manager.getOrCreateHttpTracer();
 }
 
 void ConfigImpl::createFilterChain(FilterChainFactoryCallbacks& callbacks) {
