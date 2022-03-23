@@ -3,6 +3,7 @@ syntax = "proto3";
 package aeraki.meta_protocol_proxy.v1alpha;
 
 import "envoy/config/core/v3/config_source.proto";
+import "envoy/extensions/filters/network/http_connection_manager/v3/http_connection_manager.proto";
 
 import "api/meta_protocol_proxy/config/route/v1alpha/route.proto";
 
@@ -47,6 +48,11 @@ message MetaProtocolProxy {
   // request events happen. If no meta_protocol_filters are specified, a default router filter
   // (`aeraki.meta_protocol.filters.router`) is used.
   repeated MetaProtocolFilter meta_protocol_filters = 6;
+
+  // Presence of the object defines whether the connection manager
+  // emits :ref:`tracing <arch_overview_tracing>` data to the :ref:`configured tracing provider
+  // <envoy_api_msg_config.trace.v3.Tracing>`.
+  envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager.Tracing tracing = 7;
 }
 
 message Rds {

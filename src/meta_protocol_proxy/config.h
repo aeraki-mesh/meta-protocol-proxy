@@ -7,6 +7,9 @@
 
 #include "extensions/filters/network/common/factory_base.h"
 #include "extensions/filters/network/well_known_names.h"
+#include "envoy/tracing/http_tracer_manager.h"
+#include "common/tracing/http_tracer_impl.h"
+
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/route/route_matcher_impl.h"
@@ -41,6 +44,7 @@ class Utility {
 public:
   struct Singletons {
     Route::RouteConfigProviderManagerSharedPtr route_config_provider_manager_;
+    Tracing::HttpTracerManagerSharedPtr http_tracer_manager_;
   };
 
   /**
@@ -62,7 +66,8 @@ public:
   using CodecConfig = aeraki::meta_protocol_proxy::v1alpha::Codec;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
-             Route::RouteConfigProviderManager& route_config_provider_manager);
+             Route::RouteConfigProviderManager& route_config_provider_manager,
+             Tracing::HttpTracerManager& http_tracer_manager);
   ~ConfigImpl() override = default;
 
   // FilterChainFactory
@@ -93,7 +98,7 @@ private:
   CodecConfig codecConfig_;
   std::list<FilterFactoryCb> filter_factories_;
   Route::RouteConfigProviderSharedPtr route_config_provider_;
-  Route::RouteConfigProviderManager& route_config_provider_manager_;
+  Tracing::HttpTracerSharedPtr tracer_{std::make_shared<Tracing::HttpNullTracer>()};
 };
 
 } // namespace MetaProtocolProxy

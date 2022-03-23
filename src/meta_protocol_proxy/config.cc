@@ -3,7 +3,10 @@
 #include "absl/container/flat_hash_map.h"
 
 #include "envoy/registry/registry.h"
+#include "envoy/tracing/http_tracer.h"
 #include "common/config/utility.h"
+#include "common/tracing/http_tracer_config_impl.h"
+#include "common/tracing/http_tracer_manager_impl.h"
 
 #include "src/meta_protocol_proxy/codec/factory.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
@@ -19,6 +22,7 @@ namespace MetaProtocolProxy {
 
 // Singleton registration via macro defined in envoy/singleton/manager.h
 SINGLETON_MANAGER_REGISTRATION(meta_route_config_provider_manager);
+SINGLETON_MANAGER_REGISTRATION(http_tracer_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
   Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
@@ -26,7 +30,15 @@ Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryCont
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
             return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.admin());
           });
-  return {meta_route_config_provider_manager};
+
+  auto http_tracer_manager = context.singletonManager().getTyped<Tracing::HttpTracerManagerImpl>(
+      SINGLETON_MANAGER_REGISTERED_NAME(http_tracer_manager), [&context] {
+        return std::make_shared<Tracing::HttpTracerManagerImpl>(
+            std::make_unique<Tracing::TracerFactoryContextImpl>(
+                context.getServerFactoryContext(), context.messageValidationVisitor()));
+      });
+
+  return {meta_route_config_provider_manager, http_tracer_manager};
 }
 
 Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped(
@@ -34,7 +46,8 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
     Server::Configuration::FactoryContext& context) {
   Utility::Singletons singletons = Utility::createSingletons(context);
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
-      proto_config, context, *singletons.route_config_provider_manager_));
+      proto_config, context, *singletons.route_config_provider_manager_,
+      *singletons.http_tracer_manager_));
 
   // This lambda captures the shared_ptrs created above, thus preserving the
   // reference count.
@@ -55,20 +68,20 @@ REGISTER_FACTORY(MetaProtocolProxyFilterConfigFactory,
 // class ConfigImpl.
 ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
                        Server::Configuration::FactoryContext& context,
-                       Route::RouteConfigProviderManager& route_config_provider_manager)
+                       Route::RouteConfigProviderManager& route_config_provider_manager,
+                       Tracing::HttpTracerManager& http_tracer_manager)
     : context_(context),
       stats_prefix_(
           fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
       stats_(MetaProtocolProxyStats::generateStats(stats_prefix_, context_.scope())),
-      application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
-      route_config_provider_manager_(route_config_provider_manager) {
+      application_protocol_(config.application_protocol()), codecConfig_(config.codec()) {
   switch (config.route_specifier_case()) {
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRds:
-    route_config_provider_ = route_config_provider_manager_.createRdsRouteConfigProvider(
+    route_config_provider_ = route_config_provider_manager.createRdsRouteConfigProvider(
         config.rds(), context_.getServerFactoryContext(), stats_prefix_, context_.initManager());
     break;
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRouteConfig:
-    route_config_provider_ = route_config_provider_manager_.createStaticRouteConfigProvider(
+    route_config_provider_ = route_config_provider_manager.createStaticRouteConfigProvider(
         config.route_config(), context_.getServerFactoryContext(),
         context_.messageValidationVisitor());
     break;
@@ -88,6 +101,8 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       registerFilter(filter_config);
     }
   }
+
+  tracer_ = http_tracer_manager.getOrCreateHttpTracer();
 }
 
 void ConfigImpl::createFilterChain(FilterChainFactoryCallbacks& callbacks) {
