@@ -69,7 +69,7 @@ REGISTER_FACTORY(MetaProtocolProxyFilterConfigFactory,
 ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
                        Server::Configuration::FactoryContext& context,
                        Route::RouteConfigProviderManager& route_config_provider_manager,
-                       Tracing::HttpTracerManager& )
+                       Tracing::HttpTracerManager& tracer_manager)
     : context_(context),
       stats_prefix_(
           fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
@@ -102,7 +102,79 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
     }
   }
 
-  //tracer_ = http_tracer_manager.getOrCreateHttpTracer();
+  if (config.has_tracing()) {
+    initialTracer(config, context, tracer_manager);
+  }
+}
+void ConfigImpl::initialTracer(const ConfigImpl::MetaProtocolProxyConfig& config,
+                               const Server::Configuration::FactoryContext& context,
+                               Tracing::HttpTracerManager& tracer_manager) {
+  tracer_ = tracer_manager.getOrCreateHttpTracer(getPerFilterTracerConfig(config));
+
+  const auto& tracing_config = config.tracing();
+
+  Tracing::OperationName tracing_operation_name;
+
+  // Listener level traffic direction overrides the operation name
+  switch (context.direction()) {
+  case envoy::config::core::v3::UNSPECIFIED: {
+    switch (tracing_config.hidden_envoy_deprecated_operation_name()) {
+    case envoy::extensions::filters::network::http_connection_manager::v3::
+        HttpConnectionManager_Tracing::INGRESS:
+      tracing_operation_name = Tracing::OperationName::Ingress;
+      break;
+    case envoy::extensions::filters::network::http_connection_manager::v3::
+        HttpConnectionManager_Tracing::EGRESS:
+      tracing_operation_name = Tracing::OperationName::Egress;
+      break;
+    default:
+      NOT_REACHED_GCOVR_EXCL_LINE;
+    }
+    break;
+  }
+  case envoy::config::core::v3::INBOUND:
+    tracing_operation_name = Tracing::OperationName::Ingress;
+    break;
+  case envoy::config::core::v3::OUTBOUND:
+    tracing_operation_name = Tracing::OperationName::Egress;
+    break;
+  default:
+    NOT_REACHED_GCOVR_EXCL_LINE;
+  }
+
+  Tracing::CustomTagMap custom_tags;
+  for (const std::string& header :
+       tracing_config.hidden_envoy_deprecated_request_headers_for_tags()) {
+    envoy::type::tracing::v3::CustomTag::Header headerTag;
+    headerTag.set_name(header);
+    custom_tags.emplace(
+        header, std::__1::make_shared<const Tracing::RequestHeaderCustomTag>(header, headerTag));
+  }
+  for (const auto& tag : tracing_config.custom_tags()) {
+    custom_tags.emplace(tag.tag(), Tracing::HttpTracerUtility::createCustomTag(tag));
+  }
+
+  envoy::type::v3::FractionalPercent client_sampling;
+  client_sampling.set_numerator(
+      tracing_config.has_client_sampling() ? tracing_config.client_sampling().value() : 100);
+  envoy::type::v3::FractionalPercent random_sampling;
+  // TODO: Random sampling historically was an integer and default to out of 10,000. We should
+  // deprecate that and move to a straight fractional percent config.
+  uint64_t random_sampling_numerator{PROTOBUF_PERCENT_TO_ROUNDED_INTEGER_OR_DEFAULT(
+      tracing_config, random_sampling, 10000, 10000)};
+  random_sampling.set_numerator(random_sampling_numerator);
+  random_sampling.set_denominator(envoy::type::v3::FractionalPercent::TEN_THOUSAND);
+  envoy::type::v3::FractionalPercent overall_sampling;
+  overall_sampling.set_numerator(
+      tracing_config.has_overall_sampling() ? tracing_config.overall_sampling().value() : 100);
+
+  const uint32_t max_path_tag_length = PROTOBUF_GET_WRAPPED_OR_DEFAULT(
+      tracing_config, max_path_tag_length, Tracing::DefaultMaxPathTagLength);
+
+  tracing_config_ =
+      std::__1::make_unique<TracingConnectionManagerConfig>(TracingConnectionManagerConfig{
+          tracing_operation_name, custom_tags, client_sampling, random_sampling, overall_sampling,
+          tracing_config.verbose(), max_path_tag_length});
 }
 
 void ConfigImpl::createFilterChain(FilterChainFactoryCallbacks& callbacks) {
@@ -150,6 +222,25 @@ void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {
       factory.createFilterFactoryFromProto(*message, stats_prefix_, context_);
 
   filter_factories_.push_back(callback);
+}
+
+/**
+ * Determines what tracing provider to use for a given
+ * "envoy.filters.network.http_connection_manager" filter instance.
+ */
+const envoy::config::trace::v3::Tracing_Http*
+ConfigImpl::getPerFilterTracerConfig(const MetaProtocolProxyConfig& config) {
+  // Give precedence to tracing provider configuration defined as part of
+  // "envoy.filters.network.http_connection_manager" filter config.
+  if (config.tracing().has_provider()) {
+    return &config.tracing().provider();
+  }
+  // Otherwise, for the sake of backwards compatibility, fallback to using tracing provider
+  // configuration defined in the bootstrap config.
+  if (context_.httpContext().defaultTracingConfig().has_http()) {
+    return &context_.httpContext().defaultTracingConfig().http();
+  }
+  return nullptr;
 }
 
 } // namespace  MetaProtocolProxy

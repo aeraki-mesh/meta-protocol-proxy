@@ -56,6 +56,23 @@ public:
   static Singletons createSingletons(Server::Configuration::FactoryContext& context);
 };
 
+/**
+ * Configuration for tracing which is set on the connection manager level.
+ * Http Tracing can be enabled/disabled on a per connection manager basis.
+ * Here we specify some specific for connection manager settings.
+ */
+struct TracingConnectionManagerConfig {
+  Tracing::OperationName operation_name_;
+  Tracing::CustomTagMap custom_tags_;
+  envoy::type::v3::FractionalPercent client_sampling_;
+  envoy::type::v3::FractionalPercent random_sampling_;
+  envoy::type::v3::FractionalPercent overall_sampling_;
+  bool verbose_;
+  uint32_t max_path_tag_length_;
+};
+
+using TracingConnectionManagerConfigPtr = std::unique_ptr<TracingConnectionManagerConfig>;
+
 class ConfigImpl : public Config,
                    public Route::Config,
                    public FilterChainFactory,
@@ -73,6 +90,7 @@ public:
   // FilterChainFactory
   void createFilterChain(FilterChainFactoryCallbacks& callbacks) override;
 
+  Tracing::HttpTracerSharedPtr tracer() { return tracer_; }
   Route::RouteConfigProvider* routeConfigProvider() override {
     return route_config_provider_.get();
   }
@@ -86,9 +104,17 @@ public:
   Route::Config& routerConfig() override { return *this; }
   CodecPtr createCodec() override;
   std::string applicationProtocol() override { return application_protocol_; };
+  const TracingConnectionManagerConfig* tracingConfig() { return tracing_config_.get(); }
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
+
+  /**
+   * Determines what tracing provider to use for a given
+   * "envoy.filters.network.http_connection_manager" filter instance.
+   */
+  const envoy::config::trace::v3::Tracing_Http*
+  getPerFilterTracerConfig(const MetaProtocolProxyConfig& filter_config);
 
   Server::Configuration::FactoryContext& context_;
   const std::string stats_prefix_;
@@ -98,7 +124,11 @@ private:
   CodecConfig codecConfig_;
   std::list<FilterFactoryCb> filter_factories_;
   Route::RouteConfigProviderSharedPtr route_config_provider_;
+  TracingConnectionManagerConfigPtr tracing_config_;
   Tracing::HttpTracerSharedPtr tracer_{std::make_shared<Tracing::HttpNullTracer>()};
+  void initialTracer(const MetaProtocolProxyConfig& config,
+                     const Server::Configuration::FactoryContext& context,
+                     Tracing::HttpTracerManager& tracer_manager);
 };
 
 } // namespace MetaProtocolProxy
