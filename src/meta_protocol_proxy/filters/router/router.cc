@@ -184,6 +184,24 @@ void Router::onEvent(Network::ConnectionEvent event) {
   }
 }
 
+absl::optional<uint64_t> Router::computeHashKey() {
+  ENVOY_LOG(debug, "meta protocol router: computeHashKey");
+  /*if (auto const* downstream_headers = message_.metadata_->requestHttpHeaders();
+      route_entry_ && downstream_headers != nullptr) {
+    if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {
+      return hash_policy->generateHash(
+          //message_.streamInfo().downstreamRemoteAddress().get(), *downstream_headers,
+          message_.streamInfo().downstreamAddressProvider().directRemoteAddress().get(),*downstream_headers,
+          [](const std::string&, const std::string&, std::chrono::seconds) {
+            return std::string();
+          },
+          message_.streamInfo().filterState());
+    }
+  }*/
+
+  return {};
+}
+
 const Network::Connection* Router::downstreamConnection() const {
   return callbacks_ != nullptr ? callbacks_->connection() : nullptr;
 }
