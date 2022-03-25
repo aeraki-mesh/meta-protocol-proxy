@@ -10,9 +10,7 @@ absl::optional<uint64_t> HashPolicyImpl::generateHash(const Metadata& metadata) 
   absl::optional<uint64_t> hash;
   absl::InlinedVector<absl::string_view, 1> header_values;
   header_values.reserve(hash_policy_.size());
-  ENVOY_LOG(debug, "meta protocol router: computeHashKey: 3");
   for (auto it = hash_policy_.begin(); it < hash_policy_.end(); it++) {
-    ENVOY_LOG(debug, "meta protocol router: computeHashKey: 4");
     auto value = metadata.getString(*it);
     header_values.push_back(metadata.getString(*it));
     // Ensure generating same hash value for different order header values.
