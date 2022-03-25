@@ -39,6 +39,7 @@ public:
   FilterStatus onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // Upstream::LoadBalancerContextBase
+  absl::optional<uint64_t> computeHashKey() override;
   const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() override { return nullptr; }
   const Network::Connection* downstreamConnection() const override;
 

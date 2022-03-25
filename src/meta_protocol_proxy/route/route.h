@@ -6,6 +6,7 @@
 #include "envoy/router/router.h"
 
 #include "src/meta_protocol_proxy/codec/codec.h"
+#include "src/meta_protocol_proxy/route/hash_policy.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -44,6 +45,11 @@ public:
    * @param mutation supplies the response mutation, which may be modified during this call.
    */
   virtual void responseMutation(MutationSharedPtr mutation) const PURE;
+
+  /**
+   * @return const HashPolicy* the optional hash policy for the route.
+   */
+  virtual const HashPolicy* hashPolicy() const PURE;
 };
 
 using RouteEntryPtr = std::shared_ptr<RouteEntry>;

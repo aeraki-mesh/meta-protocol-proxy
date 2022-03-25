@@ -64,6 +64,8 @@ message RouteAction {
     // Currently ClusterWeight only supports the name and weight fields.
     envoy.config.route.v3.WeightedCluster weighted_clusters = 2;
   }
+  // Specifies a list of keys in th metadata to use for ring hash load balancing.
+  repeated string hash_policy = 10 [(validate.rules).repeated = {max_items: 100}];
 }
 
 // Key /value pair.

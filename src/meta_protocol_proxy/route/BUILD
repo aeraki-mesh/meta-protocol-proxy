@@ -13,10 +13,31 @@ load(
 load("@envoy_api//bazel:api_build_system.bzl", "api_proto_package")
 
 envoy_cc_library(
+    name = "hash_policy_interface",
+    repository = "@envoy",
+    hdrs = ["hash_policy.h"],
+    external_deps = ["protobuf"],
+)
+
+envoy_cc_library(
+    name = "hash_policy_impl_lib",
+    repository = "@envoy",
+    hdrs = ["hash_policy_impl.h"],
+    srcs = ["hash_policy_impl.cc"],
+    external_deps = ["protobuf"],
+    deps = [
+        ":hash_policy_interface",
+        "//src/meta_protocol_proxy/codec:codec_interface",
+        "@envoy//source/common/common:minimal_logger_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "route_interface",
     repository = "@envoy",
     hdrs = ["route.h"],
     deps = [
+        ":hash_policy_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
         "@envoy//include/envoy/router:router_interface",
     ],
@@ -145,6 +166,7 @@ envoy_cc_library(
     deps = [
         ":route_matcher_interface",
         ":route_interface",
+        ":hash_policy_impl_lib",
         "@envoy//include/envoy/router:router_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/common:matchers_lib",
@@ -153,8 +175,8 @@ envoy_cc_library(
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
         "@envoy_api//envoy/type/v3:pkg_cc_proto",
         "//src/meta_protocol_proxy/codec:codec_interface",
-	"//src/meta_protocol_proxy:codec_impl_lib",
-	"//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
+	    "//src/meta_protocol_proxy:codec_impl_lib",
+	    "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
     ],
 )
 

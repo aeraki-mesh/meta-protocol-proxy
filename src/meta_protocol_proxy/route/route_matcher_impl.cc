@@ -1,5 +1,6 @@
 #include "src/meta_protocol_proxy/route/route_matcher_impl.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
+#include "src/meta_protocol_proxy/route/hash_policy_impl.h"
 #include "envoy/config/route/v3/route_components.pb.h"
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
@@ -35,6 +36,10 @@ RouteEntryImplBase::RouteEntryImplBase(
   for (const auto& keyValue : route.response_mutation()) {
     response_mutation_.emplace_back(
         std::make_shared<MutationEntry>(keyValue.key(), keyValue.value()));
+  }
+
+  if(route.route().hash_policy().size()>0){
+    hash_policy_ = std::make_unique<HashPolicyImpl>(route.route().hash_policy());
   }
 }
 
@@ -137,4 +142,3 @@ RouteConstSharedPtr RouteMatcherImpl::route(const Metadata& metadata, uint64_t r
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
