@@ -1,0 +1,46 @@
+admin:
+  access_log_path: ./envoy_debug.log
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 8080
+static_resources:
+  listeners:
+    name: listener_meta_protocol
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 9090
+    filter_chains:
+    - filters:
+      - name: aeraki.meta_protocol_proxy
+        typed_config:
+          '@type': type.googleapis.com/aeraki.meta_protocol_proxy.v1alpha.MetaProtocolProxy
+          application_protocol: thrift
+          codec:
+            name: aeraki.meta_protocol.codec.thrift
+          metaProtocolFilters:
+            - name: aeraki.meta_protocol.filters.router
+          routeConfig:
+            routes:
+              - name: default
+                route:
+                  cluster: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+                  hash_policy:
+                    - method
+          statPrefix: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+  clusters:
+    name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+    type: STATIC
+    connect_timeout: 5s
+    lb_policy: MAGLEV
+    load_assignment:
+      cluster_name: outbound|9090||thrift-sample-server.thrift.svc.cluster.local
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 9091
+
