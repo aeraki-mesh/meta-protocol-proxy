@@ -1,5 +1,3 @@
-#pragma once
-
 #include "src/meta_protocol_proxy/route/hash_policy_impl.h"
 
 namespace Envoy {
