@@ -37,6 +37,7 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["route.h"],
     deps = [
+        ":hash_policy_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
         "@envoy//include/envoy/router:router_interface",
     ],
