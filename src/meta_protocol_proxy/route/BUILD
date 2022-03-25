@@ -166,7 +166,7 @@ envoy_cc_library(
     deps = [
         ":route_matcher_interface",
         ":route_interface",
-        "：hash_policy_impl_lib",
+        ":hash_policy_impl_lib",
         "@envoy//include/envoy/router:router_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/common:matchers_lib",
