@@ -36,6 +36,8 @@ RouteEntryImplBase::RouteEntryImplBase(
     response_mutation_.emplace_back(
         std::make_shared<MutationEntry>(keyValue.key(), keyValue.value()));
   }
+
+  hash_policy_= std::make_unique<HashPolicy>(route.route().hash_policy());
 }
 
 const std::string& RouteEntryImplBase::clusterName() const { return cluster_name_; }

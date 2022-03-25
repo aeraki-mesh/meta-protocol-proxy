@@ -186,6 +186,12 @@ void Router::onEvent(Network::ConnectionEvent event) {
 
 absl::optional<uint64_t> Router::computeHashKey() {
   ENVOY_LOG(debug, "meta protocol router: computeHashKey");
+
+  if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {
+
+  }
+
+
   /*if (auto const* downstream_headers = message_.metadata_->requestHttpHeaders();
       route_entry_ && downstream_headers != nullptr) {
     if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {

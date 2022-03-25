@@ -41,6 +41,7 @@ public:
   }
   void requestMutation(MutationSharedPtr mutation) const override;
   void responseMutation(MutationSharedPtr mutation) const override;
+  const HashPolicy* hashPolicy() const override { return hash_policy_.get(); }
 
   // Router::Route
   const RouteEntry* routeEntry() const override;
@@ -86,7 +87,7 @@ private:
 
   class MutationEntry {
   public:
-    MutationEntry(std::string key, std::string value) : key_(key), value_(value){}
+    MutationEntry(std::string key, std::string value) : key_(key), value_(value) {}
     const std::string& key() const { return key_; }
     const std::string& value() const { return value_; }
 
@@ -106,6 +107,7 @@ private:
 
   // TODO(gengleilei) Implement it.
   Envoy::Router::MetadataMatchCriteriaConstPtr metadata_match_criteria_;
+  std::unique_ptr<const HashPolicy> hash_policy_;
 };
 
 using RouteEntryImplBaseConstSharedPtr = std::shared_ptr<const RouteEntryImplBase>;
