@@ -5,12 +5,9 @@
 #include <memory>
 #include <string>
 
-#include "envoy/config/core/v3/config_source.pb.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
 #include "common/common/assert.h"
-#include "common/common/fmt.h"
-#include "common/config/api_version.h"
 #include "common/config/utility.h"
 #include "common/config/version_converter.h"
 #include "common/http/header_map_impl.h"
@@ -166,6 +163,12 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
       action->set_allocated_weighted_clusters(
           new envoy::config::route::v3::WeightedCluster(httpRoute.route().weighted_clusters()));
     }
+
+    for (auto it = httpRoute.route().hash_policy().begin();
+         it < httpRoute.route().hash_policy().end(); it++) {
+      action->add_hash_policy(it->header().header_name());
+    }
+
     metaRoute->set_allocated_route(action);
 
     for (auto it = httpRoute.request_headers_to_add().begin();
@@ -357,4 +360,3 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
