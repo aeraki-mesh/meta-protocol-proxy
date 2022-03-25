@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/meta_protocol_proxy/route/hash_policy.h"
+#include "src/meta_protocol_proxy/route/hash_policy_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -8,7 +8,7 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Route {
 
-absl::optional<uint64_t> HashPolicy::generateHash(const Metadata& metadata) const {
+absl::optional<uint64_t> HashPolicyImpl::generateHash(const Metadata& metadata) const {
   absl::optional<uint64_t> hash;
   absl::InlinedVector<absl::string_view, 1> header_values;
   header_values.reserve(hash_policy_.size());

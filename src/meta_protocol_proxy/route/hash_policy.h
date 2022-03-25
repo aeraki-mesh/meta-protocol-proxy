@@ -1,8 +1,6 @@
 #pragma once
 
-#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
-
-#include "src/meta_protocol_proxy/codec/codec.h"
+#include "absl/types/optional.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -16,8 +14,6 @@ namespace Route {
  */
 class HashPolicy {
 public:
-  HashPolicy(const google::protobuf::RepeatedPtrField<std::string>& hash_policy)
-      : hash_policy_(hash_policy){};
   virtual ~HashPolicy() = default;
 
   /**
@@ -25,10 +21,7 @@ public:
    * @return absl::optional<uint64_t> an optional hash value to route on. A hash value might not be
    * returned if for example the specified key does not exist in the metadata.
    */
-  absl::optional<uint64_t> generateHash(const Metadata& metadata) const;
-
-private:
-  google::protobuf::RepeatedPtrField<std::string> hash_policy_;
+  virtual absl::optional<uint64_t> generateHash(const Metadata& metadata) const PURE;
 };
 
 } // namespace Route
