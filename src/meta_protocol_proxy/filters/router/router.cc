@@ -187,7 +187,9 @@ void Router::onEvent(Network::ConnectionEvent event) {
 absl::optional<uint64_t> Router::computeHashKey() {
   if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {
     auto hash = hash_policy->generateHash(*requestMetadata_);
-    ENVOY_LOG(debug, "meta protocol router: computeHashKey: {}", hash);
+    if (hash.has_value()) {
+      ENVOY_LOG(debug, "meta protocol router: computeHashKey: {}", hash.value());
+    }
     return hash;
   }
 
