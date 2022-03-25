@@ -72,6 +72,7 @@ private:
     void responseMutation(MutationSharedPtr mutation) const override {
       return parent_.responseMutation(mutation);
     }
+    const HashPolicy* hashPolicy() const override { return parent_.hashPolicy(); }
 
     // Router::Route
     const RouteEntry* routeEntry() const override { return this; }
