@@ -16,8 +16,9 @@ enum class MessageType {
   Request = 0,
   Response = 1,
   Oneway = 2,
-  Heartbeat = 3,
-  Error = 4,
+  Stream = 3,
+  Heartbeat = 4,
+  Error = 5,
 };
 
 enum class ResponseStatus {

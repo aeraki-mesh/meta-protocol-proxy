@@ -33,8 +33,8 @@ UpstreamResponseStatus ActiveResponseDecoder::onData(Buffer::Instance& data) {
   return response_status_;
 }
 
-void ActiveResponseDecoder::onStreamDecoded(MetadataSharedPtr metadata,
-                                            MutationSharedPtr mutation) {
+void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
+                                             MutationSharedPtr mutation) {
   ASSERT(metadata->getMessageType() == MessageType::Response ||
          metadata->getMessageType() == MessageType::Error);
   // ASSERT(metadata->hasResponseStatus());
@@ -250,8 +250,10 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
   return std::next(filter->entry());
 }
 
-void ActiveMessage::onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
+void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   parent_.stats().request_decoding_success_.inc();
+  if (metadata->getMessageType() == MessageType::Stream) {
+  }
 
   metadata_ = metadata;
   filter_action_ = [metadata, mutation](DecoderFilter* filter) -> FilterStatus {

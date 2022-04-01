@@ -38,7 +38,7 @@ private:
 };
 
 struct ActiveStream {
-  ActiveStream(StreamHandler& handler, MetadataSharedPtr metadata, MutationSharedPtr mutation)
+  ActiveStream(MessageHandler& handler, MetadataSharedPtr metadata, MutationSharedPtr mutation)
       : handler_(handler), metadata_(metadata), mutation_(mutation) {}
   ~ActiveStream() {
     metadata_.reset();
@@ -47,10 +47,10 @@ struct ActiveStream {
 
   void onStreamDecoded() {
     ASSERT(metadata_ && mutation_);
-    handler_.onStreamDecoded(metadata_, mutation_);
+    handler_.onMessageDecoded(metadata_, mutation_);
   }
 
-  StreamHandler& handler_;
+  MessageHandler& handler_;
   MetadataSharedPtr metadata_;
   MutationSharedPtr mutation_;
 };
@@ -138,7 +138,7 @@ public:
 
   ActiveStream* newStream(MetadataSharedPtr metadata, MutationSharedPtr mutation) override {
     ASSERT(!stream_);
-    stream_ = std::make_unique<ActiveStream>(callbacks_.newStream(), metadata, mutation);
+    stream_ = std::make_unique<ActiveStream>(callbacks_.newMessageHandler(), metadata, mutation);
     return stream_.get();
   }
 

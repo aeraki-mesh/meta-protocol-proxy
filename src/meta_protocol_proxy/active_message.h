@@ -27,7 +27,7 @@ class ConnectionManager;
 class ActiveMessage;
 
 class ActiveResponseDecoder : public ResponseDecoderCallbacks,
-                              public StreamHandler,
+                              public MessageHandler,
                               Logger::Loggable<Logger::Id::filter> {
 public:
   ActiveResponseDecoder(ActiveMessage& parent, MetaProtocolProxyStats& stats,
@@ -38,10 +38,10 @@ public:
   UpstreamResponseStatus onData(Buffer::Instance& data);
 
   // StreamHandler
-  void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
+  void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // ResponseDecoderCallbacks
-  StreamHandler& newStream() override { return *this; }
+  MessageHandler& newMessageHandler() override { return *this; }
   void onHeartbeat(MetadataSharedPtr) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
 
   uint64_t requestId() const { return metadata_ ? metadata_->getRequestId() : 0; }
@@ -136,7 +136,7 @@ using ActiveMessageEncoderFilterPtr = std::unique_ptr<ActiveMessageEncoderFilter
 // ActiveMessage tracks downstream requests for which no response has been received.
 class ActiveMessage : public LinkedObject<ActiveMessage>,
                       public Event::DeferredDeletable,
-                      public StreamHandler,
+                      public MessageHandler,
                       public DecoderFilterCallbacks,
                       public FilterChainFactoryCallbacks,
                       Logger::Loggable<Logger::Id::filter> {
@@ -160,7 +160,7 @@ public:
   void addFilter(CodecFilterSharedPtr filter) override;
 
   // StreamHandler
-  void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
+  void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // DecoderFilterCallbacks
   uint64_t requestId() const override;

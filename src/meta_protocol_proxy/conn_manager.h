@@ -18,6 +18,8 @@
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/stats.h"
 #include "src/meta_protocol_proxy/route/rds.h"
+#include "src/meta_protocol_proxy/route/rds.h"
+//#include "src/meta_protocol_proxy/stream.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -65,7 +67,7 @@ public:
   void onBelowWriteBufferLowWatermark() override;
 
   // RequestDecoderCallbacks
-  StreamHandler& newStream() override;
+  MessageHandler& newMessageHandler() override;
   void onHeartbeat(MetadataSharedPtr metadata) override;
 
   MetaProtocolProxyStats& stats() const { return stats_; }
@@ -87,6 +89,7 @@ private:
 
   Buffer::OwnedImpl request_buffer_;
   std::list<ActiveMessagePtr> active_message_list_;
+  // std::map<uint64_t, StreamPtr> active_stream_list_;
 
   bool stopped_{false};
   bool half_closed_{false};

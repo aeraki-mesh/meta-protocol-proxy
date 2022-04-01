@@ -76,7 +76,7 @@ void ConnectionManager::onBelowWriteBufferLowWatermark() {
   read_callbacks_->connection().readDisable(false);
 }
 
-StreamHandler& ConnectionManager::newStream() {
+MessageHandler& ConnectionManager::newMessageHandler() {
   ENVOY_LOG(debug, "meta protocol: create the new decoder event handler");
 
   ActiveMessagePtr new_message(std::make_unique<ActiveMessage>(*this));

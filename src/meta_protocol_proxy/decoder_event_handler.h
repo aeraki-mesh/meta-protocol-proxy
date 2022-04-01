@@ -20,9 +20,9 @@ enum class FilterStatus : uint8_t {
   Retry,
 };
 
-class StreamDecoder {
+class MessageDecoder {
 public:
-  virtual ~StreamDecoder() = default;
+  virtual ~MessageDecoder() = default;
 
   /**
    * Indicates that the message had been decoded.
@@ -33,11 +33,11 @@ public:
                                         MutationSharedPtr mutation) PURE;
 };
 
-using StreamDecoderSharedPtr = std::shared_ptr<StreamDecoder>;
+using MessageDecoderSharedPtr = std::shared_ptr<MessageDecoder>;
 
-class StreamEncoder {
+class MessageEncoder {
 public:
-  virtual ~StreamEncoder() = default;
+  virtual ~MessageEncoder() = default;
 
   /**
    * Indicates that the message had been encoded.
@@ -49,11 +49,11 @@ public:
                                         MutationSharedPtr mutation) PURE;
 };
 
-using StreamEncoderSharedPtr = std::shared_ptr<StreamEncoder>;
+using MessageEncoderSharedPtr = std::shared_ptr<MessageEncoder>;
 
-class StreamHandler {
+class MessageHandler {
 public:
-  virtual ~StreamHandler() = default;
+  virtual ~MessageHandler() = default;
 
   /**
    * Indicates that the message had been decoded.
@@ -61,19 +61,19 @@ public:
    * @param ctx the message context information
    * @return FilterStatus to indicate if filter chain iteration should continue
    */
-  virtual void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) PURE;
+  virtual void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) PURE;
 };
 
-using StreamDecoderSharedPtr = std::shared_ptr<StreamDecoder>;
+using MessageDecoderSharedPtr = std::shared_ptr<MessageDecoder>;
 
 class DecoderCallbacksBase {
 public:
   virtual ~DecoderCallbacksBase() = default;
 
   /**
-   * @return StreamDecoder* a new StreamDecoder for a message.
+   * @return newMessageHandler* a new MessageHandler for a message.
    */
-  virtual StreamHandler& newStream() PURE;
+  virtual MessageHandler& newMessageHandler() PURE;
 
   /**
    * Indicates that the message is a heartbeat.

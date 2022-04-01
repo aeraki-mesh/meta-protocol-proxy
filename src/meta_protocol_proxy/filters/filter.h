@@ -183,7 +183,7 @@ public:
 /**
  * Decoder filter interface.
  */
-class DecoderFilter : public StreamDecoder, public FilterBase {
+class DecoderFilter : public MessageDecoder, public FilterBase {
 public:
   ~DecoderFilter() override = default;
 
@@ -199,7 +199,7 @@ using DecoderFilterSharedPtr = std::shared_ptr<DecoderFilter>;
 /**
  * Encoder filter interface.
  */
-class EncoderFilter : public StreamEncoder, public FilterBase {
+class EncoderFilter : public MessageEncoder, public FilterBase {
 public:
   ~EncoderFilter() override = default;
 
