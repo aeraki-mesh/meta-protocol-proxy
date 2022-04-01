@@ -488,7 +488,7 @@ void ActiveMessage::onError(const std::string& what) {
   ASSERT(metadata_);
   ENVOY_LOG(error, "Bad response: {}", what);
   sendLocalReply(AppException(Error{ErrorType::BadResponse, what}), false);
-  parent_.deferredMessage(*this);
+  connection_manager_.deferredMessage(*this);
 }
 
 } // namespace  MetaProtocolProxy
