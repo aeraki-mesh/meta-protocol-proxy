@@ -191,17 +191,19 @@ void ActiveMessageEncoderFilter::continueEncoding() {
 }
 
 // class ActiveMessage
-ActiveMessage::ActiveMessage(ConnectionManager& parent)
-    : parent_(parent), request_timer_(std::make_unique<Stats::HistogramCompletableTimespanImpl>(
-                           parent_.stats().request_time_ms_, parent.timeSystem())),
-      stream_id_(parent.randomGenerator().random()),
-      stream_info_(parent.timeSystem(), parent_.connection().addressProviderSharedPtr()),
+ActiveMessage::ActiveMessage(ConnectionManager& connection_manager)
+    : connection_manager_(connection_manager),
+      request_timer_(std::make_unique<Stats::HistogramCompletableTimespanImpl>(
+          connection_manager.stats().request_time_ms_, connection_manager.timeSystem())),
+      stream_id_(connection_manager.randomGenerator().random()),
+      stream_info_(connection_manager.timeSystem(),
+                   connection_manager.connection().addressProviderSharedPtr()),
       pending_stream_decoded_(false), local_response_sent_(false) {
-  parent_.stats().request_active_.inc();
+  connection_manager.stats().request_active_.inc();
 }
 
 ActiveMessage::~ActiveMessage() {
-  parent_.stats().request_active_.dec();
+  connection_manager_.stats().request_active_.dec();
   request_timer_->complete();
   for (auto& filter : decoder_filters_) {
     ENVOY_LOG(debug, "destroy decoder filter");
@@ -251,7 +253,7 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
 }
 
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
-  parent_.stats().request_decoding_success_.inc();
+  connection_manager_.stats().request_decoding_success_.inc();
   if (metadata->getMessageType() == MessageType::Stream) {
   }
 
@@ -263,7 +265,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   auto status = applyDecoderFilters(nullptr, FilterIterationStartState::CanStartFromCurrent);
   if (status == FilterStatus::StopIteration) {
     ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
-              parent_.config().applicationProtocol(), metadata->getRequestId());
+              connection_manager_.config().applicationProtocol(), metadata->getRequestId());
     pending_stream_decoded_ = true;
     return;
   }
@@ -273,19 +275,19 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   ENVOY_LOG(
       debug,
       "meta protocol {} request: complete processing of downstream request messages, id is {}",
-      parent_.config().applicationProtocol(), metadata->getRequestId());
+      connection_manager_.config().applicationProtocol(), metadata->getRequestId());
 }
 
 void ActiveMessage::finalizeRequest() {
   pending_stream_decoded_ = false;
-  parent_.stats().request_.inc();
+  connection_manager_.stats().request_.inc();
   bool is_one_way = false;
   switch (metadata_->getMessageType()) {
   case MessageType::Request:
-    parent_.stats().request_twoway_.inc();
+    connection_manager_.stats().request_twoway_.inc();
     break;
   case MessageType::Oneway:
-    parent_.stats().request_oneway_.inc();
+    connection_manager_.stats().request_oneway_.inc();
     is_one_way = true;
     break;
   default:
@@ -293,12 +295,12 @@ void ActiveMessage::finalizeRequest() {
   }
 
   if (local_response_sent_ || is_one_way) {
-    parent_.deferredMessage(*this);
+    connection_manager_.deferredMessage(*this);
   }
 }
 
 void ActiveMessage::createFilterChain() {
-  parent_.config().filterFactory().createFilterChain(*this);
+  connection_manager_.config().filterFactory().createFilterChain(*this);
 }
 
 MetaProtocolProxy::Route::RouteConstSharedPtr ActiveMessage::route() {
@@ -308,7 +310,7 @@ MetaProtocolProxy::Route::RouteConstSharedPtr ActiveMessage::route() {
 
   if (metadata_ != nullptr) {
     MetaProtocolProxy::Route::RouteConstSharedPtr route =
-        parent_.config().routerConfig().route(*metadata_, stream_id_);
+        connection_manager_.config().routerConfig().route(*metadata_, stream_id_);
     cached_route_ = route;
     return cached_route_.value();
   }
@@ -362,7 +364,7 @@ FilterStatus ActiveMessage::applyEncoderFilters(ActiveMessageEncoderFilter* filt
 void ActiveMessage::sendLocalReply(const DirectResponse& response, bool end_stream) {
   ASSERT(metadata_);
   // metadata_->setRequestId(request_id_);
-  parent_.sendLocalReply(*metadata_, response, end_stream);
+  connection_manager_.sendLocalReply(*metadata_, response, end_stream);
 
   if (end_stream) {
     return;
@@ -376,12 +378,12 @@ void ActiveMessage::startUpstreamResponse(Metadata& requestMetadata) {
 
   ASSERT(response_decoder_ == nullptr);
 
-  auto codec = parent_.config().createCodec();
+  auto codec = connection_manager_.config().createCodec();
 
   // Create a response message decoder.
   response_decoder_ = std::make_unique<ActiveResponseDecoder>(
-      *this, parent_.stats(), parent_.connection(), parent_.config().applicationProtocol(),
-      std::move(codec), requestMetadata);
+      *this, connection_manager_.stats(), connection_manager_.connection(),
+      connection_manager_.config().applicationProtocol(), std::move(codec), requestMetadata);
 }
 
 UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
@@ -391,28 +393,31 @@ UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
     auto status = response_decoder_->onData(buffer);
     if (status == UpstreamResponseStatus::Complete) {
       if (requestId() != response_decoder_->requestId()) {
-        throw EnvoyException(fmt::format(
-            "meta protocol {} response: request ID is not equal, {}:{}",
-            parent_.config().applicationProtocol(), requestId(), response_decoder_->requestId()));
+        throw EnvoyException(
+            fmt::format("meta protocol {} response: request ID is not equal, {}:{}",
+                        connection_manager_.config().applicationProtocol(), requestId(),
+                        response_decoder_->requestId()));
       }
 
       // Completed upstream response.
-      parent_.deferredMessage(*this);
+      connection_manager_.deferredMessage(*this);
     } else if (status == UpstreamResponseStatus::Retry) {
       response_decoder_.reset();
     }
 
     return status;
   } catch (const DownstreamConnectionCloseException& ex) {
-    ENVOY_CONN_LOG(error, "meta protocol {} response: exception ({})", parent_.connection(),
-                   parent_.config().applicationProtocol(), ex.what());
+    ENVOY_CONN_LOG(error, "meta protocol {} response: exception ({})",
+                   connection_manager_.connection(),
+                   connection_manager_.config().applicationProtocol(), ex.what());
     onReset();
-    parent_.stats().response_error_caused_connection_close_.inc();
+    connection_manager_.stats().response_error_caused_connection_close_.inc();
     return UpstreamResponseStatus::Reset;
   } catch (const EnvoyException& ex) {
-    ENVOY_CONN_LOG(error, "meta protocol {} response: exception ({})", parent_.connection(),
-                   parent_.config().applicationProtocol(), ex.what());
-    parent_.stats().response_decoding_error_.inc();
+    ENVOY_CONN_LOG(error, "meta protocol {} response: exception ({})",
+                   connection_manager_.connection(),
+                   connection_manager_.config().applicationProtocol(), ex.what());
+    connection_manager_.stats().response_decoding_error_.inc();
 
     onError(ex.what());
     return UpstreamResponseStatus::Reset;
@@ -420,12 +425,12 @@ UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
 }
 
 void ActiveMessage::resetDownstreamConnection() {
-  parent_.connection().close(Network::ConnectionCloseType::NoFlush);
+  connection_manager_.connection().close(Network::ConnectionCloseType::NoFlush);
 }
 
-CodecPtr ActiveMessage::createCodec() { return parent_.config().createCodec(); }
+CodecPtr ActiveMessage::createCodec() { return connection_manager_.config().createCodec(); }
 
-void ActiveMessage::resetStream() { parent_.deferredMessage(*this); }
+void ActiveMessage::resetStream() { connection_manager_.deferredMessage(*this); }
 
 uint64_t ActiveMessage::requestId() const {
   return metadata_ != nullptr ? metadata_->getRequestId() : 0;
@@ -433,13 +438,17 @@ uint64_t ActiveMessage::requestId() const {
 
 uint64_t ActiveMessage::streamId() const { return stream_id_; }
 
-void ActiveMessage::continueDecoding() { parent_.continueDecoding(); }
+void ActiveMessage::continueDecoding() { connection_manager_.continueDecoding(); }
 
 StreamInfo::StreamInfo& ActiveMessage::streamInfo() { return stream_info_; }
 
-Event::Dispatcher& ActiveMessage::dispatcher() { return parent_.connection().dispatcher(); }
+Event::Dispatcher& ActiveMessage::dispatcher() {
+  return connection_manager_.connection().dispatcher();
+}
 
-const Network::Connection* ActiveMessage::connection() const { return &parent_.connection(); }
+const Network::Connection* ActiveMessage::connection() const {
+  return &connection_manager_.connection();
+}
 
 void ActiveMessage::addDecoderFilter(DecoderFilterSharedPtr filter) {
   addDecoderFilterWorker(filter, false);
@@ -467,7 +476,7 @@ void ActiveMessage::addEncoderFilterWorker(EncoderFilterSharedPtr filter, bool d
   LinkedList::moveIntoListBack(std::move(wrapper), encoder_filters_);
 }
 
-void ActiveMessage::onReset() { parent_.deferredMessage(*this); }
+void ActiveMessage::onReset() { connection_manager_.deferredMessage(*this); }
 
 void ActiveMessage::onError(const std::string& what) {
   if (!metadata_) {

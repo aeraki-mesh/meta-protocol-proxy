@@ -195,7 +195,7 @@ private:
   void addDecoderFilterWorker(DecoderFilterSharedPtr filter, bool dual_filter);
   void addEncoderFilterWorker(EncoderFilterSharedPtr, bool dual_filter);
 
-  ConnectionManager& parent_;
+  ConnectionManager& connection_manager_;
 
   MetadataSharedPtr metadata_;
   Stats::TimespanPtr request_timer_;

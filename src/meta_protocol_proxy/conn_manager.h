@@ -19,7 +19,7 @@
 #include "src/meta_protocol_proxy/stats.h"
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/route/rds.h"
-//#include "src/meta_protocol_proxy/stream.h"
+#include "src/meta_protocol_proxy/stream.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -80,6 +80,13 @@ public:
   void deferredMessage(ActiveMessage& message);
   void sendLocalReply(Metadata& metadata, const DirectResponse& response, bool end_stream);
 
+  bool streamExisted(uint64_t stream_id) {
+    auto iter = active_stream_map_.find(stream_id);
+    return (iter != active_stream_map_.end());
+  }
+  
+  Stream& getActiveStream(uint64_t stream_id);
+
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }
 
@@ -89,7 +96,7 @@ private:
 
   Buffer::OwnedImpl request_buffer_;
   std::list<ActiveMessagePtr> active_message_list_;
-  // std::map<uint64_t, StreamPtr> active_stream_list_;
+  std::map<uint64_t, StreamPtr> active_stream_map_;
 
   bool stopped_{false};
   bool half_closed_{false};

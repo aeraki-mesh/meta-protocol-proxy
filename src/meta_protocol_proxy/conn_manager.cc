@@ -162,6 +162,12 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
   }
 }
 
+Stream& ConnectionManager::getActiveStream(uint64_t stream_id) {
+  auto iter = active_stream_map_.find(stream_id);
+  ASSERT(iter != active_stream_map_.end());
+  return **iter->second;
+}
+
 void ConnectionManager::continueDecoding() {
   ENVOY_CONN_LOG(debug, "meta protocol filter continued", read_callbacks_->connection());
   stopped_ = false;
