@@ -42,6 +42,7 @@ envoy_cc_library(
     ],
     hdrs = [
         "active_message.h",
+        "stream.h",
         "conn_manager.h",
     ],
     deps = [
