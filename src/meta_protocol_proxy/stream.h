@@ -26,8 +26,8 @@ namespace MetaProtocolProxy {
 // Stream tracks a streaming RPC, multiple requests and responses can be sent inside a stream.
 class Stream : Logger::Loggable<Logger::Id::filter> {
 public:
-  Stream(){};
-  ~Stream(){};
+  Stream() = default;
+  ~Stream() = default;
 };
 
 using StreamPtr = std::unique_ptr<Stream>;
