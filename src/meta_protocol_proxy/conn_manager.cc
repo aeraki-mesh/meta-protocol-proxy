@@ -165,7 +165,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
 Stream& ConnectionManager::getActiveStream(uint64_t stream_id) {
   auto iter = active_stream_map_.find(stream_id);
   ASSERT(iter != active_stream_map_.end());
-  return **iter->second;
+  return *iter->second;
 }
 
 void ConnectionManager::continueDecoding() {
