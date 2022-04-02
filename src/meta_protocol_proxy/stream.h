@@ -1,8 +1,6 @@
 #pragma once
 
 #include "envoy/network/connection.h"
-#include "envoy/stats/timespan.h"
-
 #include "common/buffer/buffer_impl.h"
 #include "common/common/logger.h"
 #include "src/meta_protocol_proxy/route/route.h"
