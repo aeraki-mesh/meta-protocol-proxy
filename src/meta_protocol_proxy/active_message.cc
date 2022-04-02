@@ -254,20 +254,52 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
 
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   connection_manager_.stats().request_decoding_success_.inc();
-  if (metadata->getMessageType() == MessageType::Stream) {
+
+  bool needApplyFilters = false;
+  switch (metadata->getMessageType()) {
+  case MessageType::Request:
+    needApplyFilters = true;
+    break;
+  case MessageType::Stream_Init:
+    needApplyFilters = true;
+    connection_manager_.newActiveStream(metadata->getRequestId());
+    break;
+  case MessageType::Stream_Data:
+    needApplyFilters = false;
+    if (connection_manager_.streamExisted(metadata->getRequestId())) {
+      Stream& existingStream = connection_manager_.getActiveStream(metadata->getRequestId());
+      existingStream.send2upstream(metadata->getOriginMessage());
+    } else {
+      ENVOY_LOG(error,
+                "meta protocol {} request: can't find an existing stream for stream message, "
+                "stream id: {}",
+                metadata->getStreamId());
+    }
+    break;
+  case MessageType::Stream_Close:
+    needApplyFilters = false;
+    // todo close a stream
+    // todo we need a timeout mechanism to remove a stream to avoid memory leak
+    break;
+  default:
+    break;
   }
 
   metadata_ = metadata;
-  filter_action_ = [metadata, mutation](DecoderFilter* filter) -> FilterStatus {
-    return filter->onMessageDecoded(metadata, mutation);
-  };
+  // Apply filters for request/response RPC and the first message in a stream. Skip filters for all
+  // the following messages in an existing stream
+  if (needApplyFilters) {
+    filter_action_ = [metadata, mutation](DecoderFilter* filter) -> FilterStatus {
+      return filter->onMessageDecoded(metadata, mutation);
+    };
 
-  auto status = applyDecoderFilters(nullptr, FilterIterationStartState::CanStartFromCurrent);
-  if (status == FilterStatus::StopIteration) {
-    ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
-              connection_manager_.config().applicationProtocol(), metadata->getRequestId());
-    pending_stream_decoded_ = true;
-    return;
+    auto status = applyDecoderFilters(nullptr, FilterIterationStartState::CanStartFromCurrent);
+    if (status == FilterStatus::StopIteration) {
+      ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
+                connection_manager_.config().applicationProtocol(), metadata->getRequestId());
+      pending_stream_decoded_ = true; // todo  this might be a memory leak ?
+      return;
+    }
   }
 
   finalizeRequest();
@@ -277,6 +309,8 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
       "meta protocol {} request: complete processing of downstream request messages, id is {}",
       connection_manager_.config().applicationProtocol(), metadata->getRequestId());
 }
+
+void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) {}
 
 void ActiveMessage::finalizeRequest() {
   pending_stream_decoded_ = false;
@@ -288,6 +322,16 @@ void ActiveMessage::finalizeRequest() {
     break;
   case MessageType::Oneway:
     connection_manager_.stats().request_oneway_.inc();
+    is_one_way = true;
+    break;
+  case MessageType::Stream_Init:
+    connection_manager_.stats().request_event_.inc();
+    is_one_way = true;
+    break;
+  case MessageType::Stream_Data:
+    is_one_way = true;
+    break;
+  case MessageType::Stream_Close:
     is_one_way = true;
     break;
   default:

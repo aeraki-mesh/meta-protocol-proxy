@@ -25,6 +25,9 @@ void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
 
 FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
                                       MutationSharedPtr requestMutation) {
+  auto messageType = metadata->getMessageType();
+  ASSERT(messageType == MessageType::Request || messageType == MessageType::Stream_Init);
+
   requestMetadata_ = metadata;
   route_ = callbacks_->route();
   if (!route_) {
@@ -78,7 +81,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
 
-  // TODO move buffer into the upstream request
+  // move buffer into the upstream request
   upstream_request_buffer_.move(metadata->getOriginMessage(),
                                 metadata->getOriginMessage().length());
   route_entry_->requestMutation(requestMutation);
@@ -248,7 +251,7 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", *parent_.callbacks_, data.length());
-  auto codec = parent_.callbacks_->createCodec(); // TODO just create codec once
+  auto codec = router_.callbacks_->createCodec(); // TODO just create codec once
   codec->encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }
@@ -261,7 +264,7 @@ void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason re
   onUpstreamHostSelected(host);
   onResetStream(reason);
 
-  parent_.upstream_request_buffer_.drain(parent_.upstream_request_buffer_.length());
+  router_.upstream_request_buffer_.drain(router_.upstream_request_buffer_.length());
 
   // If it is a connection error, it means that the connection pool returned
   // the error asynchronously and the upper layer needs to be notified to continue decoding.
@@ -275,7 +278,7 @@ void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason re
     } else if (reason == ConnectionPool::PoolFailureReason::RemoteConnectionFailure) {
       host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectFailed);
     }
-    parent_.callbacks_->continueDecoding();
+    router_.callbacks_->continueDecoding();
   }
 }
 
@@ -290,16 +293,16 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
   host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectSuccess);
 
   conn_data_ = std::move(conn_data);
-  conn_data_->addUpstreamCallbacks(parent_);
+  conn_data_->addUpstreamCallbacks(router_);
   conn_pool_handle_ = nullptr;
 
   // Store the upstream ip to the metadata, which will be used in the response
-  parent_.requestMetadata_->putString(
+  router_.requestMetadata_->putString(
       Metadata::HEADER_REAL_SERVER_ADDRESS,
       conn_data_->connection().addressProvider().remoteAddress()->asString());
 
   onRequestStart(continue_decoding);
-  encodeData(parent_.upstream_request_buffer_);
+  encodeData(router_.upstream_request_buffer_);
 }
 
 void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {
@@ -307,7 +310,7 @@ void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {
             upstream_host_->address()->asString());
 
   if (continue_decoding) {
-    parent_.callbacks_->continueDecoding();
+    router_.callbacks_->continueDecoding();
   }
   onRequestComplete();
 }
@@ -331,7 +334,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
     // an error.
     ENVOY_LOG(debug,
               "meta protocol upstream request: the request is oneway, reset downstream stream");
-    parent_.callbacks_->resetStream();
+    router_.callbacks_->resetStream();
     return;
   }
 
@@ -339,7 +342,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
   // triggers the release of the current stream at the end of the filter's callback.
   switch (reason) {
   case ConnectionPool::PoolFailureReason::Overflow:
-    parent_.callbacks_->sendLocalReply(
+    router_.callbacks_->sendLocalReply(
         AppException(Error{ErrorType::Unspecified,
                            fmt::format("meta protocol upstream request: too many connections")}),
         false);
@@ -347,7 +350,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
   case ConnectionPool::PoolFailureReason::LocalConnectionFailure:
     // Should only happen if we closed the connection, due to an error condition, in which case
     // we've already handled any possible downstream response.
-    parent_.callbacks_->sendLocalReply(
+    router_.callbacks_->sendLocalReply(
         AppException(
             Error{ErrorType::Unspecified,
                   fmt::format("meta protocol upstream request: local connection failure '{}'",
@@ -355,7 +358,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
         false);
     break;
   case ConnectionPool::PoolFailureReason::RemoteConnectionFailure:
-    parent_.callbacks_->sendLocalReply(
+    router_.callbacks_->sendLocalReply(
         AppException(
             Error{ErrorType::Unspecified,
                   fmt::format("meta protocol upstream request: remote connection failure '{}'",
@@ -363,7 +366,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
         false);
     break;
   case ConnectionPool::PoolFailureReason::Timeout:
-    parent_.callbacks_->sendLocalReply(
+    router_.callbacks_->sendLocalReply(
         AppException(Error{
             ErrorType::Unspecified,
             fmt::format("meta protocol upstream request: connection failure '{}' due to timeout",
@@ -374,11 +377,11 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
 
-  if (parent_.filter_complete_ && !response_complete_) {
+  if (router_.filter_complete_ && !response_complete_) {
     // When the filter's callback has ended and the reply message has not been processed,
     // call resetStream to release the current stream.
     // the resetStream eventually triggers the onDestroy function call.
-    parent_.callbacks_->resetStream();
+    router_.callbacks_->resetStream();
   }
 }
 

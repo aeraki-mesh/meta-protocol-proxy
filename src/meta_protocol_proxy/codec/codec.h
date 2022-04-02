@@ -16,9 +16,11 @@ enum class MessageType {
   Request = 0,
   Response = 1,
   Oneway = 2,
-  Stream = 3,
-  Heartbeat = 4,
-  Error = 5,
+  Stream_Init = 3,
+  Stream_Data = 4,
+  Stream_Close = 5,
+  Heartbeat = 6,
+  Error = 7,
 };
 
 enum class ResponseStatus {
@@ -91,6 +93,7 @@ public:
   virtual ResponseStatus getResponseStatus() const PURE;
   virtual void setRequestId(uint64_t requestId) PURE;
   virtual uint64_t getRequestId() const PURE;
+  virtual uint64_t getStreamId() const PURE;
   virtual size_t getMessageSize() const PURE;
   virtual void setHeaderSize(size_t headerSize) PURE;
   virtual size_t getHeaderSize() const PURE;

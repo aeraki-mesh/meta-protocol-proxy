@@ -167,9 +167,7 @@ public:
   uint64_t streamId() const override;
   const Network::Connection* connection() const override;
   void continueDecoding() override;
-  // SerializationType serializationType() const override;
-  // ProtocolType protocolType() const override;
-  StreamInfo::StreamInfo& streamInfo() override;
+  StreamInfo::StreamInfo& streamInfo() override; // todo refactory
   Route::RouteConstSharedPtr route() override;
   void sendLocalReply(const DirectResponse& response, bool end_stream) override;
   void startUpstreamResponse(Metadata& requestMetadata) override;
@@ -178,6 +176,7 @@ public:
   CodecPtr createCodec() override;
   Event::Dispatcher& dispatcher() override;
   void resetStream() override;
+  void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
 
   void createFilterChain();
   FilterStatus applyDecoderFilters(ActiveMessageDecoderFilter* filter,

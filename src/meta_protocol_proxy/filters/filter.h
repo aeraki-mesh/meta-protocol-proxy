@@ -142,6 +142,13 @@ public:
    * @return CodecPtr
    */
   virtual CodecPtr createCodec() PURE;
+
+  /**
+   * Set the selected upstream connection, used by router.
+   * This method is used to initialize the upstream connection for a streaming RPC
+   * @param conn supplies the upstream's connection
+   */
+  virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
 };
 
 /**
