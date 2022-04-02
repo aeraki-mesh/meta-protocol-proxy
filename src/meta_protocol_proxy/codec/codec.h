@@ -93,6 +93,7 @@ public:
   virtual ResponseStatus getResponseStatus() const PURE;
   virtual void setRequestId(uint64_t requestId) PURE;
   virtual uint64_t getRequestId() const PURE;
+  virtual uint64_t setStreamId(uint64_t streamId) const PURE;
   virtual uint64_t getStreamId() const PURE;
   virtual size_t getMessageSize() const PURE;
   virtual void setHeaderSize(size_t headerSize) PURE;
