@@ -102,6 +102,7 @@ public:
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
   CodecPtr createCodec() override;
+  void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
 

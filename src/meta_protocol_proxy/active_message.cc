@@ -170,6 +170,11 @@ void ActiveMessageDecoderFilter::resetDownstreamConnection() {
 
 CodecPtr ActiveMessageDecoderFilter::createCodec() { return parent_.createCodec(); }
 
+void ActiveMessageDecoderFilter::setUpstreamConnection(
+    Tcp::ConnectionPool::ConnectionDataPtr conn) {
+  return parent_.setUpstreamConnection(std::move(conn));
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
