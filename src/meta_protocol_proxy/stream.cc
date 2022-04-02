@@ -25,6 +25,11 @@ void Stream::setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_con
   upstream_conn_data_ = std::move(upstream_conn_data);
   upstream_conn_data_->addUpstreamCallbacks(*this);
 }
+
+void Stream::onEvent(Network::ConnectionEvent event) {
+  // todo clean stream resource when connection has been closed
+}
+
 } // namespace  MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

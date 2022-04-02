@@ -21,6 +21,9 @@ public:
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override {
     send2downstream(data, end_stream);
   } // todo: we need to close the stream
+  void onEvent(Network::ConnectionEvent event) override;
+  void onAboveWriteBufferHighWatermark() override {}
+  void onBelowWriteBufferLowWatermark() override {}
 
   void send2upstream(Buffer::Instance& data);
   void send2downstream(Buffer::Instance& data, bool end_stream);
