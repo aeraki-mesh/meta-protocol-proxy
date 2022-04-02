@@ -14,7 +14,12 @@ void Stream::send2upstream(Buffer::Instance& data) {
   }
 }
 
-void Stream::send2downstream(Buffer::Instance& data) { downstream_conn_.write(data, false); }
+void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
+  downstream_conn_.write(data, end_stream);
+  if (end_stream) {
+    // todo clean stream
+  }
+}
 
 void Stream::setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data) {
   upstream_conn_data_ = std::move(upstream_conn_data);

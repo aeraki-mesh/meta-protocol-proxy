@@ -19,11 +19,11 @@ public:
 
   // UpstreamCallbacks
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override {
-    send2downstream(data);
+    send2downstream(data, end_stream);
   } // todo: we need to close the stream
 
   void send2upstream(Buffer::Instance& data);
-  void send2downstream(Buffer::Instance& data);
+  void send2downstream(Buffer::Instance& data, bool end_stream);
   void setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data);
 
 private:
