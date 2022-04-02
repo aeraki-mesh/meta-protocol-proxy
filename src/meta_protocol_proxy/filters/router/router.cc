@@ -211,7 +211,7 @@ void Router::cleanup() {
 
 Router::UpstreamRequest::UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool,
                                          MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
-    : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
+    : router_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
       request_complete_(false), response_started_(false), response_complete_(false),
       stream_reset_(false) {}
 
