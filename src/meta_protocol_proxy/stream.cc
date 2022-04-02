@@ -26,7 +26,7 @@ void Stream::setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_con
   upstream_conn_data_->addUpstreamCallbacks(*this);
 }
 
-void Stream::onEvent(Network::ConnectionEvent event) {
+void Stream::onEvent(Network::ConnectionEvent) {
   // todo clean stream resource when connection has been closed
 }
 
