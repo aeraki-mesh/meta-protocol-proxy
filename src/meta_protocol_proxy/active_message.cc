@@ -110,21 +110,23 @@ FilterStatus ActiveResponseDecoder::applyMessageEncodedFilters(MetadataSharedPtr
 }
 
 // class ActiveMessageFilterBase
-uint64_t ActiveMessageFilterBase::requestId() const { return parent_.requestId(); }
+uint64_t ActiveMessageFilterBase::requestId() const { return activeMessage_.requestId(); }
 
-uint64_t ActiveMessageFilterBase::streamId() const { return parent_.streamId(); }
+uint64_t ActiveMessageFilterBase::streamId() const { return activeMessage_.streamId(); }
 
 const Network::Connection* ActiveMessageFilterBase::connection() const {
-  return parent_.connection();
+  return activeMessage_.connection();
 }
 
-Route::RouteConstSharedPtr ActiveMessageFilterBase::route() { return parent_.route(); }
+Route::RouteConstSharedPtr ActiveMessageFilterBase::route() { return activeMessage_.route(); }
 
-Event::Dispatcher& ActiveMessageFilterBase::dispatcher() { return parent_.dispatcher(); }
+Event::Dispatcher& ActiveMessageFilterBase::dispatcher() { return activeMessage_.dispatcher(); }
 
-void ActiveMessageFilterBase::resetStream() { parent_.resetStream(); }
+void ActiveMessageFilterBase::resetStream() { activeMessage_.resetStream(); }
 
-StreamInfo::StreamInfo& ActiveMessageFilterBase::streamInfo() { return parent_.streamInfo(); }
+StreamInfo::StreamInfo& ActiveMessageFilterBase::streamInfo() {
+  return activeMessage_.streamInfo();
+}
 
 // class ActiveMessageDecoderFilter
 ActiveMessageDecoderFilter::ActiveMessageDecoderFilter(ActiveMessage& parent,
@@ -133,46 +135,46 @@ ActiveMessageDecoderFilter::ActiveMessageDecoderFilter(ActiveMessage& parent,
     : ActiveMessageFilterBase(parent, dual_filter), handle_(filter) {}
 
 void ActiveMessageDecoderFilter::continueDecoding() {
-  ASSERT(parent_.metadata());
+  ASSERT(activeMessage_.metadata());
   auto state = ActiveMessage::FilterIterationStartState::AlwaysStartFromNext;
-  if (0 != parent_.metadata()->getOriginMessage().length()) {
+  if (0 != activeMessage_.metadata()->getOriginMessage().length()) {
     state = ActiveMessage::FilterIterationStartState::CanStartFromCurrent;
     ENVOY_LOG(warn, "The original message data is not consumed, triggering the decoder filter from "
                     "the current location");
   }
-  const FilterStatus status = parent_.applyDecoderFilters(this, state);
+  const FilterStatus status = activeMessage_.applyDecoderFilters(this, state);
   if (status == FilterStatus::Continue) {
     ENVOY_LOG(debug, "meta protocol response: start upstream");
     // All filters have been executed for the current decoder state.
-    if (parent_.pendingStreamDecoded()) {
+    if (activeMessage_.pendingStreamDecoded()) {
       // If the filter stack was paused during messageEnd, handle end-of-request details.
-      parent_.finalizeRequest();
+      activeMessage_.finalizeRequest();
     }
-    parent_.continueDecoding();
+    activeMessage_.continueDecoding();
   }
 }
 
 void ActiveMessageDecoderFilter::sendLocalReply(const DirectResponse& response, bool end_stream) {
-  parent_.sendLocalReply(response, end_stream);
+  activeMessage_.sendLocalReply(response, end_stream);
 }
 
 void ActiveMessageDecoderFilter::startUpstreamResponse(Metadata& requestMetadata) {
-  parent_.startUpstreamResponse(requestMetadata);
+  activeMessage_.startUpstreamResponse(requestMetadata);
 }
 
 UpstreamResponseStatus ActiveMessageDecoderFilter::upstreamData(Buffer::Instance& buffer) {
-  return parent_.upstreamData(buffer);
+  return activeMessage_.upstreamData(buffer);
 }
 
 void ActiveMessageDecoderFilter::resetDownstreamConnection() {
-  parent_.resetDownstreamConnection();
+  activeMessage_.resetDownstreamConnection();
 }
 
-CodecPtr ActiveMessageDecoderFilter::createCodec() { return parent_.createCodec(); }
+CodecPtr ActiveMessageDecoderFilter::createCodec() { return activeMessage_.createCodec(); }
 
 void ActiveMessageDecoderFilter::setUpstreamConnection(
     Tcp::ConnectionPool::ConnectionDataPtr conn) {
-  return parent_.setUpstreamConnection(std::move(conn));
+  return activeMessage_.setUpstreamConnection(std::move(conn));
 }
 
 // class ActiveMessageEncoderFilter
@@ -182,14 +184,14 @@ ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
     : ActiveMessageFilterBase(parent, dual_filter), handle_(filter) {}
 
 void ActiveMessageEncoderFilter::continueEncoding() {
-  ASSERT(parent_.metadata());
+  ASSERT(activeMessage_.metadata());
   auto state = ActiveMessage::FilterIterationStartState::AlwaysStartFromNext;
-  if (0 != parent_.metadata()->getOriginMessage().length()) {
+  if (0 != activeMessage_.metadata()->getOriginMessage().length()) {
     state = ActiveMessage::FilterIterationStartState::CanStartFromCurrent;
     ENVOY_LOG(warn, "The original message data is not consumed, triggering the encoder filter from "
                     "the current location");
   }
-  const FilterStatus status = parent_.applyEncoderFilters(this, state);
+  const FilterStatus status = activeMessage_.applyEncoderFilters(this, state);
   if (FilterStatus::Continue == status) {
     ENVOY_LOG(debug, "All encoding filters have been executed");
   }
@@ -302,7 +304,8 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     if (status == FilterStatus::StopIteration) {
       ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
                 connection_manager_.config().applicationProtocol(), metadata->getRequestId());
-      pending_stream_decoded_ = true; // todo  this might be a memory leak ?
+      pending_stream_decoded_ =
+          true; // todo  this might be a memory leak ? wait for upstream connection ready
       return;
     }
   }

@@ -157,6 +157,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     upstream_request_->onResetStream(ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
     upstream_request_->onResponseComplete();
     cleanup();
+    // todo we also need to clean the stream
   }
 }
 
@@ -293,7 +294,9 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
   host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectSuccess);
 
   conn_data_ = std::move(conn_data);
-  conn_data_->addUpstreamCallbacks(router_);
+  if (metadata_->getMessageType() == MessageType::Request) {
+    conn_data_->addUpstreamCallbacks(router_);
+  }
   conn_pool_handle_ = nullptr;
 
   // Store the upstream ip to the metadata, which will be used in the response
@@ -303,6 +306,14 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
 
   onRequestStart(continue_decoding);
   encodeData(router_.upstream_request_buffer_);
+
+  if (metadata_->getMessageType() == MessageType::Stream_Init) {
+    // For streaming requests, we handle the following server response message in the stream
+    ENVOY_LOG(debug, "meta protocol upstream request: the request is a stream init message");
+    router_.callbacks_
+        ->resetStream(); // todo change to a more appreciate method name, maybe clearMessage()
+    router_.callbacks_->setUpstreamConnection(std::move(conn_data_));
+  }
 }
 
 void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {

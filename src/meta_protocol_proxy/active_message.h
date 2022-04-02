@@ -66,7 +66,7 @@ using ActiveResponseDecoderPtr = std::unique_ptr<ActiveResponseDecoder>;
 class ActiveMessageFilterBase : public virtual FilterCallbacksBase {
 public:
   ActiveMessageFilterBase(ActiveMessage& parent, bool dual_filter)
-      : parent_(parent), dual_filter_(dual_filter) {}
+      : activeMessage_(parent), dual_filter_(dual_filter) {}
   ~ActiveMessageFilterBase() override = default;
 
   // FilterCallbacksBase
@@ -81,7 +81,7 @@ public:
   void resetStream() override;
 
 protected:
-  ActiveMessage& parent_;
+  ActiveMessage& activeMessage_;
   const bool dual_filter_ : 1;
 };
 
