@@ -21,6 +21,9 @@ public:
 
   void send2upstream(Buffer::Instance& data);
   void send2downstream(Buffer::Instance& data);
+  void setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr up_stream_conn_data) {
+    up_stream_conn_data_ = std::move(up_stream_conn_data);
+  }
 
 private:
   uint64_t stream_id_;

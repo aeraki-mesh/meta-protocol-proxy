@@ -310,7 +310,9 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
       connection_manager_.config().applicationProtocol(), metadata->getRequestId());
 }
 
-void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) {}
+void ActiveMessage::setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) {
+  connection_manager_.getActiveStream(metadata_->getStreamId()).setUpstreamConn(std::move(conn));
+}
 
 void ActiveMessage::finalizeRequest() {
   pending_stream_decoded_ = false;
