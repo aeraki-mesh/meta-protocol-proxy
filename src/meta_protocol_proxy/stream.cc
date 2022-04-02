@@ -9,8 +9,8 @@ void Stream::send2upstream(Buffer::Instance& data) {
   if (up_stream_conn_data_ != nullptr) {
     up_stream_conn_data_->connection().write(data, false);
   } else {
-    ENVOY_CONN_LOG(error, "meta protocol: no upstream connection for stream {}, can't send message",
-                   stream_id_);
+    ENVOY_LOG(error, "meta protocol: no upstream connection for stream {}, can't send message",
+              stream_id_);
   }
 }
 
