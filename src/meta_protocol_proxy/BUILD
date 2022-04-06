@@ -38,7 +38,7 @@ envoy_cc_library(
     repository = "@envoy",
     srcs = [
         "active_message.cc",
-        "stream.cc"，
+        "stream.cc",
         "conn_manager.cc",
     ],
     hdrs = [
