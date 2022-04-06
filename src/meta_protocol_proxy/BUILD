@@ -38,10 +38,12 @@ envoy_cc_library(
     repository = "@envoy",
     srcs = [
         "active_message.cc",
+        "stream.cc"，
         "conn_manager.cc",
     ],
     hdrs = [
         "active_message.h",
+        "stream.h",
         "conn_manager.h",
     ],
     deps = [
@@ -49,7 +51,6 @@ envoy_cc_library(
         ":decoder_events_lib",
         ":decoder_lib",
         ":heartbeat_response_lib",
-        ":stream_lib",
         ":stats_lib",
         "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy/route:rds_interface",
@@ -69,27 +70,6 @@ envoy_cc_library(
         "@envoy//source/common/network:filter_lib",
         "@envoy//source/common/stats:timespan_lib",
         "@envoy//source/common/stream_info:stream_info_lib",
-    ],
-)
-
-envoy_cc_library(
-    name = "stream_interface",
-    repository = "@envoy",
-    hdrs = ["stream.h"],
-    deps = [
-        "//src/meta_protocol_proxy/route:route_interface",
-        "@envoy//source/common/buffer:buffer_lib",
-        "@envoy//source/common/common:minimal_logger_lib",
-    ],
-)
-
-envoy_cc_library(
-    name = "stream_lib",
-    repository = "@envoy",
-    srcs = ["stream.cc"],
-    hdrs = ["conn_manager.h"],
-    deps = [
-        ":stream_interface",
     ],
 )
 
