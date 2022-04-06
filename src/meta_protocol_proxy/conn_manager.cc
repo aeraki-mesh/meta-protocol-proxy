@@ -164,7 +164,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
 
 Stream& ConnectionManager::newActiveStream(uint64_t stream_id) {
   ENVOY_LOG(debug, "meta protocol: create an active stream: {}", stream_id);
-  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection()));
+  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection(), *this));
   active_stream_map_[stream_id] = std::move(new_stream);
   return *active_stream_map_.find(stream_id)->second;
 }
