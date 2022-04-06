@@ -18,7 +18,7 @@ class Stream : Tcp::ConnectionPool::UpstreamCallbacks,
                Logger::Loggable<Logger::Id::filter> {
 public:
   Stream(uint64_t stream_id, Network::Connection& downstream_conn,
-         ConnectionManager connection_manager);
+         ConnectionManager& connection_manager);
   ~Stream() = default;
 
   // UpstreamCallbacks
