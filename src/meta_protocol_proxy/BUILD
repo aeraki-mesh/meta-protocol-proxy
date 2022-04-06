@@ -87,6 +87,7 @@ envoy_cc_library(
     name = "stream_lib",
     repository = "@envoy",
     srcs = ["stream.cc"],
+    hdrs = ["conn_manager.h"],
     deps = [
         ":stream_interface",
     ],
