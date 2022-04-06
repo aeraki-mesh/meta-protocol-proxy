@@ -23,7 +23,7 @@ ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& ra
       decoder_(std::make_unique<RequestDecoder>(*codec_, *this)) {}
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
-  ENVOY_LOG(trace, "meta protocol: read {} bytes", data.length());
+  ENVOY_LOG(trace, "meta protocol: read {} bytes, end stream: {}", data.length(), end_stream);
   request_buffer_.move(data);
   dispatch();
 
