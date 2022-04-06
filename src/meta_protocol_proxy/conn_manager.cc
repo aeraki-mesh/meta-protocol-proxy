@@ -23,12 +23,12 @@ ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& ra
       decoder_(std::make_unique<RequestDecoder>(*codec_, *this)) {}
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
-  ENVOY_LOG(trace, "meta protocol: read {} bytes, end stream: {}", data.length(), end_stream);
+  ENVOY_LOG(debug, "meta protocol: read {} bytes", data.length());
   request_buffer_.move(data);
   dispatch();
 
   if (end_stream) {
-    ENVOY_CONN_LOG(trace, "downstream half-closed", read_callbacks_->connection());
+    ENVOY_CONN_LOG(debug, "downstream half-closed", read_callbacks_->connection());
 
     // Downstream has closed. Unless we're waiting for an upstream connection to complete a oneway
     // request, close. The special case for oneway requests allows them to complete before the
