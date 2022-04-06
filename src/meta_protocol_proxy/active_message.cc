@@ -289,8 +289,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   case MessageType::Stream_Close:
     needApplyFilters = false;
     ENVOY_LOG(debug, "********* 2");
-    ENVOY_LOG(debug, "********* 2 connection_manager_, {}",
-              fmt::printf("test %p\n", fmt::ptr(&connection_manager_)));
+    ENVOY_LOG(debug, "********* 2 connection_manager_, {}", fmt::ptr(&connection_manager_));
     ENVOY_LOG(debug, "********* 2 metadata_, {}", metadata_);
     ENVOY_LOG(debug, "********* 2 metadata_->getStreamId(), {}", metadata_->getStreamId());
     connection_manager_.closeStream(metadata_->getStreamId());
