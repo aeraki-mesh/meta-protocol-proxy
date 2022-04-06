@@ -260,7 +260,7 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
 
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   connection_manager_.stats().request_decoding_success_.inc();
-
+  ENVOY_LOG(debug, "********* 1");
   bool needApplyFilters = false;
   switch (metadata->getMessageType()) {
   case MessageType::Request:
@@ -288,7 +288,9 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     break;
   case MessageType::Stream_Close:
     needApplyFilters = false;
+    ENVOY_LOG(debug, "********* 2");
     connection_manager_.closeStream(metadata_->getStreamId());
+    ENVOY_LOG(debug, "********* 3");
     // todo we need a timeout mechanism to remove a stream
     break;
   default:

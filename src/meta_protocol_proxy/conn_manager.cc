@@ -181,7 +181,7 @@ bool ConnectionManager::streamExisted(uint64_t stream_id) {
 }
 
 void ConnectionManager::closeStream(uint64_t stream_id) {
-  ENVOY_LOG(debug, "meta protocol: stream {} closed ", stream_id);
+  ENVOY_LOG(debug, "meta protocol: close stream {} ", stream_id);
   active_stream_map_.erase(stream_id);
 }
 
