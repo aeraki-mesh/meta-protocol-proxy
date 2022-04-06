@@ -273,21 +273,33 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
       ENVOY_LOG(debug,
-                "meta protocol request: found an existing stream for stream message, "
+                "meta protocol request: found an existing stream for stream data message, "
                 "stream id: {}",
                 metadata->getStreamId());
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
       existingStream.send2upstream(metadata->getOriginMessage());
     } else {
       ENVOY_LOG(error,
-                "meta protocol request: can't find an existing stream for stream message, "
+                "meta protocol request: can't find an existing stream for stream data message, "
                 "stream id: {}",
                 metadata->getStreamId());
     }
     break;
   case MessageType::Stream_Close:
     needApplyFilters = false;
-    connection_manager_.closeStream(metadata->getStreamId());
+    if (connection_manager_.streamExisted(metadata->getStreamId())) {
+      ENVOY_LOG(debug,
+                "meta protocol request: close an existing stream: {}",
+                metadata->getStreamId());
+      Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
+      existingStream.send2upstream(metadata->getOriginMessage());
+      connection_manager_.closeStream(metadata->getStreamId());
+    } else {
+      ENVOY_LOG(error,
+                "meta protocol request: can't find an existing stream for stream close message, "
+                "stream id: {}",
+                metadata->getStreamId());
+    }
     // todo we need a timeout mechanism to remove a stream
     break;
   default:

@@ -182,9 +182,7 @@ bool ConnectionManager::streamExisted(uint64_t stream_id) {
 
 void ConnectionManager::closeStream(uint64_t stream_id) {
   ENVOY_LOG(debug, "meta protocol: close stream {} ", stream_id);
-  ENVOY_LOG(debug, "********* 2.1");
   active_stream_map_.erase(stream_id);
-  ENVOY_LOG(debug, "********* 2.2");
 }
 
 void ConnectionManager::continueDecoding() {
