@@ -289,6 +289,9 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   case MessageType::Stream_Close:
     needApplyFilters = false;
     ENVOY_LOG(debug, "********* 2");
+    ENVOY_LOG(debug, "********* 2 connection_manager_, {}", connection_manager_);
+    ENVOY_LOG(debug, "********* 2 metadata_, {}", metadata_);
+    ENVOY_LOG(debug, "********* 2 metadata_->getStreamId(), {}", metadata_->getStreamId());
     connection_manager_.closeStream(metadata_->getStreamId());
     ENVOY_LOG(debug, "********* 3");
     // todo we need a timeout mechanism to remove a stream
