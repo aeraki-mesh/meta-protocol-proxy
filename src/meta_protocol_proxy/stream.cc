@@ -1,4 +1,5 @@
 #include "src/meta_protocol_proxy/stream.h"
+#include "src/meta_protocol_proxy/conn_manager.h"
 
 namespace Envoy {
 namespace Extensions {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <any>
-#include <string>
 
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/optref.h"
