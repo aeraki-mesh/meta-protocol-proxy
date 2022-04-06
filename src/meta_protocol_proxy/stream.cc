@@ -7,7 +7,7 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
 Stream::Stream(uint64_t stream_id, Network::Connection& downstream_conn,
-               ConnectionManager connection_manager)
+               ConnectionManager& connection_manager)
     : stream_id_(stream_id), downstream_conn_(downstream_conn),
       connection_manager_(connection_manager){};
 
