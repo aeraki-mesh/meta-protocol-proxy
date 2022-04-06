@@ -10,6 +10,8 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
+class ConnectionManager;
+
 // Stream tracks a streaming RPC, multiple requests and responses can be sent inside a stream.
 class Stream : Tcp::ConnectionPool::UpstreamCallbacks,
                Event::DeferredDeletable,
@@ -30,11 +32,14 @@ public:
   void send2upstream(Buffer::Instance& data);
   void send2downstream(Buffer::Instance& data, bool end_stream);
   void setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data);
+  void halfClose() { half_close_ = true; }
 
 private:
   uint64_t stream_id_;
   Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data_;
   Network::Connection& downstream_conn_;
+  ConnectionManager& connection_manager_;
+  bool half_close_{false};
 };
 
 using StreamPtr = std::unique_ptr<Stream>;

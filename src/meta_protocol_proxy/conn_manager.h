@@ -4,9 +4,6 @@
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/network/connection.h"
 #include "envoy/network/filter.h"
-#include "envoy/stats/scope.h"
-#include "envoy/stats/stats.h"
-#include "envoy/stats/stats_macros.h"
 #include "envoy/stats/timespan.h"
 
 #include "common/common/logger.h"
@@ -17,7 +14,6 @@
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/stats.h"
-#include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/stream.h"
 
