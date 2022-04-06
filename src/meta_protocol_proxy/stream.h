@@ -11,7 +11,9 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
 // Stream tracks a streaming RPC, multiple requests and responses can be sent inside a stream.
-class Stream : Tcp::ConnectionPool::UpstreamCallbacks, Logger::Loggable<Logger::Id::filter> {
+class Stream : Tcp::ConnectionPool::UpstreamCallbacks,
+               Event::DeferredDeletable,
+               Logger::Loggable<Logger::Id::filter> {
 public:
   Stream(uint64_t stream_id, Network::Connection& downstream_conn)
       : stream_id_(stream_id), downstream_conn_(downstream_conn){};

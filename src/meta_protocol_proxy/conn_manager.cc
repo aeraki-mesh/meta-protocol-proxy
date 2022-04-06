@@ -175,6 +175,16 @@ Stream& ConnectionManager::getActiveStream(uint64_t stream_id) {
   return *iter->second;
 }
 
+bool ConnectionManager::streamExisted(uint64_t stream_id) {
+  auto iter = active_stream_map_.find(stream_id);
+  return (iter != active_stream_map_.end());
+}
+
+void ConnectionManager::closeStream(uint64_t stream_id) {
+  ENVOY_LOG(debug, "meta protocol: stream {} closed ", stream_id);
+  active_stream_map_.erase(stream_id);
+}
+
 void ConnectionManager::continueDecoding() {
   ENVOY_CONN_LOG(debug, "meta protocol filter continued", read_callbacks_->connection());
   stopped_ = false;

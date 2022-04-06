@@ -80,13 +80,10 @@ public:
   void deferredMessage(ActiveMessage& message);
   void sendLocalReply(Metadata& metadata, const DirectResponse& response, bool end_stream);
 
-  bool streamExisted(uint64_t stream_id) {
-    auto iter = active_stream_map_.find(stream_id);
-    return (iter != active_stream_map_.end());
-  }
-
   Stream& newActiveStream(uint64_t stream_id);
   Stream& getActiveStream(uint64_t stream_id);
+  bool streamExisted(uint64_t stream_id);
+  void closeStream(uint64_t stream_id);
 
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }

@@ -37,7 +37,6 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
                                              MutationSharedPtr mutation) {
   ASSERT(metadata->getMessageType() == MessageType::Response ||
          metadata->getMessageType() == MessageType::Error);
-  // ASSERT(metadata->hasResponseStatus());
 
   metadata_ = metadata;
   if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::Continue) {
@@ -269,24 +268,28 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     break;
   case MessageType::Stream_Init:
     needApplyFilters = true;
-    connection_manager_.newActiveStream(metadata->getRequestId());
+    connection_manager_.newActiveStream(metadata->getStreamId());
     break;
   case MessageType::Stream_Data:
     needApplyFilters = false;
-    if (connection_manager_.streamExisted(metadata->getRequestId())) {
-      Stream& existingStream = connection_manager_.getActiveStream(metadata->getRequestId());
+    if (connection_manager_.streamExisted(metadata->getStreamId())) {
+      ENVOY_LOG(debug,
+                "meta protocol request: found an existing stream for stream message, "
+                "stream id: {}",
+                metadata->getStreamId());
+      Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
       existingStream.send2upstream(metadata->getOriginMessage());
     } else {
       ENVOY_LOG(error,
-                "meta protocol {} request: can't find an existing stream for stream message, "
+                "meta protocol request: can't find an existing stream for stream message, "
                 "stream id: {}",
                 metadata->getStreamId());
     }
     break;
   case MessageType::Stream_Close:
     needApplyFilters = false;
-    // todo close a stream
-    // todo we need a timeout mechanism to remove a stream to avoid memory leak
+    connection_manager_.closeStream(metadata_->getStreamId());
+    // todo we need a timeout mechanism to remove a stream
     break;
   default:
     break;
