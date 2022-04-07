@@ -80,6 +80,7 @@ public:
   Stream& getActiveStream(uint64_t stream_id);
   bool streamExisted(uint64_t stream_id);
   void closeStream(uint64_t stream_id);
+  void clearStream() { active_stream_map_.clear(); }
 
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }

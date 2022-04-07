@@ -45,6 +45,7 @@ Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end
 
     ENVOY_LOG(debug, "meta protocol: end data processing");
     resetAllMessages(false);
+    clearStream();
     read_callbacks_->connection().close(Network::ConnectionCloseType::FlushWrite);
   }
 
