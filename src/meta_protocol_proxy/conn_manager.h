@@ -50,7 +50,9 @@ class ConnectionManager : public Network::ReadFilter,
 public:
   ConnectionManager(Config& config, Random::RandomGenerator& random_generator,
                     TimeSource& time_system);
-  ~ConnectionManager() override = default;
+  ~ConnectionManager() override{
+      ENVOY_LOG(debug, "**********release conn manager ***********8")
+  };
 
   // Network::ReadFilter
   Network::FilterStatus onData(Buffer::Instance& data, bool end_stream) override;
