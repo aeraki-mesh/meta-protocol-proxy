@@ -288,8 +288,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   case MessageType::Stream_Close:
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
-      ENVOY_LOG(debug, "meta protocol request: close an existing stream: {}",
-                metadata->getStreamId());
+      ENVOY_LOG(debug, "meta protocol: close client side stream {}", stream_id_);
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
       existingStream.send2upstream(metadata->getOriginMessage());
       existingStream.closeClientStream();
