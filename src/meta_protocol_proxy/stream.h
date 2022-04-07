@@ -36,6 +36,7 @@ public:
   void closeServerStream() { server_closed_ = true; }
 
 private:
+  void clear();
   uint64_t stream_id_;
   Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data_;
   Network::Connection& downstream_conn_;

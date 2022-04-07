@@ -19,6 +19,9 @@ void Stream::send2upstream(Buffer::Instance& data) {
     ENVOY_LOG(error, "meta protocol: no upstream connection for stream {}, can't send message",
               stream_id_);
   }
+  if (client_closed_ && server_closed_) {
+    clear();
+  }
 }
 
 void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
@@ -30,15 +33,24 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
     return;
   }
   downstream_conn_.write(metadata->getOriginMessage(), end_stream);
-  if (metadata->getMessageType() == MessageType::Stream_Close) {
+  if (metadata->getMessageType() == MessageType::Stream_Close_one_way) {
     ENVOY_LOG(debug, "meta protocol: close server side stream {}", stream_id_);
     closeServerStream();
   }
-  if (end_stream || (client_closed_ && server_closed_)) {
+  if (metadata->getMessageType() == MessageType::Stream_Close_two_way) {
     ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
-    connection_manager_.closeStream(stream_id_);
-    upstream_conn_data_->connection().removeConnectionCallbacks(*this);
+    closeClientStream();
+    closeServerStream();
   }
+  if (end_stream || (client_closed_ && server_closed_)) {
+    clear();
+  }
+}
+
+void Stream::clear() {
+  ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
+  connection_manager_.closeStream(stream_id_);
+  upstream_conn_data_->connection().removeConnectionCallbacks(*this);
 }
 
 void Stream::setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data) {

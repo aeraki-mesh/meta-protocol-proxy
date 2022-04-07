@@ -285,21 +285,38 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
                 metadata->getStreamId());
     }
     break;
-  case MessageType::Stream_Close:
+  case MessageType::Stream_Close_one_way:
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
       ENVOY_LOG(debug, "meta protocol: close client side stream {}", stream_id_);
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
+      existingStream.closeClientStream(); // order matters, close stream before calling
+                                          // send2upstream
       existingStream.send2upstream(metadata->getOriginMessage());
-      existingStream.closeClientStream();
     } else {
       ENVOY_LOG(error,
                 "meta protocol request: can't find an existing stream for stream close message, "
                 "stream id: {}",
                 metadata->getStreamId());
     }
-    // todo we need a timeout mechanism to remove a stream
     break;
+  case MessageType::Stream_Close_two_way:
+    needApplyFilters = false;
+    if (connection_manager_.streamExisted(metadata->getStreamId())) {
+      ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
+      Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
+      existingStream.closeClientStream();
+      existingStream.closeServerStream(); // order matters, close stream before calling
+                                          // send2upstream
+      existingStream.send2upstream(metadata->getOriginMessage());
+    } else {
+      ENVOY_LOG(error,
+                "meta protocol request: can't find an existing stream for stream close message, "
+                "stream id: {}",
+                metadata->getStreamId());
+    }
+    break;
+    // todo we need a timeout mechanism to remove a stream
   default:
     break;
   }
