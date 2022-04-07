@@ -18,7 +18,7 @@ class Stream : Tcp::ConnectionPool::UpstreamCallbacks,
                Logger::Loggable<Logger::Id::filter> {
 public:
   Stream(uint64_t stream_id, Network::Connection& downstream_conn,
-         ConnectionManager& connection_manager);
+         ConnectionManager& connection_manager, Codec& codec);
   ~Stream() = default;
 
   // UpstreamCallbacks
@@ -32,14 +32,17 @@ public:
   void send2upstream(Buffer::Instance& data);
   void send2downstream(Buffer::Instance& data, bool end_stream);
   void setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data);
-  void halfClose() { half_close_ = true; }
+  void closeClientStream() { client_closed_ = true; }
+  void closeServerStream() { server_closed_ = true; }
 
 private:
   uint64_t stream_id_;
   Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data_;
   Network::Connection& downstream_conn_;
   ConnectionManager& connection_manager_;
-  bool half_close_{false};
+  Codec& codec_;
+  bool client_closed_{false};
+  bool server_closed_{false};
 };
 
 using StreamPtr = std::unique_ptr<Stream>;

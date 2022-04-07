@@ -292,7 +292,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
                 metadata->getStreamId());
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
       existingStream.send2upstream(metadata->getOriginMessage());
-      existingStream.halfClose();
+      existingStream.closeClientStream();
     } else {
       ENVOY_LOG(error,
                 "meta protocol request: can't find an existing stream for stream close message, "
