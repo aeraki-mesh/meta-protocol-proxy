@@ -14,6 +14,7 @@ Stream::Stream(uint64_t stream_id, Network::Connection& downstream_conn,
 
 void Stream::send2upstream(Buffer::Instance& data) {
   if (upstream_conn_data_ != nullptr) {
+    ENVOY_LOG(debug, "meta protocol: send downstream request to stream {}", stream_id_);
     upstream_conn_data_->connection().write(data, false);
   } else {
     ENVOY_LOG(error, "meta protocol: no upstream connection for stream {}, can't send message",

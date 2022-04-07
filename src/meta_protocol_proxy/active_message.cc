@@ -288,10 +288,10 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   case MessageType::Stream_Close_One_Way:
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
-      ENVOY_LOG(debug, "meta protocol: close client side stream {}", stream_id_);
+      ENVOY_LOG(debug, "meta protocol: close client side stream {}", metadata->getStreamId());
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
-      existingStream.closeClientStream(); // order matters, close stream before calling
-                                          // send2upstream
+      // order matters, close stream before calling send2upstream
+      existingStream.closeClientStream();
       existingStream.send2upstream(metadata->getOriginMessage());
     } else {
       ENVOY_LOG(error,
@@ -303,11 +303,11 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   case MessageType::Stream_Close_Two_Way:
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
-      ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
+      ENVOY_LOG(debug, "meta protocol: close the entire stream {}", metadata->getStreamId());
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
+      // order matters, close stream before calling send2upstream
       existingStream.closeClientStream();
-      existingStream.closeServerStream(); // order matters, close stream before calling
-                                          // send2upstream
+      existingStream.closeServerStream();
       existingStream.send2upstream(metadata->getOriginMessage());
     } else {
       ENVOY_LOG(error,
