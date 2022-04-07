@@ -26,9 +26,10 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
   auto metadata = std::make_unique<MetadataImpl>();
   DecodeStatus status = codec_.decode(data, *metadata);
   if (status == DecodeStatus::WaitForData) {
+    ENVOY_LOG(debug, "meta protocol: response wait for data {}", stream_id_);
     return;
   }
-  downstream_conn_.write(data, end_stream);
+  downstream_conn_.write(metadata->getOriginMessage(), end_stream);
   if (metadata->getMessageType() == MessageType::Stream_Close) {
     ENVOY_LOG(debug, "meta protocol: close server side stream {}", stream_id_);
     closeServerStream();
