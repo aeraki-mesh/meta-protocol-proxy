@@ -50,8 +50,8 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
 
 void Stream::clear() {
   ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
-  connection_manager_.closeStream(stream_id_);
   upstream_conn_data_->connection().removeConnectionCallbacks(*this);
+  connection_manager_.closeStream(stream_id_);
 }
 
 void Stream::setUpstreamConn(Tcp::ConnectionPool::ConnectionDataPtr upstream_conn_data) {
