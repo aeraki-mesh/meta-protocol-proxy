@@ -2,6 +2,8 @@
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
 
+#include "envoy/network/connection.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
@@ -51,6 +53,9 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
 void Stream::clear() {
   ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
   upstream_conn_data_->connection().removeConnectionCallbacks(*this);
+  // we don't reuse connection for streaming RPCs.
+  // close the upstream connection to avoid any remaining stream states in the previous connection
+  upstream_conn_data_->connection().close(Network::ConnectionCloseType::FlushWrite);
   connection_manager_.closeStream(stream_id_);
 }
 
