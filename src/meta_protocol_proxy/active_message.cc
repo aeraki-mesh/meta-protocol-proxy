@@ -368,9 +368,8 @@ void ActiveMessage::finalizeRequest() {
     is_one_way = true;
     break;
   case MessageType::Stream_Data:
-    is_one_way = true;
-    break;
-  case MessageType::Stream_Close:
+  case MessageType::Stream_Close_one_way:
+  case MessageType::Stream_Close_two_way:
     is_one_way = true;
     break;
   default:
