@@ -33,11 +33,11 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
     return;
   }
   downstream_conn_.write(metadata->getOriginMessage(), end_stream);
-  if (metadata->getMessageType() == MessageType::Stream_Close_one_way) {
+  if (metadata->getMessageType() == MessageType::Stream_Close_One_Way) {
     ENVOY_LOG(debug, "meta protocol: close server side stream {}", stream_id_);
     closeServerStream();
   }
-  if (metadata->getMessageType() == MessageType::Stream_Close_two_way) {
+  if (metadata->getMessageType() == MessageType::Stream_Close_Two_Way) {
     ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
     closeClientStream();
     closeServerStream();

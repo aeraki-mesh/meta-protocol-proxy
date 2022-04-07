@@ -17,8 +17,8 @@ enum class MessageType {
   Oneway = 2,
   Stream_Init = 3,
   Stream_Data = 4,
-  Stream_Close_one_way = 5,
-  Stream_Close_two_way = 6,
+  Stream_Close_One_Way = 5,
+  Stream_Close_Two_Way = 6,
   Heartbeat = 7,
   Error = 8,
 };

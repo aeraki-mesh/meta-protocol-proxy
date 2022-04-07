@@ -285,7 +285,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
                 metadata->getStreamId());
     }
     break;
-  case MessageType::Stream_Close_one_way:
+  case MessageType::Stream_Close_One_Way:
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
       ENVOY_LOG(debug, "meta protocol: close client side stream {}", stream_id_);
@@ -300,7 +300,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
                 metadata->getStreamId());
     }
     break;
-  case MessageType::Stream_Close_two_way:
+  case MessageType::Stream_Close_Two_Way:
     needApplyFilters = false;
     if (connection_manager_.streamExisted(metadata->getStreamId())) {
       ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
@@ -368,8 +368,8 @@ void ActiveMessage::finalizeRequest() {
     is_one_way = true;
     break;
   case MessageType::Stream_Data:
-  case MessageType::Stream_Close_one_way:
-  case MessageType::Stream_Close_two_way:
+  case MessageType::Stream_Close_One_Way:
+  case MessageType::Stream_Close_Two_Way:
     is_one_way = true;
     break;
   default:
