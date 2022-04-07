@@ -35,7 +35,9 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
     closeServerStream();
   }
   if (end_stream || (client_closed_ && server_closed_)) {
+    ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
     connection_manager_.closeStream(stream_id_);
+    upstream_conn_data_->connection().removeConnectionCallbacks(*this);
   }
 }
 
