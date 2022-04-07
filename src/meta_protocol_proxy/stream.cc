@@ -23,7 +23,7 @@ void Stream::send2upstream(Buffer::Instance& data) {
 void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: send upstream response to stream {}", stream_id_);
   downstream_conn_.write(data, end_stream);
-  if (end_stream || half_close_) {
+  if (end_stream) {
     connection_manager_.closeStream(stream_id_);
   }
 }
