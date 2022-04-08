@@ -59,7 +59,9 @@ void Stream::clear() {
   // we don't reuse connection for streaming RPCs.
   // close the upstream connection to avoid any remaining stream states in the previous connection
   // upstream_conn_data_->connection().close(Network::ConnectionCloseType::FlushWrite);
-  // upstream_conn_data_.reset();
+  // In theory, we don't have to reset the unique prt, since it will be deleted automatically after
+  // stream being deleted from the connection manager. Just do it for safety.
+  upstream_conn_data_.reset();
   connection_manager_.closeStream(stream_id_);
 }
 
