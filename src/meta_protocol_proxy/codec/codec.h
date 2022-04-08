@@ -23,6 +23,8 @@ enum class MessageType {
   Error = 8,
 };
 
+enum class StreamType { Stream };
+
 enum class ResponseStatus {
   Ok = 0,
   Error = 1,
