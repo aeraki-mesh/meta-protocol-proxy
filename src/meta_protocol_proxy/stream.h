@@ -19,7 +19,7 @@ class Stream : Tcp::ConnectionPool::UpstreamCallbacks,
 public:
   Stream(uint64_t stream_id, Network::Connection& downstream_conn,
          ConnectionManager& connection_manager, Codec& codec);
-  ~Stream() { ENVOY_LOG(debug, "***************** close stream ***************"); };
+  ~Stream() = default;
 
   // UpstreamCallbacks
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override {

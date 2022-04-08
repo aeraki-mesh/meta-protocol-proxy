@@ -22,9 +22,6 @@ void Stream::send2upstream(Buffer::Instance& data) {
     ENVOY_LOG(error, "meta protocol: no upstream connection for stream {}, can't send message",
               stream_id_);
   }
-  if (client_closed_ && server_closed_) {
-    clear();
-  }
 }
 
 void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
@@ -47,7 +44,8 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
       closeClientStream();
       closeServerStream();
     }
-    if (end_stream || (client_closed_ && server_closed_)) {
+    // According to tRPC protocol, server close means the stream is closed.
+    if (end_stream || (server_closed_)) {
       clear();
     }
   }
@@ -56,9 +54,6 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
 void Stream::clear() {
   ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
   upstream_conn_data_->connection().removeConnectionCallbacks(*this);
-  // we don't reuse connection for streaming RPCs.
-  // close the upstream connection to avoid any remaining stream states in the previous connection
-  // upstream_conn_data_->connection().close(Network::ConnectionCloseType::FlushWrite);
   // In theory, we don't have to reset the unique prt, since it will be deleted automatically after
   // stream being deleted from the connection manager. Just do it for safety.
   upstream_conn_data_.reset();
