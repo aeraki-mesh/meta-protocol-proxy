@@ -55,7 +55,7 @@ void Stream::clear() {
   upstream_conn_data_->connection().removeConnectionCallbacks(*this);
   // we don't reuse connection for streaming RPCs.
   // close the upstream connection to avoid any remaining stream states in the previous connection
-  upstream_conn_data_->connection().close(Network::ConnectionCloseType::FlushWrite);
+  // upstream_conn_data_->connection().close(Network::ConnectionCloseType::FlushWrite);
   connection_manager_.closeStream(stream_id_);
 }
 
