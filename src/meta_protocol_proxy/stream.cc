@@ -30,23 +30,25 @@ void Stream::send2upstream(Buffer::Instance& data) {
 void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: send upstream response to stream {}", stream_id_);
   auto metadata = std::make_unique<MetadataImpl>();
-  DecodeStatus status = codec_.decode(data, *metadata);
-  if (status == DecodeStatus::WaitForData) {
-    ENVOY_LOG(debug, "meta protocol: response wait for data {}", stream_id_);
-    return;
-  }
-  downstream_conn_.write(metadata->getOriginMessage(), end_stream);
-  if (metadata->getMessageType() == MessageType::Stream_Close_One_Way) {
-    ENVOY_LOG(debug, "meta protocol: close server side stream {}", stream_id_);
-    closeServerStream();
-  }
-  if (metadata->getMessageType() == MessageType::Stream_Close_Two_Way) {
-    ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
-    closeClientStream();
-    closeServerStream();
-  }
-  if (end_stream || (client_closed_ && server_closed_)) {
-    clear();
+  while (data.length() > 0) {
+    DecodeStatus status = codec_.decode(data, *metadata);
+    if (status == DecodeStatus::WaitForData) {
+      ENVOY_LOG(debug, "meta protocol: response wait for data {}", stream_id_);
+      return;
+    }
+    downstream_conn_.write(metadata->getOriginMessage(), end_stream);
+    if (metadata->getMessageType() == MessageType::Stream_Close_One_Way) {
+      ENVOY_LOG(debug, "meta protocol: close server side stream {}", stream_id_);
+      closeServerStream();
+    }
+    if (metadata->getMessageType() == MessageType::Stream_Close_Two_Way) {
+      ENVOY_LOG(debug, "meta protocol: close the entire stream {}", stream_id_);
+      closeClientStream();
+      closeServerStream();
+    }
+    if (end_stream || (client_closed_ && server_closed_)) {
+      clear();
+    }
   }
 }
 
