@@ -31,6 +31,7 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: send upstream response to stream {}", stream_id_);
   while (data.length() > 0) {
     auto metadata = std::make_unique<MetadataImpl>();
+    metadata->setMessageType(MessageType::Response);
     DecodeStatus status = codec_.decode(data, *metadata);
     if (status == DecodeStatus::WaitForData) {
       ENVOY_LOG(debug, "meta protocol: response wait for data {}", stream_id_);
