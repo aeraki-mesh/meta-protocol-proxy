@@ -1,7 +1,6 @@
 #pragma once
 
 #include <any>
-#include <string>
 
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/optref.h"
@@ -16,9 +15,15 @@ enum class MessageType {
   Request = 0,
   Response = 1,
   Oneway = 2,
-  Heartbeat = 3,
-  Error = 4,
+  Stream_Init = 3,
+  Stream_Data = 4,
+  Stream_Close_One_Way = 5,
+  Stream_Close_Two_Way = 6,
+  Heartbeat = 7,
+  Error = 8,
 };
+
+enum class StreamType { Stream };
 
 enum class ResponseStatus {
   Ok = 0,
@@ -90,6 +95,8 @@ public:
   virtual ResponseStatus getResponseStatus() const PURE;
   virtual void setRequestId(uint64_t requestId) PURE;
   virtual uint64_t getRequestId() const PURE;
+  virtual void setStreamId(uint64_t streamId) PURE;
+  virtual uint64_t getStreamId() const PURE;
   virtual size_t getMessageSize() const PURE;
   virtual void setHeaderSize(size_t headerSize) PURE;
   virtual size_t getHeaderSize() const PURE;

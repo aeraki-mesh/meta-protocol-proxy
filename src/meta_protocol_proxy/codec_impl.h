@@ -63,6 +63,8 @@ public:
   ResponseStatus getResponseStatus() const override { return response_status_; };
   void setRequestId(uint64_t requestId) override { request_id_ = requestId; };
   uint64_t getRequestId() const override { return request_id_; };
+  void setStreamId(uint64_t streamId) override { stream_id_ = streamId; };
+  uint64_t getStreamId() const override { return stream_id_; };
   size_t getMessageSize() const override { return header_size_ + body_size_; }
   void setHeaderSize(size_t headerSize) override { header_size_ = headerSize; };
   size_t getHeaderSize() const override { return header_size_; };
@@ -76,6 +78,7 @@ private:
   MessageType message_type_{MessageType::Request};
   ResponseStatus response_status_{ResponseStatus::Ok};
   uint64_t request_id_{0};
+  uint64_t stream_id_{0};
   size_t header_size_{0};
   size_t body_size_{0};
   // Reuse the HeaderMatcher API and related tools provided by Envoy to match the route

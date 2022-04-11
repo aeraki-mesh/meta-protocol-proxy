@@ -23,12 +23,12 @@ ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& ra
       decoder_(std::make_unique<RequestDecoder>(*codec_, *this)) {}
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
-  ENVOY_LOG(trace, "meta protocol: read {} bytes", data.length());
+  ENVOY_LOG(debug, "meta protocol: read {} bytes", data.length());
   request_buffer_.move(data);
   dispatch();
 
   if (end_stream) {
-    ENVOY_CONN_LOG(trace, "downstream half-closed", read_callbacks_->connection());
+    ENVOY_CONN_LOG(debug, "downstream half-closed", read_callbacks_->connection());
 
     // Downstream has closed. Unless we're waiting for an upstream connection to complete a oneway
     // request, close. The special case for oneway requests allows them to complete before the
@@ -45,6 +45,7 @@ Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end
 
     ENVOY_LOG(debug, "meta protocol: end data processing");
     resetAllMessages(false);
+    clearStream();
     read_callbacks_->connection().close(Network::ConnectionCloseType::FlushWrite);
   }
 
@@ -76,7 +77,7 @@ void ConnectionManager::onBelowWriteBufferLowWatermark() {
   read_callbacks_->connection().readDisable(false);
 }
 
-StreamHandler& ConnectionManager::newStream() {
+MessageHandler& ConnectionManager::newMessageHandler() {
   ENVOY_LOG(debug, "meta protocol: create the new decoder event handler");
 
   ActiveMessagePtr new_message(std::make_unique<ActiveMessage>(*this));
@@ -160,6 +161,29 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
   default:
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
+}
+
+Stream& ConnectionManager::newActiveStream(uint64_t stream_id) {
+  ENVOY_CONN_LOG(debug, "meta protocol: create an active stream: {}", connection(), stream_id);
+  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection(), *this, *codec_));
+  active_stream_map_[stream_id] = std::move(new_stream);
+  return *active_stream_map_.find(stream_id)->second;
+}
+
+Stream& ConnectionManager::getActiveStream(uint64_t stream_id) {
+  auto iter = active_stream_map_.find(stream_id);
+  ASSERT(iter != active_stream_map_.end());
+  return *iter->second;
+}
+
+bool ConnectionManager::streamExisted(uint64_t stream_id) {
+  auto iter = active_stream_map_.find(stream_id);
+  return (iter != active_stream_map_.end());
+}
+
+void ConnectionManager::closeStream(uint64_t stream_id) {
+  ENVOY_LOG(debug, "meta protocol: close stream {} ", stream_id);
+  active_stream_map_.erase(stream_id);
 }
 
 void ConnectionManager::continueDecoding() {

@@ -25,6 +25,7 @@ namespace MetaProtocolProxy {
   COUNTER(request_event)                                                                           \
   COUNTER(request_oneway)                                                                          \
   COUNTER(request_twoway)                                                                          \
+  COUNTER(request_stream)                                                                          \
   COUNTER(response)                                                                                \
   COUNTER(response_business_exception)                                                             \
   COUNTER(response_decoding_error)                                                                 \

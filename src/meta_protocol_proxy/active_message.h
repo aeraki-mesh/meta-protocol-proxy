@@ -27,7 +27,7 @@ class ConnectionManager;
 class ActiveMessage;
 
 class ActiveResponseDecoder : public ResponseDecoderCallbacks,
-                              public StreamHandler,
+                              public MessageHandler,
                               Logger::Loggable<Logger::Id::filter> {
 public:
   ActiveResponseDecoder(ActiveMessage& parent, MetaProtocolProxyStats& stats,
@@ -38,10 +38,10 @@ public:
   UpstreamResponseStatus onData(Buffer::Instance& data);
 
   // StreamHandler
-  void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
+  void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // ResponseDecoderCallbacks
-  StreamHandler& newStream() override { return *this; }
+  MessageHandler& newMessageHandler() override { return *this; }
   void onHeartbeat(MetadataSharedPtr) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
 
   uint64_t requestId() const { return metadata_ ? metadata_->getRequestId() : 0; }
@@ -66,7 +66,7 @@ using ActiveResponseDecoderPtr = std::unique_ptr<ActiveResponseDecoder>;
 class ActiveMessageFilterBase : public virtual FilterCallbacksBase {
 public:
   ActiveMessageFilterBase(ActiveMessage& parent, bool dual_filter)
-      : parent_(parent), dual_filter_(dual_filter) {}
+      : activeMessage_(parent), dual_filter_(dual_filter) {}
   ~ActiveMessageFilterBase() override = default;
 
   // FilterCallbacksBase
@@ -81,7 +81,7 @@ public:
   void resetStream() override;
 
 protected:
-  ActiveMessage& parent_;
+  ActiveMessage& activeMessage_;
   const bool dual_filter_ : 1;
 };
 
@@ -102,6 +102,7 @@ public:
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
   CodecPtr createCodec() override;
+  void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
 
@@ -136,7 +137,7 @@ using ActiveMessageEncoderFilterPtr = std::unique_ptr<ActiveMessageEncoderFilter
 // ActiveMessage tracks downstream requests for which no response has been received.
 class ActiveMessage : public LinkedObject<ActiveMessage>,
                       public Event::DeferredDeletable,
-                      public StreamHandler,
+                      public MessageHandler,
                       public DecoderFilterCallbacks,
                       public FilterChainFactoryCallbacks,
                       Logger::Loggable<Logger::Id::filter> {
@@ -160,16 +161,14 @@ public:
   void addFilter(CodecFilterSharedPtr filter) override;
 
   // StreamHandler
-  void onStreamDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
+  void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
   // DecoderFilterCallbacks
   uint64_t requestId() const override;
   uint64_t streamId() const override;
   const Network::Connection* connection() const override;
   void continueDecoding() override;
-  // SerializationType serializationType() const override;
-  // ProtocolType protocolType() const override;
-  StreamInfo::StreamInfo& streamInfo() override;
+  StreamInfo::StreamInfo& streamInfo() override; // todo refactory
   Route::RouteConstSharedPtr route() override;
   void sendLocalReply(const DirectResponse& response, bool end_stream) override;
   void startUpstreamResponse(Metadata& requestMetadata) override;
@@ -178,6 +177,7 @@ public:
   CodecPtr createCodec() override;
   Event::Dispatcher& dispatcher() override;
   void resetStream() override;
+  void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
 
   void createFilterChain();
   FilterStatus applyDecoderFilters(ActiveMessageDecoderFilter* filter,
@@ -195,7 +195,7 @@ private:
   void addDecoderFilterWorker(DecoderFilterSharedPtr filter, bool dual_filter);
   void addEncoderFilterWorker(EncoderFilterSharedPtr, bool dual_filter);
 
-  ConnectionManager& parent_;
+  ConnectionManager& connection_manager_;
 
   MetadataSharedPtr metadata_;
   Stats::TimespanPtr request_timer_;

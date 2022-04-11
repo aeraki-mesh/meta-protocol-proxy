@@ -74,7 +74,7 @@ private:
     void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host);
     void onResetStream(ConnectionPool::PoolFailureReason reason);
 
-    Router& parent_;
+    Router& router_;
     Tcp::ConnectionPool::Instance& conn_pool_;
     MetadataSharedPtr metadata_;
     MutationSharedPtr mutation_;

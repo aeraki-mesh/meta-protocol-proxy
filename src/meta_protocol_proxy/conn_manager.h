@@ -4,9 +4,6 @@
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 #include "envoy/network/connection.h"
 #include "envoy/network/filter.h"
-#include "envoy/stats/scope.h"
-#include "envoy/stats/stats.h"
-#include "envoy/stats/stats_macros.h"
 #include "envoy/stats/timespan.h"
 
 #include "common/common/logger.h"
@@ -18,6 +15,7 @@
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/stats.h"
 #include "src/meta_protocol_proxy/route/rds.h"
+#include "src/meta_protocol_proxy/stream.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -52,7 +50,9 @@ class ConnectionManager : public Network::ReadFilter,
 public:
   ConnectionManager(Config& config, Random::RandomGenerator& random_generator,
                     TimeSource& time_system);
-  ~ConnectionManager() override = default;
+  ~ConnectionManager() override {
+    ENVOY_LOG(debug, "**********release conn manager ***********8");
+  };
 
   // Network::ReadFilter
   Network::FilterStatus onData(Buffer::Instance& data, bool end_stream) override;
@@ -65,7 +65,7 @@ public:
   void onBelowWriteBufferLowWatermark() override;
 
   // RequestDecoderCallbacks
-  StreamHandler& newStream() override;
+  MessageHandler& newMessageHandler() override;
   void onHeartbeat(MetadataSharedPtr metadata) override;
 
   MetaProtocolProxyStats& stats() const { return stats_; }
@@ -78,6 +78,12 @@ public:
   void deferredMessage(ActiveMessage& message);
   void sendLocalReply(Metadata& metadata, const DirectResponse& response, bool end_stream);
 
+  Stream& newActiveStream(uint64_t stream_id);
+  Stream& getActiveStream(uint64_t stream_id);
+  bool streamExisted(uint64_t stream_id);
+  void closeStream(uint64_t stream_id);
+  void clearStream() { active_stream_map_.clear(); }
+
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }
 
@@ -87,6 +93,7 @@ private:
 
   Buffer::OwnedImpl request_buffer_;
   std::list<ActiveMessagePtr> active_message_list_;
+  std::map<uint64_t, StreamPtr> active_stream_map_;
 
   bool stopped_{false};
   bool half_closed_{false};

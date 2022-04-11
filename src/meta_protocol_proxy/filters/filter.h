@@ -142,6 +142,13 @@ public:
    * @return CodecPtr
    */
   virtual CodecPtr createCodec() PURE;
+
+  /**
+   * Set the selected upstream connection, used by router.
+   * This method is used to initialize the upstream connection for a streaming RPC
+   * @param conn supplies the upstream's connection
+   */
+  virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
 };
 
 /**
@@ -183,7 +190,7 @@ public:
 /**
  * Decoder filter interface.
  */
-class DecoderFilter : public StreamDecoder, public FilterBase {
+class DecoderFilter : public MessageDecoder, public FilterBase {
 public:
   ~DecoderFilter() override = default;
 
@@ -199,7 +206,7 @@ using DecoderFilterSharedPtr = std::shared_ptr<DecoderFilter>;
 /**
  * Encoder filter interface.
  */
-class EncoderFilter : public StreamEncoder, public FilterBase {
+class EncoderFilter : public MessageEncoder, public FilterBase {
 public:
   ~EncoderFilter() override = default;
 
