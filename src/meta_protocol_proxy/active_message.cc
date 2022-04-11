@@ -367,6 +367,7 @@ void ActiveMessage::finalizeRequest() {
     connection_manager_.stats().request_event_.inc();
     is_one_way = true;
     break;
+    // stream responses are handled in the stream, so stream messages are one way
   case MessageType::Stream_Data:
   case MessageType::Stream_Close_One_Way:
   case MessageType::Stream_Close_Two_Way:

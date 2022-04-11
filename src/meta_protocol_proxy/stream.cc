@@ -44,7 +44,7 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
       closeClientStream();
       closeServerStream();
     }
-    // According to tRPC protocol, server close means the stream is closed.
+    // According to tRPC protocol, a server close frame means the stream is closed.
     if (end_stream || (server_closed_)) {
       clear();
     }
