@@ -108,7 +108,7 @@ Two layer-7 protocols, [Dubbo](src/application_protocols/dubbo) and [Thrift](src
 
 ### Dubbo
 Since the dubbo test client will use dns name ```org.apache.dubbo.samples.basic.api.demoservice``` to access th dubbo test server, we need to
-add the below line to hte hosts file:
+add the below line to the hosts file:
 
 ```bash
 127.0.0.1 org.apache.dubbo.samples.basic.api.demoservice
