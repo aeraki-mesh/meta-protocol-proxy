@@ -44,31 +44,49 @@ sudo chmod +x /usr/local/bin/bazel
 ### 安装外部依赖
 
 ```bash
-sudo apt-get install \
-autoconf \
-automake \
-cmake \
-curl \
-libtool \
-make \
-ninja-build \
-patch \
-python3-pip \
-unzip \
-virtualenv
+sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch python3-pip unzip virtualenv libc++-10-dev
 ```
 
-### 安装构建工具
+### 安装 LLVM
 
 ```bash
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt-get install llvm-10 lldb-10 llvm-10-dev libllvm10 llvm-10-runtime clang-10 clang++-10 lld-10 gcc-10 g++-10
+cd /home/ubuntu \
+  && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && rm clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
 ```
 
 ### 编译
-运行 ```./build.sh```，如果构建顺利完成，生成的二进制文件路径为 bazel-bin/envoy ，该二进制文件中包含了 MetaProtocol Proxy 和
+运行 ```make build```，如果构建顺利完成，生成的二进制文件路径为 bazel-bin/envoy ，该二进制文件中包含了 MetaProtocol Proxy 和
 基于 MetaProtocol Proxy 实现的 Dubbo 协议。
+生产环境使用，运行 ```make release```
+
+## 使用 Docker 构建 MetaProtocol Proxy
+### 设置 meta-protocol-proxy 代码库 path
+
+```bash
+export META_PROTOCOL_PROXY_REPO=/path/to/meta-protocol-proxy
+
+```
+
+### 启动构建容器
+
+```bash
+docker run -it --name meta-protocol-proxy-build -v ${META_PROTOCOL_PROXY_REPO}:/meta-protocol-proxy aeraki/meta-protocol-proxy-build:2022-0416-0 bash
+```
+
+### 设置 clang
+
+```bash
+cd /meta-protocol-proxy
+
+./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04
+```
+
+### 编译
+```bash
+make build
+```
 
 ## 测试 MetaProtocol Proxy
 
