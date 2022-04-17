@@ -73,6 +73,34 @@ the MetaProtocol Proxy and the codecs of the application protocols.
 
 To build MetaProtocol proxy for production, run ```make release```.
 
+## Build MetaProtocol Proxy Using Docker
+### Export meta-protocol-proxy repo path
+
+
+```bash
+export META_PROTOCOL_PROXY_REPO=/path/to/meta-protocol-proxy
+
+```
+
+### Start the build container
+
+```bash
+docker run -it --name meta-protocol-proxy-build -v ${META_PROTOCOL_PROXY_REPO}:/meta-protocol-proxy aeraki/meta-protocol-proxy-build:2022-0416-0 bash
+```
+
+### Setup clang
+
+```bash
+cd /meta-protocol-proxy
+
+./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04
+```
+
+### Build
+```bash
+make build
+```
+
 ## Test MetaProtocol Proxy
 
 Two layer-7 protocols, [Dubbo](src/application_protocols/dubbo) and [Thrift](src/application_protocols/thrift
