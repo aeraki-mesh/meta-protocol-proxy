@@ -116,7 +116,13 @@ void ConnectionManager::dispatch() {
   try {
     bool underflow = false;
     while (!underflow) {
-      decoder_->onData(request_buffer_, underflow);
+      FilterStatus status = decoder_->onData(request_buffer_, underflow);
+      // Dispatch may be stopped by a filter, for example: router waiting for an upstream connection
+      // ready Dispatch will be continued when the waiting condition is met
+      if (status == FilterStatus::StopIteration) {
+        stopped_ = true;
+        break;
+      }
     }
     return;
   } catch (const EnvoyException& ex) {
