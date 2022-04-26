@@ -108,7 +108,9 @@ public:
    * Drains data from the given buffer
    *
    * @param data a Buffer containing protocol data
-   * as the server real ip address
+   * @param buffer_underflow bool set to true if more data is required to continue decoding
+   * @return FilterStatus::Continue when waiting for filter continuation,
+   *             StopIteration otherwise.
    * @throw EnvoyException on protocol errors
    */
   FilterStatus onData(Buffer::Instance& data, bool& buffer_underflow);
