@@ -53,18 +53,26 @@ sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch
 ```
 
 ### Install LLVM
-
+x86
 ```bash
 cd /home/ubuntu \
   && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
-  && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1 \
   && rm clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+```
+
+arm
+```bash
+cd /home/ubuntu \
+  && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz \
+  && tar -xvf clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1 \
+  && rm clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz
 ```
 
 ### Setup clang
 
 ```bash
-./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04
+./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-linux-gnu
 ```
 
 ### Build
@@ -74,30 +82,22 @@ the MetaProtocol Proxy and the codecs of the application protocols.
 To build MetaProtocol proxy for production, run ```make release```.
 
 ## Build MetaProtocol Proxy Using Docker
+now support x86 and arm
 ### Export meta-protocol-proxy repo path
-
 
 ```bash
 export META_PROTOCOL_PROXY_REPO=/path/to/meta-protocol-proxy
-
 ```
 
 ### Start the build container
 
 ```bash
-docker run -it --name meta-protocol-proxy-build -v ${META_PROTOCOL_PROXY_REPO}:/meta-protocol-proxy aeraki/meta-protocol-proxy-build:2022-0416-0 bash
-```
-
-### Setup clang
-
-```bash
-cd /meta-protocol-proxy
-
-./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04
+docker run -it --name meta-protocol-proxy-build -v ${META_PROTOCOL_PROXY_REPO}:/meta-protocol-proxy aeraki/meta-protocol-proxy-build:2022-0429-0 bash
 ```
 
 ### Build
 ```bash
+cd /meta-protocol-proxy
 make build
 ```
 

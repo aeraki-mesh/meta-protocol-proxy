@@ -48,12 +48,26 @@ sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch
 ```
 
 ### 安装 LLVM
-
+x86
 ```bash
 cd /home/ubuntu \
   && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
-  && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1 \
   && rm clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+```
+
+arm
+```bash
+cd /home/ubuntu \
+  && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz \
+  && tar -xvf clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1 \
+  && rm clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz
+```
+
+### 设置 clang
+
+```bash
+./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-linux-gnu
 ```
 
 ### 编译
@@ -62,29 +76,22 @@ cd /home/ubuntu \
 生产环境使用，运行 ```make release```
 
 ## 使用 Docker 构建 MetaProtocol Proxy
+现在支持 x86 和 arm 架构
 ### 设置 meta-protocol-proxy 代码库 path
 
 ```bash
 export META_PROTOCOL_PROXY_REPO=/path/to/meta-protocol-proxy
-
 ```
 
 ### 启动构建容器
 
 ```bash
-docker run -it --name meta-protocol-proxy-build -v ${META_PROTOCOL_PROXY_REPO}:/meta-protocol-proxy aeraki/meta-protocol-proxy-build:2022-0416-0 bash
-```
-
-### 设置 clang
-
-```bash
-cd /meta-protocol-proxy
-
-./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04
+docker run -it --name meta-protocol-proxy-build -v ${META_PROTOCOL_PROXY_REPO}:/meta-protocol-proxy aeraki/meta-protocol-proxy-build:2022-0429-0 bash
 ```
 
 ### 编译
 ```bash
+cd /meta-protocol-proxy
 make build
 ```
 
