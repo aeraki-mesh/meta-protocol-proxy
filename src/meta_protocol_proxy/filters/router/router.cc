@@ -210,7 +210,7 @@ void Router::cleanup() {
   }
 }
 
-Router::UpstreamRequest::UpstreamRequest(Router& parent, Tcp::ConnectionPool::Instance& pool,
+Router::UpstreamRequest::UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool,
                                          MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
     : router_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
       request_complete_(false), response_started_(false), response_complete_(false),
@@ -257,7 +257,7 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   conn_data_->connection().write(data, false);
 }
 
-void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason,
+void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
                                             Upstream::HostDescriptionConstSharedPtr host) {
   conn_pool_handle_ = nullptr;
 
@@ -302,7 +302,7 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
   // Store the upstream ip to the metadata, which will be used in the response
   router_.requestMetadata_->putString(
       Metadata::HEADER_REAL_SERVER_ADDRESS,
-      conn_data_->connection().addressProvider().remoteAddress()->asString());
+      conn_data_->connection().connectionInfoProvider().remoteAddress()->asString());
 
   onRequestStart(continue_decoding);
   encodeData(router_.upstream_request_buffer_);

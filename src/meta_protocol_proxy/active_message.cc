@@ -1,7 +1,7 @@
 #include "src/meta_protocol_proxy/active_message.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
 
-#include "common/stats/timespan_impl.h"
+#include "source/common/stats/timespan_impl.h"
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
@@ -203,7 +203,7 @@ ActiveMessage::ActiveMessage(ConnectionManager& connection_manager)
           connection_manager.stats().request_time_ms_, connection_manager.timeSystem())),
       stream_id_(connection_manager.randomGenerator().random()),
       stream_info_(connection_manager.timeSystem(),
-                   connection_manager.connection().addressProviderSharedPtr()),
+                   connection_manager.connection().connectionInfoProviderSharedPtr()),
       pending_stream_decoded_(false), local_response_sent_(false) {
   connection_manager.stats().request_active_.inc();
 }

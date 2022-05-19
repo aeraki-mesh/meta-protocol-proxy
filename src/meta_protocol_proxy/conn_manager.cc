@@ -4,7 +4,7 @@
 
 #include "envoy/common/exception.h"
 
-#include "common/common/fmt.h"
+#include "source/common/common/fmt.h"
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/heartbeat_response.h"
 #include "src/meta_protocol_proxy/codec_impl.h"

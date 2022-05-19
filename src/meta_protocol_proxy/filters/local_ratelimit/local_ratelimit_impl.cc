@@ -1,7 +1,7 @@
 #include "src/meta_protocol_proxy/filters/local_ratelimit/local_ratelimit_impl.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
 
-#include "common/protobuf/utility.h"
+#include "source/common/protobuf/utility.h"
 
 namespace Envoy {
 namespace Extensions {

@@ -5,8 +5,8 @@
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.validate.h"
 
-#include "extensions/filters/network/common/factory_base.h"
-#include "extensions/filters/network/well_known_names.h"
+#include "source/extensions/filters/network/common/factory_base.h"
+#include "source/extensions/filters/network/well_known_names.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/route/route_matcher_impl.h"

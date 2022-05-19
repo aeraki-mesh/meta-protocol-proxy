@@ -5,9 +5,9 @@
 #include "envoy/buffer/buffer.h"
 #include "envoy/config/typed_config.h"
 
-#include "common/common/assert.h"
-#include "common/config/utility.h"
-#include "common/singleton/const_singleton.h"
+#include "source/common/common/assert.h"
+#include "source/common/config/utility.h"
+#include "source/common/singleton/const_singleton.h"
 #include "src/application_protocols/dubbo/message.h"
 #include "src/application_protocols/dubbo/metadata.h"
 #include "src/application_protocols/dubbo/protocol_constants.h"

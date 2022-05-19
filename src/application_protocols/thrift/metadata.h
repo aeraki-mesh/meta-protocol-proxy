@@ -8,8 +8,8 @@
 
 #include "envoy/buffer/buffer.h"
 
-#include "common/common/macros.h"
-#include "common/http/header_map_impl.h"
+#include "source/common/common/macros.h"
+#include "source/common/http/header_map_impl.h"
 #include "src/application_protocols/thrift/thrift.h"
 #include "src/application_protocols/thrift/tracing.h"
 

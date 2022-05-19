@@ -7,11 +7,11 @@
 
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
-#include "common/common/assert.h"
-#include "common/config/utility.h"
-#include "common/config/version_converter.h"
-#include "common/http/header_map_impl.h"
-#include "common/protobuf/utility.h"
+#include "source/common/common/assert.h"
+#include "source/common/config/utility.h"
+//#include "source/common/config/version_converter.h"
+#include "source/common/http/header_map_impl.h"
+#include "source/common/protobuf/utility.h"
 
 #include "src/meta_protocol_proxy/route/config_impl.h"
 
@@ -45,7 +45,7 @@ RdsRouteConfigSubscription::RdsRouteConfigSubscription(
     // aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration HTTP
     // RouteConfiguration is used here because we want to reuse the http rds grpc service
     : Envoy::Config::SubscriptionBase<envoy::config::route::v3::RouteConfiguration>(
-          rds.config_source().resource_api_version(),
+          //rds.config_source().resource_api_version(),
           factory_context.messageValidationContext().dynamicValidationVisitor(), "name"),
       route_config_name_(rds.route_config_name()),
       scope_(factory_context.scope().createScope(stat_prefix + "rds." + route_config_name_ + ".")),
@@ -266,8 +266,11 @@ void RdsRouteConfigProviderImpl::validateConfig(
 
 RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& admin) {
   config_tracker_entry_ =
-      admin.getConfigTracker().add("meta_protocol_routes", [this] { return dumpRouteConfigs(); });
-  // ConfigTracker keys must be unique. We are asserting that no one has stolen the
+      admin.getConfigTracker().add("meta_protocol_routes", [this](const Matchers::StringMatcher& matcher) {
+          return dumpRouteConfigs(matcher);
+      });
+
+    // ConfigTracker keys must be unique. We are asserting that no one has stolen the
   // "meta_protocol_routes" key from us, since the returned entry will be nullptr if the key already
   // exists.
   RELEASE_ASSERT(config_tracker_entry_, "");
@@ -321,7 +324,7 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
 }
 
 std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>
-RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
+RouteConfigProviderManagerImpl::dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const {
   auto config_dump =
       std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
 
@@ -334,10 +337,13 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
     ASSERT(subscription->route_config_provider_opt_.has_value());
 
     if (subscription->routeConfigUpdate()->configInfo()) {
-      auto* dynamic_config = config_dump->mutable_dynamic_route_configs()->Add();
+        if (!name_matcher.match(subscription->routeConfigUpdate()->protobufConfiguration().name())) {
+            continue;
+        }
+        auto* dynamic_config = config_dump->mutable_dynamic_route_configs()->Add();
       dynamic_config->set_version_info(subscription->routeConfigUpdate()->configVersion());
       dynamic_config->mutable_route_config()->PackFrom(
-          API_RECOVER_ORIGINAL(subscription->routeConfigUpdate()->protobufConfiguration()));
+          (subscription->routeConfigUpdate()->protobufConfiguration()));
       TimestampUtil::systemClockToTimestamp(subscription->routeConfigUpdate()->lastUpdated(),
                                             *dynamic_config->mutable_last_updated());
     }
@@ -345,9 +351,12 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs() const {
 
   for (const auto& provider : static_route_config_providers_) {
     ASSERT(provider->configInfo());
-    auto* static_config = config_dump->mutable_static_route_configs()->Add();
+      if (!name_matcher.match(provider->configInfo().value().config_.name())) {
+          continue;
+      }
+      auto* static_config = config_dump->mutable_static_route_configs()->Add();
     static_config->mutable_route_config()->PackFrom(
-        API_RECOVER_ORIGINAL(provider->configInfo().value().config_));
+        (provider->configInfo().value().config_));
     TimestampUtil::systemClockToTimestamp(provider->lastUpdated(),
                                           *static_config->mutable_last_updated());
   }

@@ -4,7 +4,7 @@
 #include "envoy/config/route/v3/route_components.pb.h"
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
-#include "common/protobuf/utility.h"
+#include "source/common/protobuf/utility.h"
 
 namespace Envoy {
 namespace Extensions {

@@ -6,8 +6,8 @@
 #include "envoy/server/factory_context.h"
 #include "envoy/service/discovery/v3/discovery.pb.h"
 
-#include "common/common/logger.h"
-#include "common/protobuf/utility.h"
+#include "source/common/common/logger.h"
+#include "source/common/protobuf/utility.h"
 
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 

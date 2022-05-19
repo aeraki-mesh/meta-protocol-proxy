@@ -19,7 +19,7 @@ envoy_cc_library(
     deps = [
         ":pkg_cc_proto",
         ":codec_lib",
-        "@envoy//include/envoy/registry",
+        "@envoy//envoy/registry",
         "//src/meta_protocol_proxy/codec:factory_lib",
     ],
 )
@@ -30,7 +30,7 @@ envoy_cc_library(
     srcs = ["dubbo_codec.cc"],
     hdrs = ["dubbo_codec.h"],
     deps = [
-        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//envoy/buffer:buffer_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/buffer:buffer_lib",
         "//src/meta_protocol_proxy/codec:codec_interface",
@@ -50,7 +50,7 @@ envoy_cc_library(
         "hessian2_codec_object_codec_lib",
     ],
     deps = [
-        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//envoy/buffer:buffer_interface",
         "@envoy//source/common/singleton:const_singleton",
     ],
 )
@@ -95,8 +95,8 @@ envoy_cc_library(
         ":hessian_utils_lib",
         ":message_lib",
         ":metadata_lib",
-        "@envoy//include/envoy/buffer:buffer_interface",
-        "@envoy//include/envoy/config:typed_config_interface",
+        "@envoy//envoy/buffer:buffer_interface",
+        "@envoy//envoy/config:typed_config_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/config:utility_lib",
         "@envoy//source/common/singleton:const_singleton",
@@ -111,7 +111,7 @@ envoy_cc_library(
         ":message_lib",
         ":metadata_lib",
         ":serializer_interface",
-        "@envoy//include/envoy/config:typed_config_interface",
+        "@envoy//envoy/config:typed_config_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/config:utility_lib",
         "@envoy//source/common/singleton:const_singleton",
@@ -125,7 +125,7 @@ envoy_cc_library(
     hdrs = ["dubbo_protocol_impl.h"],
     deps = [
         ":protocol_interface",
-        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//envoy/buffer:buffer_interface",
         "@envoy//source/common/singleton:const_singleton",
     ],
 )

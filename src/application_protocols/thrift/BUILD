@@ -19,7 +19,7 @@ envoy_cc_library(
     deps = [
         ":pkg_cc_proto",
         ":codec_lib",
-        "@envoy//include/envoy/registry",
+        "@envoy//envoy/registry",
         "//src/meta_protocol_proxy/codec:factory_lib",
     ],
 )
@@ -40,8 +40,8 @@ envoy_cc_library(
     "transport.h",
     ],
     deps = [
-        "@envoy//include/envoy/registry",
-        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//envoy/registry",
+        "@envoy//envoy/buffer:buffer_interface",
 	"@envoy//source/common/config:utility_lib",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/buffer:buffer_lib",

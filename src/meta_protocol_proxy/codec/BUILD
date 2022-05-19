@@ -10,7 +10,7 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["codec.h"],
     deps = [
-        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//envoy/buffer:buffer_interface",
     ],
 )
 
@@ -20,7 +20,7 @@ envoy_cc_library(
     hdrs = ["factory.h"],
     deps = [
         ":codec_interface",
-        "@envoy//include/envoy/config:typed_config_interface",
+        "@envoy//envoy/config:typed_config_interface",
         "@envoy//source/common/common:macros",
         "@envoy//source/common/protobuf:utility_lib",
     ],

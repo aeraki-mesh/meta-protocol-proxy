@@ -1,6 +1,6 @@
 #include "src/meta_protocol_proxy/filters/global_ratelimit/ratelimit.h"
 #include "src/meta_protocol_proxy/app_exception.h"
-#include "common/buffer/buffer_impl.h"
+#include "source/common/buffer/buffer_impl.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
 
 namespace Envoy {
