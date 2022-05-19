@@ -18,9 +18,8 @@ CXX := clang++-10
 PATH := /home/ubuntu/clang+llvm-10.0.0-linux-gnu/bin:$(PATH)
 
 BAZEL_CONFIG = -s --sandbox_debug --verbose_failures --verbose_explanations --explain=build.log --host_force_python=PY3 
-#BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=clang --override_repository=envoy=/home/gocode/code/src/github.com/envoyproxy/110/envoy
-BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=clang --override_repository=envoy=/home/gocode/code/src/github.com/envoyproxy/envoy
-#BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=libc++ 
+#BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=clang --override_repository=envoy=/home/gocode/code/src/github.com/envoyproxy/envoy
+BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=libc++ 
 BAZEL_CONFIG_REL  = $(BAZEL_CONFIG_DEV) --config=release
 BAZEL_TARGETS = envoy
 
