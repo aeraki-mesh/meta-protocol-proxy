@@ -7,9 +7,9 @@
 #include "envoy/extensions/common/ratelimit/v3/ratelimit.pb.h"
 #include "envoy/ratelimit/ratelimit.h"
 
-#include "common/common/thread_synchronizer.h"
-#include "common/protobuf/protobuf.h"
-#include "common/http/header_utility.h"
+#include "source/common/common/thread_synchronizer.h"
+#include "source/common/protobuf/protobuf.h"
+#include "source/common/http/header_utility.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
 
 #include "api/meta_protocol_proxy/filters/local_ratelimit/v1alpha/local_ratelimit.pb.h"

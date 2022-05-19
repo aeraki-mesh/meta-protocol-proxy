@@ -2,7 +2,7 @@
 
 #include "envoy/registry/registry.h"
 
-#include "common/common/assert.h"
+#include "source/common/common/assert.h"
 #include "src/application_protocols/dubbo/message_impl.h"
 
 namespace Envoy {

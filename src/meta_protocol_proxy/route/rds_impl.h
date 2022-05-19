@@ -20,15 +20,15 @@
 #include "envoy/stats/scope.h"
 #include "envoy/thread_local/thread_local.h"
 
-#include "common/common/callback_impl.h"
-#include "common/common/cleanup.h"
-#include "common/common/logger.h"
-#include "common/init/manager_impl.h"
-#include "common/init/target_impl.h"
-#include "common/init/watcher_impl.h"
-#include "common/protobuf/utility.h"
+#include "source/common/common/callback_impl.h"
+#include "source/common/common/cleanup.h"
+#include "source/common/common/logger.h"
+#include "source/common/init/manager_impl.h"
+#include "source/common/init/target_impl.h"
+#include "source/common/init/watcher_impl.h"
+#include "source/common/protobuf/utility.h"
 
-#include "common/config/subscription_base.h"
+#include "source/common/config/subscription_base.h"
 
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
@@ -217,7 +217,7 @@ class RouteConfigProviderManagerImpl : public RouteConfigProviderManager,
 public:
   RouteConfigProviderManagerImpl(Server::Admin& admin);
 
-  std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump> dumpRouteConfigs() const;
+  std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump> dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const;
 
   // RouteConfigProviderManager
   RouteConfigProviderSharedPtr

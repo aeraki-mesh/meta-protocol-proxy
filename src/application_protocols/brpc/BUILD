@@ -19,7 +19,7 @@ envoy_cc_library(
     deps = [
         ":pkg_cc_proto",
         ":codec_lib",
-        "@envoy//include/envoy/registry",
+        "@envoy//envoy/registry",
         "//src/meta_protocol_proxy/codec:factory_lib",
     ],
 )
@@ -30,7 +30,7 @@ envoy_cc_library(
     srcs = ["brpc_codec.cc"],
     hdrs = ["brpc_codec.h"],
     deps = [
-        "@envoy//include/envoy/buffer:buffer_interface",
+        "@envoy//envoy/buffer:buffer_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/buffer:buffer_lib",
         "//src/meta_protocol_proxy/codec:codec_interface",

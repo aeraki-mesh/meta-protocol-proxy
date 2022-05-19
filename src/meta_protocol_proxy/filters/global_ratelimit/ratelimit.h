@@ -6,13 +6,13 @@
 
 #include "envoy/stats/scope.h"
 #include "envoy/buffer/buffer.h"
-#include "common/common/logger.h"
-#include "common/buffer/buffer_impl.h"
+#include "source/common/common/logger.h"
+#include "source/common/buffer/buffer_impl.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "envoy/upstream/thread_local_cluster.h"
-#include "common/upstream/load_balancer_impl.h"
+#include "source/common/upstream/load_balancer_impl.h"
 #include "envoy/network/connection.h"
-#include "common/http/header_utility.h"
+#include "source/common/http/header_utility.h"
 
 #include "api/meta_protocol_proxy/filters/global_ratelimit/v1alpha/global_ratelimit.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"

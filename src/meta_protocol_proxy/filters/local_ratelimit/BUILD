@@ -16,7 +16,7 @@ envoy_cc_library(
         ":local_ratelimit",
         "//src/meta_protocol_proxy/filters:factory_base_lib",
         "//src/meta_protocol_proxy/filters:filter_config_interface",
-        "@envoy//include/envoy/registry",
+        "@envoy//envoy/registry",
     ],
 )
 
@@ -34,10 +34,10 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy_api//envoy/extensions/filters/network/local_ratelimit/v3:pkg_cc_proto",
-        "@envoy//include/envoy/network:filter_interface",
-        "@envoy//include/envoy/ratelimit:ratelimit_interface",
-        "@envoy//include/envoy/stats:stats_macros",
-        "@envoy//include/envoy/stats:stats_interface",
+        "@envoy//envoy/network:filter_interface",
+        "@envoy//envoy/ratelimit:ratelimit_interface",
+        "@envoy//envoy/stats:stats_macros",
+        "@envoy//envoy/stats:stats_interface",
     ],
 )
 
@@ -52,10 +52,10 @@ envoy_cc_library(
         "//api/meta_protocol_proxy/filters/local_ratelimit/v1alpha:pkg_cc_proto",
         "@envoy//source/common/common:thread_synchronizer_lib",
         "@envoy//source/common/protobuf:utility_lib",
-        "@envoy//include/envoy/event:dispatcher_interface",
-        "@envoy//include/envoy/event:timer_interface",
+        "@envoy//envoy/event:dispatcher_interface",
+        "@envoy//envoy/event:timer_interface",
         "@envoy_api//envoy/extensions/common/ratelimit/v3:pkg_cc_proto",
-        "@envoy//include/envoy/ratelimit:ratelimit_interface",
+        "@envoy//envoy/ratelimit:ratelimit_interface",
         "@envoy//source/common/protobuf:protobuf",
         "@envoy//source/common/http:header_utility_lib",
     ],

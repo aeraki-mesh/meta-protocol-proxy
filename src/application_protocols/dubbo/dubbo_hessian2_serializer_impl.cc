@@ -2,8 +2,8 @@
 
 #include "envoy/common/exception.h"
 
-#include "common/common/assert.h"
-#include "common/common/macros.h"
+#include "source/common/common/assert.h"
+#include "source/common/common/macros.h"
 #include "src/application_protocols/dubbo/hessian_utils.h"
 #include "src/application_protocols/dubbo/message_impl.h"
 

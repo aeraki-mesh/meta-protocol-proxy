@@ -10,10 +10,10 @@
 
 #include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
 
-#include "common/common/logger.h"
-#include "common/common/matchers.h"
-#include "common/http/header_utility.h"
-#include "common/protobuf/protobuf.h"
+#include "source/common/common/logger.h"
+#include "source/common/common/matchers.h"
+#include "source/common/http/header_utility.h"
+#include "source/common/protobuf/protobuf.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/meta_protocol_proxy/route/route_matcher.h"
 #include "src/meta_protocol_proxy/route/route.h"

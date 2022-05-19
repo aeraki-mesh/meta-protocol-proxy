@@ -3,7 +3,7 @@
 #include "absl/container/flat_hash_map.h"
 
 #include "envoy/registry/registry.h"
-#include "common/config/utility.h"
+#include "source/common/config/utility.h"
 
 #include "src/meta_protocol_proxy/codec/factory.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
@@ -42,7 +42,7 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
   // as these captured objects are also global singletons.
   return [singletons, filter_config, &context](Network::FilterManager& filter_manager) -> void {
     filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
-        *filter_config, context.api().randomGenerator(), context.dispatcher().timeSource()));
+        *filter_config, context.api().randomGenerator(), context.mainThreadDispatcher().timeSource()));
   };
 }
 
@@ -112,7 +112,6 @@ CodecPtr ConfigImpl::createCodec() {
       codecConfig_.name());
   ProtobufTypes::MessagePtr message = factory.createEmptyConfigProto();
   Envoy::Config::Utility::translateOpaqueConfig(codecConfig_.config(),
-                                                ProtobufWkt::Struct::default_instance(),
                                                 context_.messageValidationVisitor(), *message);
   return factory.createCodec(*message);
 }
@@ -129,7 +128,6 @@ void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {
           string_name);
   ProtobufTypes::MessagePtr message = factory.createEmptyConfigProto();
   Envoy::Config::Utility::translateOpaqueConfig(proto_config.config(),
-                                                ProtobufWkt::Struct::default_instance(),
                                                 context_.messageValidationVisitor(), *message);
   FilterFactoryCb callback =
       factory.createFilterFactoryFromProto(*message, stats_prefix_, context_);

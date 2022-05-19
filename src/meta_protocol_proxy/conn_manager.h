@@ -6,7 +6,7 @@
 #include "envoy/network/filter.h"
 #include "envoy/stats/timespan.h"
 
-#include "common/common/logger.h"
+#include "source/common/common/logger.h"
 
 #include "src/meta_protocol_proxy/codec/codec.h"
 #include "src/meta_protocol_proxy/active_message.h"

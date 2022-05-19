@@ -1,6 +1,6 @@
 #include "src/meta_protocol_proxy/filters/local_ratelimit/local_ratelimit.h"
 #include "src/meta_protocol_proxy/app_exception.h"
-#include "common/buffer/buffer_impl.h"
+#include "source/common/buffer/buffer_impl.h"
 #include "envoy/extensions/filters/network/local_ratelimit/v3/local_rate_limit.pb.h"
 #include "src/meta_protocol_proxy/filters/local_ratelimit/local_ratelimit_impl.h"
 
