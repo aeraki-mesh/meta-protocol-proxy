@@ -23,12 +23,11 @@
 #include "source/common/common/callback_impl.h"
 #include "source/common/common/cleanup.h"
 #include "source/common/common/logger.h"
+#include "source/common/config/subscription_base.h"
 #include "source/common/init/manager_impl.h"
 #include "source/common/init/target_impl.h"
 #include "source/common/init/watcher_impl.h"
 #include "source/common/protobuf/utility.h"
-
-#include "source/common/config/subscription_base.h"
 
 #include "absl/container/node_hash_map.h"
 #include "absl/container/node_hash_set.h"
