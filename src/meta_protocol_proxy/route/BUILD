@@ -136,7 +136,6 @@ envoy_cc_library(
         "@envoy//source/common/config:subscription_base_interface",
         "@envoy//source/common/config:subscription_factory_lib",
         "@envoy//source/common/config:utility_lib",
-        #"@envoy//source/common/config:version_converter_lib",
         "@envoy//source/common/init:manager_lib",
         "@envoy//source/common/init:target_lib",
         "@envoy//source/common/init:watcher_lib",
