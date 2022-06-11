@@ -1,6 +1,7 @@
 #!/bin/bash
 
 BASEDIR=$(dirname "$0")
+BUILD_CONTAINER_NAME=meta-protocol-proxy-build
 
 trap 'onCtrlC' INT
 function onCtrlC () {
@@ -18,7 +19,7 @@ function onCtrlC () {
 if [ "$1" == "docker-build" ]
 then
     echo "docker build mode"
-    docker cp meta-protocol-brpc-build:/meta-protocol-proxy/bazel-bin/envoy $BASEDIR
+    docker cp ${BUILD_CONTAINER_NAME}:/meta-protocol-proxy/bazel-bin/envoy $BASEDIR
     docker build -t brpc-demo-envoy -f $BASEDIR/envoy.Dockerfile .
     docker run -d --network host --name brpc-demo-envoy brpc-demo-envoy 
 else
