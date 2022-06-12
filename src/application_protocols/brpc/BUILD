@@ -17,7 +17,6 @@ envoy_cc_library(
     srcs = ["config.cc"],
     hdrs = ["config.h"],
     deps = [
-        ":pkg_cc_proto",
         ":codec_lib",
         "@envoy//envoy/registry",
         "//src/meta_protocol_proxy/codec:factory_lib",
@@ -44,6 +43,7 @@ envoy_cc_library(
     srcs = ["protocol.cc"],
     hdrs = ["protocol.h"],
     deps = [
+        ":pkg_cc_proto",
         "@envoy//source/common/buffer:buffer_lib",
         "@envoy//source/common/common:minimal_logger_lib",
     ]
