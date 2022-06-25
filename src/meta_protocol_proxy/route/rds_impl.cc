@@ -120,7 +120,7 @@ void RdsRouteConfigSubscription::onConfigUpdate(
 }
 
 // We use the Envoy RDS(HTTP RouteConfiguration) to transmit MetaProtocol RouteConfiguration between
-// the RDS server and Envoy. The HTTP RouteConfiguration needs to be convert to MetaProtocol
+// the RDS server and Envoy. The HTTP RouteConfiguration needs to be converted back to MetaProtocol
 // RouteConfiguration after received.
 void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
     const envoy::config::route::v3::RouteConfiguration& http_route_config,
@@ -165,6 +165,17 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
     for (auto it = httpRoute.route().hash_policy().begin();
          it < httpRoute.route().hash_policy().end(); it++) {
       action->add_hash_policy(it->header().header_name());
+    }
+
+    for (auto it = httpRoute.route().request_mirror_policies().begin();
+         it < httpRoute.route().request_mirror_policies().end(); it++) {
+      auto mirrorPolicy = action->add_request_mirror_policies();
+      mirrorPolicy->set_cluster(it->cluster());
+      auto* fraction = new envoy::config::core::v3::RuntimeFractionalPercent();
+      auto* defaultValue = new envoy::type::v3::FractionalPercent();
+      defaultValue->set_numerator(it->runtime_fraction().default_value().numerator());
+      fraction->set_allocated_default_value(defaultValue);
+      mirrorPolicy->set_allocated_runtime_fraction(fraction);
     }
 
     metaRoute->set_allocated_route(action);
@@ -263,12 +274,11 @@ void RdsRouteConfigProviderImpl::validateConfig(
 }
 
 RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& admin) {
-  config_tracker_entry_ =
-    admin.getConfigTracker().add("meta_protocol_routes", [this](const Matchers::StringMatcher& matcher) {
-      return dumpRouteConfigs(matcher);
-    });
+  config_tracker_entry_ = admin.getConfigTracker().add(
+      "meta_protocol_routes",
+      [this](const Matchers::StringMatcher& matcher) { return dumpRouteConfigs(matcher); });
 
-    // ConfigTracker keys must be unique. We are asserting that no one has stolen the
+  // ConfigTracker keys must be unique. We are asserting that no one has stolen the
   // "meta_protocol_routes" key from us, since the returned entry will be nullptr if the key already
   // exists.
   RELEASE_ASSERT(config_tracker_entry_, "");
@@ -322,7 +332,8 @@ RouteConfigProviderPtr RouteConfigProviderManagerImpl::createStaticRouteConfigPr
 }
 
 std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>
-RouteConfigProviderManagerImpl::dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const {
+RouteConfigProviderManagerImpl::dumpRouteConfigs(
+    const Matchers::StringMatcher& name_matcher) const {
   auto config_dump =
       std::make_unique<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump>();
 
@@ -340,7 +351,8 @@ RouteConfigProviderManagerImpl::dumpRouteConfigs(const Matchers::StringMatcher& 
       }
       auto* dynamic_config = config_dump->mutable_dynamic_route_configs()->Add();
       dynamic_config->set_version_info(subscription->routeConfigUpdate()->configVersion());
-      dynamic_config->mutable_route_config()->PackFrom(subscription->routeConfigUpdate()->protobufConfiguration());
+      dynamic_config->mutable_route_config()->PackFrom(
+          subscription->routeConfigUpdate()->protobufConfiguration());
       TimestampUtil::systemClockToTimestamp(subscription->routeConfigUpdate()->lastUpdated(),
                                             *dynamic_config->mutable_last_updated());
     }
