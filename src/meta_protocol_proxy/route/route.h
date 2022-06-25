@@ -15,6 +15,24 @@ namespace MetaProtocolProxy {
 namespace Route {
 
 /**
+ * RequestMirrorPolicy is an individual mirroring rule for a route entry.
+ */
+class RequestMirrorPolicy {
+public:
+  virtual ~RequestMirrorPolicy() = default;
+
+  /**
+   * @return const std::string& the upstream cluster that should be used for the mirrored request.
+   */
+  virtual const std::string& clusterName() const PURE;
+
+  /**
+   * @return bool whether this policy is currently enabled.
+   */
+  virtual bool enabled(Runtime::Loader& runtime) const PURE;
+};
+
+/**
  * RouteEntry is an individual resolved route entry.
  */
 class RouteEntry {
@@ -50,6 +68,13 @@ public:
    * @return const HashPolicy* the optional hash policy for the route.
    */
   virtual const HashPolicy* hashPolicy() const PURE;
+
+  /**
+   * @return const std::vector<RequestMirrorPolicy>& the mirror policies associated with this route,
+   * if any.
+   */
+  virtual const std::vector<std::shared_ptr<RequestMirrorPolicy>>&
+  requestMirrorPolicies() const PURE;
 };
 
 using RouteEntryPtr = std::shared_ptr<RouteEntry>;

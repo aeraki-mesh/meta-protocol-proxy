@@ -15,7 +15,8 @@ namespace Route {
 RouteEntryImplBase::RouteEntryImplBase(
     const aeraki::meta_protocol_proxy::config::route::v1alpha::Route& route)
     : cluster_name_(route.route().cluster()),
-      config_headers_(Http::HeaderUtility::buildHeaderDataVector(route.match().metadata())) {
+      config_headers_(Http::HeaderUtility::buildHeaderDataVector(route.match().metadata())),
+      mirror_policies_(buildMirrorPolicies(route.route())) {
   if (route.route().cluster_specifier_case() ==
       aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction::ClusterSpecifierCase::
           kWeightedClusters) {
@@ -38,9 +39,24 @@ RouteEntryImplBase::RouteEntryImplBase(
         std::make_shared<MutationEntry>(keyValue.key(), keyValue.value()));
   }
 
-  if(route.route().hash_policy().size()>0){
+  if (route.route().hash_policy().size() > 0) {
     hash_policy_ = std::make_unique<HashPolicyImpl>(route.route().hash_policy());
   }
+}
+
+std::vector<std::shared_ptr<RequestMirrorPolicy>> RouteEntryImplBase::buildMirrorPolicies(
+    const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction& route) {
+  std::vector<std::shared_ptr<RequestMirrorPolicy>> policies{};
+
+  const auto& proto_policies = route.request_mirror_policies();
+  policies.reserve(proto_policies.size());
+  for (const auto& policy : proto_policies) {
+    policies.push_back(std::make_shared<RequestMirrorPolicyImpl>(
+        policy.cluster(), policy.runtime_fraction().runtime_key(),
+        policy.runtime_fraction().default_value()));
+  }
+
+  return policies;
 }
 
 const std::string& RouteEntryImplBase::clusterName() const { return cluster_name_; }
