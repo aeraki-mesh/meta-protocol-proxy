@@ -26,6 +26,25 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Route {
 
+class RequestMirrorPolicyImpl : public RequestMirrorPolicy {
+public:
+  RequestMirrorPolicyImpl(const std::string& cluster_name, const std::string& runtime_key,
+                          const envoy::type::v3::FractionalPercent& default_value)
+      : cluster_name_(cluster_name), runtime_key_(runtime_key), default_value_(default_value) {}
+
+  // Router::RequestMirrorPolicy
+  const std::string& clusterName() const override { return cluster_name_; }
+  bool enabled(Runtime::Loader& runtime) const override {
+    return runtime_key_.empty() ? true
+                                : runtime.snapshot().featureEnabled(runtime_key_, default_value_);
+  }
+
+private:
+  const std::string cluster_name_;
+  const std::string runtime_key_;
+  const envoy::type::v3::FractionalPercent default_value_;
+};
+
 class RouteEntryImplBase : public RouteEntry,
                            public Route,
                            public std::enable_shared_from_this<RouteEntryImplBase>,
@@ -42,6 +61,9 @@ public:
   void requestMutation(MutationSharedPtr mutation) const override;
   void responseMutation(MutationSharedPtr mutation) const override;
   const HashPolicy* hashPolicy() const override { return hash_policy_.get(); }
+  const std::vector<std::shared_ptr<RequestMirrorPolicy>>& requestMirrorPolicies() const override {
+    return mirror_policies_;
+  }
 
   // Router::Route
   const RouteEntry* routeEntry() const override;
@@ -73,6 +95,10 @@ private:
       return parent_.responseMutation(mutation);
     }
     const HashPolicy* hashPolicy() const override { return parent_.hashPolicy(); }
+    const std::vector<std::shared_ptr<RequestMirrorPolicy>>&
+    requestMirrorPolicies() const override {
+      return parent_.requestMirrorPolicies();
+    }
 
     // Router::Route
     const RouteEntry* routeEntry() const override { return this; }
@@ -99,6 +125,9 @@ private:
 
   using MutationEntrySharedPtr = std::shared_ptr<MutationEntry>;
 
+  static std::vector<std::shared_ptr<RequestMirrorPolicy>> buildMirrorPolicies(
+      const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction& route);
+
   uint64_t total_cluster_weight_;
   const std::string cluster_name_;
   const std::vector<Http::HeaderUtility::HeaderDataPtr> config_headers_;
@@ -109,6 +138,7 @@ private:
   // TODO(gengleilei) Implement it.
   Envoy::Router::MetadataMatchCriteriaConstPtr metadata_match_criteria_;
   std::unique_ptr<const HashPolicy> hash_policy_;
+  const std::vector<std::shared_ptr<RequestMirrorPolicy>> mirror_policies_;
 };
 
 using RouteEntryImplBaseConstSharedPtr = std::shared_ptr<const RouteEntryImplBase>;
