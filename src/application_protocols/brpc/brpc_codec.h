@@ -8,6 +8,7 @@
 #include "source/common/common/logger.h"
 
 #include "src/meta_protocol_proxy/codec/codec.h"
+#include "src/application_protocols/brpc/brpc_meta.pb.h"
 #include "src/application_protocols/brpc/protocol.h"
 
 namespace Envoy {
@@ -47,8 +48,9 @@ protected:
 
 private:
   BrpcDecodeStatus decode_status{BrpcDecodeStatus::DecodeHeader};
-  BrpcHeader brpc_header_;
   MetaProtocolProxy::MessageType messageType_;
+  BrpcHeader brpc_header_;
+  aeraki::meta_protocol::brpc::RpcMeta meta_;
   std::unique_ptr<Buffer::OwnedImpl> origin_msg_;
 };
 
