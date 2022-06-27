@@ -91,13 +91,18 @@ BrpcDecodeStatus BrpcCodec::decodeHeader(Buffer::Instance& buffer) {
 
 BrpcDecodeStatus BrpcCodec::decodeBody(Buffer::Instance& buffer) {
   // Wait for more data if the buffer is not a complete message	
-  if (buffer.length() < brpc_header_.get_body_len()) {
+  if (buffer.length() < BrpcHeader::HEADER_SIZE + brpc_header_.get_body_len()) {
     return BrpcDecodeStatus::WaitForData;
   }
 
-  origin_msg_ = std::make_unique<Buffer::OwnedImpl>();
+  meta_.ParseFromArray(static_cast<uint8_t*>(buffer.linearize(BrpcHeader::HEADER_SIZE +
+                                                              brpc_header_.get_meta_len())) +
+                           BrpcHeader::HEADER_SIZE,
+                       brpc_header_.get_meta_len());
+  ENVOY_LOG(debug, "brpc meta: {}", meta_.DebugString());
 
   // move the decoded message out of the buffer
+  origin_msg_ = std::make_unique<Buffer::OwnedImpl>();
   origin_msg_->move(buffer, BrpcHeader::HEADER_SIZE + brpc_header_.get_body_len());
 
   return BrpcDecodeStatus::DecodeDone;
