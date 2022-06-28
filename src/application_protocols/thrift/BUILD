@@ -42,7 +42,7 @@ envoy_cc_library(
     deps = [
         "@envoy//envoy/registry",
         "@envoy//envoy/buffer:buffer_interface",
-	"@envoy//source/common/config:utility_lib",
+        "@envoy//source/common/config:utility_lib",
         "@envoy//source/common/common:logger_lib",
         "@envoy//source/common/buffer:buffer_lib",
         "//src/meta_protocol_proxy/codec:codec_interface",
