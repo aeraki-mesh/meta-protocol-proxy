@@ -184,7 +184,7 @@ public:
                                    FilterIterationStartState state);
   FilterStatus applyEncoderFilters(ActiveMessageEncoderFilter* filter,
                                    FilterIterationStartState state);
-  void maybeDeferredMessage();
+  void maybeDeferredDeleteMessage();
   void onReset();
   void onError(const std::string& what);
   MetadataSharedPtr metadata() const { return metadata_; }

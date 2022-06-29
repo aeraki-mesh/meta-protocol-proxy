@@ -149,7 +149,7 @@ void ActiveMessageDecoderFilter::continueDecoding() {
     // All filters have been executed for the current decoder state.
     if (activeMessage_.pendingStreamDecoded()) {
       // If the filter stack was paused during messageEnd, handle end-of-request details.
-      activeMessage_.maybeDeferredMessage();
+      activeMessage_.maybeDeferredDeleteMessage();
     }
   }
 }
@@ -340,16 +340,16 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     case FilterStatus::AbortIteration:
       ENVOY_LOG(debug, "meta protocol {} request: abort calling decoder filters, id is {}",
                 connection_manager_.config().applicationProtocol(), metadata->getRequestId());
-      connection_manager_.deferredMessage(*this);
+      connection_manager_.deferredDeleteMessage(*this);
       break;
     case FilterStatus::ContinueIteration:
-      maybeDeferredMessage();
+      maybeDeferredDeleteMessage();
       break;
     default:
       NOT_REACHED_GCOVR_EXCL_LINE;
     }
   } else {
-    maybeDeferredMessage();
+    maybeDeferredDeleteMessage();
   }
 
   ENVOY_LOG(
@@ -362,7 +362,7 @@ void ActiveMessage::setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr
   connection_manager_.getActiveStream(metadata_->getStreamId()).setUpstreamConn(std::move(conn));
 }
 
-void ActiveMessage::maybeDeferredMessage() {
+void ActiveMessage::maybeDeferredDeleteMessage() {
   pending_stream_decoded_ = false;
   connection_manager_.stats().request_.inc();
   bool is_one_way = false;
@@ -389,7 +389,7 @@ void ActiveMessage::maybeDeferredMessage() {
   }
 
   if (local_response_sent_ || is_one_way) {
-    connection_manager_.deferredMessage(*this);
+    connection_manager_.deferredDeleteMessage(*this);
   }
 }
 
@@ -497,7 +497,7 @@ UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
       }
 
       // Completed upstream response.
-      connection_manager_.deferredMessage(*this);
+      connection_manager_.deferredDeleteMessage(*this);
     } else if (status == UpstreamResponseStatus::Retry) {
       response_decoder_.reset();
     }
@@ -527,7 +527,7 @@ void ActiveMessage::resetDownstreamConnection() {
 
 CodecPtr ActiveMessage::createCodec() { return connection_manager_.config().createCodec(); }
 
-void ActiveMessage::resetStream() { connection_manager_.deferredMessage(*this); }
+void ActiveMessage::resetStream() { connection_manager_.deferredDeleteMessage(*this); }
 
 uint64_t ActiveMessage::requestId() const {
   return metadata_ != nullptr ? metadata_->getRequestId() : 0;
@@ -571,7 +571,7 @@ void ActiveMessage::addEncoderFilterWorker(EncoderFilterSharedPtr filter, bool d
   LinkedList::moveIntoListBack(std::move(wrapper), encoder_filters_);
 }
 
-void ActiveMessage::onReset() { connection_manager_.deferredMessage(*this); }
+void ActiveMessage::onReset() { connection_manager_.deferredDeleteMessage(*this); }
 
 void ActiveMessage::onError(const std::string& what) {
   if (!metadata_) {
@@ -583,7 +583,7 @@ void ActiveMessage::onError(const std::string& what) {
   ASSERT(metadata_);
   ENVOY_LOG(error, "Bad response: {}", what);
   sendLocalReply(AppException(Error{ErrorType::BadResponse, what}), false);
-  connection_manager_.deferredMessage(*this);
+  connection_manager_.deferredDeleteMessage(*this);
 }
 
 } // namespace  MetaProtocolProxy
