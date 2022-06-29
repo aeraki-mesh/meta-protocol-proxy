@@ -28,22 +28,9 @@ Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end
   dispatch();
 
   if (end_stream) {
-    ENVOY_CONN_LOG(debug, "downstream half-closed", read_callbacks_->connection());
+    ENVOY_CONN_LOG(debug, "meta protocol: downstream connection has been closed",
+                   read_callbacks_->connection());
 
-    // Downstream has closed. Unless we're waiting for an upstream connection to complete a oneway
-    // request, close. The special case for oneway requests allows them to complete before the
-    // ConnectionManager is destroyed.
-    if (stopped_) {
-      ASSERT(!active_message_list_.empty());
-      auto metadata = (*active_message_list_.begin())->metadata();
-      if (metadata && metadata->getMessageType() == MessageType::Oneway) {
-        ENVOY_CONN_LOG(trace, "waiting for one-way completion", read_callbacks_->connection());
-        half_closed_ = true;
-        return Network::FilterStatus::StopIteration;
-      }
-    }
-
-    ENVOY_LOG(debug, "meta protocol: end data processing");
     resetAllMessages(false);
     clearStream();
     read_callbacks_->connection().close(Network::ConnectionCloseType::FlushWrite);
@@ -104,12 +91,6 @@ void ConnectionManager::onHeartbeat(MetadataSharedPtr metadata) {
 void ConnectionManager::dispatch() {
   if (0 == request_buffer_.length()) {
     ENVOY_LOG(debug, "meta protocol: it's empty data");
-    return;
-  }
-
-  if (stopped_) {
-    ENVOY_CONN_LOG(debug, "meta protocol: meta protocol filter stopped",
-                   read_callbacks_->connection());
     return;
   }
 
@@ -184,19 +165,6 @@ bool ConnectionManager::streamExisted(uint64_t stream_id) {
 void ConnectionManager::closeStream(uint64_t stream_id) {
   ENVOY_LOG(debug, "meta protocol: close stream {} ", stream_id);
   active_stream_map_.erase(stream_id);
-}
-
-void ConnectionManager::continueDecoding() {
-  ENVOY_CONN_LOG(debug, "meta protocol filter continued", read_callbacks_->connection());
-  stopped_ = false;
-  dispatch();
-
-  if (!stopped_ && half_closed_) {
-    // If we're half closed, but not stopped waiting for an upstream,
-    // reset any pending rpcs and close the connection.
-    resetAllMessages(false);
-    read_callbacks_->connection().close(Network::ConnectionCloseType::FlushWrite);
-  }
 }
 
 void ConnectionManager::deferredMessage(ActiveMessage& message) {

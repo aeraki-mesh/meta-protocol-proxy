@@ -74,7 +74,6 @@ public:
   Random::RandomGenerator& randomGenerator() const { return random_generator_; }
   Config& config() const { return config_; }
 
-  void continueDecoding();
   void deferredMessage(ActiveMessage& message);
   void sendLocalReply(Metadata& metadata, const DirectResponse& response, bool end_stream);
 
@@ -94,9 +93,6 @@ private:
   Buffer::OwnedImpl request_buffer_;
   std::list<ActiveMessagePtr> active_message_list_;
   std::map<uint64_t, StreamPtr> active_stream_map_;
-
-  bool stopped_{false};
-  bool half_closed_{false};
 
   Config& config_;
   TimeSource& time_system_;

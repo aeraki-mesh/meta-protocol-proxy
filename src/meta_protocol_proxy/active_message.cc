@@ -149,7 +149,6 @@ void ActiveMessageDecoderFilter::continueDecoding() {
       // If the filter stack was paused during messageEnd, handle end-of-request details.
       activeMessage_.finalizeRequest();
     }
-    activeMessage_.continueDecoding();
   }
 }
 
@@ -520,8 +519,6 @@ uint64_t ActiveMessage::requestId() const {
 }
 
 uint64_t ActiveMessage::streamId() const { return stream_id_; }
-
-void ActiveMessage::continueDecoding() { connection_manager_.continueDecoding(); }
 
 StreamInfo::StreamInfo& ActiveMessage::streamInfo() { return stream_info_; }
 
