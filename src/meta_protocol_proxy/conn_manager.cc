@@ -51,7 +51,11 @@ void ConnectionManager::initializeReadFilterCallbacks(Network::ReadFilterCallbac
 }
 
 void ConnectionManager::onEvent(Network::ConnectionEvent event) {
-  resetAllMessages(event == Network::ConnectionEvent::LocalClose);
+  if (event == Network::ConnectionEvent::LocalClose) {
+    resetAllMessages(true);
+  } else if (event == Network::ConnectionEvent::RemoteClose) {
+    resetAllMessages(false);
+  }
 }
 
 void ConnectionManager::onAboveWriteBufferHighWatermark() {
@@ -167,10 +171,12 @@ void ConnectionManager::closeStream(uint64_t stream_id) {
   active_stream_map_.erase(stream_id);
 }
 
-void ConnectionManager::deferredMessage(ActiveMessage& message) {
+void ConnectionManager::deferredDeleteMessage(ActiveMessage& message) {
   if (!message.inserted()) {
     return;
   }
+  ENVOY_LOG(debug, "meta protocol: deferred delete message, id is {}",
+            message.metadata()->getRequestId());
   read_callbacks_->connection().dispatcher().deferredDelete(
       message.removeFromList(active_message_list_));
 }

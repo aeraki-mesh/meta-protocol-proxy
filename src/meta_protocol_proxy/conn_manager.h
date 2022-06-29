@@ -74,7 +74,7 @@ public:
   Random::RandomGenerator& randomGenerator() const { return random_generator_; }
   Config& config() const { return config_; }
 
-  void deferredMessage(ActiveMessage& message);
+  void deferredDeleteMessage(ActiveMessage& message);
   void sendLocalReply(Metadata& metadata, const DirectResponse& response, bool end_stream);
 
   Stream& newActiveStream(uint64_t stream_id);
