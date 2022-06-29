@@ -37,11 +37,11 @@ FilterStatus LocalRateLimit::onMessageDecoded(MetadataSharedPtr metadata, Mutati
                   fmt::format("meta protocol local rate limit: request '{}' has been rate limited",
                               metadata->getRequestId())}),
         false);
-    return FilterStatus::StopIteration;
+    return FilterStatus::AbortIteration;
   }
 
   ENVOY_STREAM_LOG(debug, "meta protocol local rate limit: onMessageDecoded", *callbacks_);
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 void LocalRateLimit::setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks) {
@@ -49,7 +49,7 @@ void LocalRateLimit::setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks
 }
 
 FilterStatus LocalRateLimit::onMessageEncoded(MetadataSharedPtr, MutationSharedPtr) {
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 void LocalRateLimit::cleanup() {}
@@ -68,4 +68,3 @@ bool LocalRateLimit::shouldRateLimit(MetadataSharedPtr metadata) {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-

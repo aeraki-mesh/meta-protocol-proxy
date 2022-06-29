@@ -109,8 +109,8 @@ public:
    *
    * @param data a Buffer containing protocol data
    * @param buffer_underflow bool set to true if more data is required to continue decoding
-   * @return FilterStatus::Continue when waiting for filter continuation,
-   *             StopIteration otherwise.
+   * @return FilterStatus::ContinueIteration,PauseIteration,AbortIteration or Retry
+   * filter processing.
    * @throw EnvoyException on protocol errors
    */
   FilterStatus onData(Buffer::Instance& data, bool& buffer_underflow);
