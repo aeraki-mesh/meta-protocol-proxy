@@ -167,7 +167,7 @@ public:
   uint64_t requestId() const override;
   uint64_t streamId() const override;
   const Network::Connection* connection() const override;
-  void continueDecoding() override;
+  void continueDecoding() override{};            // This method is unused, we may clear it later
   StreamInfo::StreamInfo& streamInfo() override; // todo refactory
   Route::RouteConstSharedPtr route() override;
   void sendLocalReply(const DirectResponse& response, bool end_stream) override;
