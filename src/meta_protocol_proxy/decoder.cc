@@ -42,7 +42,7 @@ DecoderBase::DecoderBase(Codec& codec, MessageType messageType)
 
 DecoderBase::~DecoderBase() { complete(); }
 
-FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow) {
+void DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow) {
   ENVOY_LOG(debug, "MetaProtocol decoder: {} bytes available", data.length());
   buffer_underflow = false;
 
@@ -60,7 +60,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
   case ProtocolState::WaitForData:
     ENVOY_LOG(debug, "MetaProtocol decoder: wait for data");
     buffer_underflow = true;
-    return FilterStatus::ContinueIteration;
+    return;
   default:
     break;
   }
@@ -71,7 +71,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
   complete();
   buffer_underflow = (data.length() == 0);
   ENVOY_LOG(debug, "MetaProtocol decoder: data length {}", data.length());
-  return FilterStatus::ContinueIteration;
+  return;
 }
 
 /**

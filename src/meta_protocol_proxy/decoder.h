@@ -109,11 +109,9 @@ public:
    *
    * @param data a Buffer containing protocol data
    * @param buffer_underflow bool set to true if more data is required to continue decoding
-   * @return FilterStatus::ContinueIteration,PauseIteration,AbortIteration or Retry
-   * filter processing.
    * @throw EnvoyException on protocol errors
    */
-  FilterStatus onData(Buffer::Instance& data, bool& buffer_underflow);
+  void onData(Buffer::Instance& data, bool& buffer_underflow);
 
   // It is assumed that all of the protocol parsing are stateless,
   // if there is a state of the need to provide the reset interface call here.

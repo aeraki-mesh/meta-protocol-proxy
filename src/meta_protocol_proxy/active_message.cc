@@ -135,6 +135,8 @@ ActiveMessageDecoderFilter::ActiveMessageDecoderFilter(ActiveMessage& parent,
 
 void ActiveMessageDecoderFilter::continueDecoding() {
   ASSERT(activeMessage_.metadata());
+  ENVOY_LOG(debug, "meta protocol: continueDecoding, id is {}",
+            activeMessage_.metadata()->getRequestId());
   auto state = ActiveMessage::FilterIterationStartState::AlwaysStartFromNext;
   if (0 != activeMessage_.metadata()->getOriginMessage().length()) {
     state = ActiveMessage::FilterIterationStartState::CanStartFromCurrent;
@@ -147,7 +149,7 @@ void ActiveMessageDecoderFilter::continueDecoding() {
     // All filters have been executed for the current decoder state.
     if (activeMessage_.pendingStreamDecoded()) {
       // If the filter stack was paused during messageEnd, handle end-of-request details.
-      activeMessage_.finalizeRequest();
+      activeMessage_.maybeDeferredMessage();
     }
   }
 }
@@ -329,16 +331,26 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     };
 
     auto status = applyDecoderFilters(nullptr, FilterIterationStartState::CanStartFromCurrent);
-    if (status == FilterStatus::PauseIteration) {
-      ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
+    switch (status) {
+    case FilterStatus::PauseIteration:
+      ENVOY_LOG(debug, "meta protocol {} request: pause calling decoder filters, id is {}",
                 connection_manager_.config().applicationProtocol(), metadata->getRequestId());
-      pending_stream_decoded_ =
-          true; // todo  this might be a memory leak ? wait for upstream connection ready
-      return;
+      pending_stream_decoded_ = true;
+      break;
+    case FilterStatus::AbortIteration:
+      ENVOY_LOG(debug, "meta protocol {} request: abort calling decoder filters, id is {}",
+                connection_manager_.config().applicationProtocol(), metadata->getRequestId());
+      connection_manager_.deferredMessage(*this);
+      break;
+    case FilterStatus::ContinueIteration:
+      maybeDeferredMessage();
+      break;
+    default:
+      NOT_REACHED_GCOVR_EXCL_LINE;
     }
+  } else {
+    maybeDeferredMessage();
   }
-
-  finalizeRequest();
 
   ENVOY_LOG(
       debug,
@@ -350,7 +362,7 @@ void ActiveMessage::setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr
   connection_manager_.getActiveStream(metadata_->getStreamId()).setUpstreamConn(std::move(conn));
 }
 
-void ActiveMessage::finalizeRequest() {
+void ActiveMessage::maybeDeferredMessage() {
   pending_stream_decoded_ = false;
   connection_manager_.stats().request_.inc();
   bool is_one_way = false;
@@ -406,6 +418,9 @@ FilterStatus ActiveMessage::applyDecoderFilters(ActiveMessageDecoderFilter* filt
   if (!local_response_sent_) {
     for (auto entry = commonDecodePrefix(filter, state); entry != decoder_filters_.end(); entry++) {
       const FilterStatus status = filter_action_((*entry)->handler().get());
+      // if a local response has been sent back to the upstream, the following filters in the chain
+      // will not be executed. A local response is usually an error response in the framework layer,
+      // sucha as no host found or rate limited request
       if (local_response_sent_) {
         break;
       }

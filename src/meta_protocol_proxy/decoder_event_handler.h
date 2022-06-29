@@ -19,7 +19,7 @@ enum class FilterStatus : uint8_t {
   // Abort the current iterate and remove the current message from the connection manager
   AbortIteration,
   // Indicates that a retry is required for the reply message received.
-  Retry,
+  Retry, // Retry has not been supported yet
 };
 
 class MessageDecoder {
@@ -29,7 +29,8 @@ public:
   /**
    * Indicates that the message had been decoded.
    * @param metadata MessageMetadataSharedPtr describing the message
-   * @return FilterStatus to indicate if filter chain iteration should continue
+   * @return FilterStatus to indicate if filter chain iteration should continue,pause,abort, or
+   * retry
    */
   virtual FilterStatus onMessageDecoded(MetadataSharedPtr metadata,
                                         MutationSharedPtr mutation) PURE;
