@@ -39,7 +39,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
          metadata->getMessageType() == MessageType::Error);
 
   metadata_ = metadata;
-  if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::Continue) {
+  if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::ContinueIteration) {
     response_status_ = UpstreamResponseStatus::Complete;
     return;
   }
@@ -94,14 +94,14 @@ FilterStatus ActiveResponseDecoder::applyMessageEncodedFilters(MetadataSharedPtr
   auto status = parent_.applyEncoderFilters(
       nullptr, ActiveMessage::FilterIterationStartState::CanStartFromCurrent);
   switch (status) {
-  case FilterStatus::StopIteration:
+  case FilterStatus::PauseIteration:
     break;
   case FilterStatus::Retry:
     response_status_ = UpstreamResponseStatus::Retry;
     decoder_->reset();
     break;
   default:
-    ASSERT(FilterStatus::Continue == status);
+    ASSERT(FilterStatus::ContinueIteration == status);
     break;
   }
 
@@ -142,7 +142,7 @@ void ActiveMessageDecoderFilter::continueDecoding() {
                     "the current location");
   }
   const FilterStatus status = activeMessage_.applyDecoderFilters(this, state);
-  if (status == FilterStatus::Continue) {
+  if (status == FilterStatus::ContinueIteration) {
     ENVOY_LOG(debug, "meta protocol response: start upstream");
     // All filters have been executed for the current decoder state.
     if (activeMessage_.pendingStreamDecoded()) {
@@ -190,7 +190,7 @@ void ActiveMessageEncoderFilter::continueEncoding() {
                     "the current location");
   }
   const FilterStatus status = activeMessage_.applyEncoderFilters(this, state);
-  if (FilterStatus::Continue == status) {
+  if (FilterStatus::ContinueIteration == status) {
     ENVOY_LOG(debug, "All encoding filters have been executed");
   }
 }
@@ -329,7 +329,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
     };
 
     auto status = applyDecoderFilters(nullptr, FilterIterationStartState::CanStartFromCurrent);
-    if (status == FilterStatus::StopIteration) {
+    if (status == FilterStatus::PauseIteration) {
       ENVOY_LOG(debug, "meta protocol {} request: stop calling decoder filter, id is {}",
                 connection_manager_.config().applicationProtocol(), metadata->getRequestId());
       pending_stream_decoded_ =
@@ -410,7 +410,7 @@ FilterStatus ActiveMessage::applyDecoderFilters(ActiveMessageDecoderFilter* filt
         break;
       }
 
-      if (status != FilterStatus::Continue) {
+      if (status != FilterStatus::ContinueIteration) {
         return status;
       }
     }
@@ -418,7 +418,7 @@ FilterStatus ActiveMessage::applyDecoderFilters(ActiveMessageDecoderFilter* filt
 
   filter_action_ = nullptr;
 
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 FilterStatus ActiveMessage::applyEncoderFilters(ActiveMessageEncoderFilter* filter,
@@ -432,7 +432,7 @@ FilterStatus ActiveMessage::applyEncoderFilters(ActiveMessageEncoderFilter* filt
         break;
       }
 
-      if (status != FilterStatus::Continue) {
+      if (status != FilterStatus::ContinueIteration) {
         return status;
       }
     }
@@ -440,7 +440,7 @@ FilterStatus ActiveMessage::applyEncoderFilters(ActiveMessageEncoderFilter* filt
 
   encoder_filter_action_ = nullptr;
 
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 void ActiveMessage::sendLocalReply(const DirectResponse& response, bool end_stream) {

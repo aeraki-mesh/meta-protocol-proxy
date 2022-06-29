@@ -60,7 +60,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
   case ProtocolState::WaitForData:
     ENVOY_LOG(debug, "MetaProtocol decoder: wait for data");
     buffer_underflow = true;
-    return FilterStatus::Continue;
+    return FilterStatus::ContinueIteration;
   default:
     break;
   }
@@ -71,7 +71,7 @@ FilterStatus DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow)
   complete();
   buffer_underflow = (data.length() == 0);
   ENVOY_LOG(debug, "MetaProtocol decoder: data length {}", data.length());
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 /**

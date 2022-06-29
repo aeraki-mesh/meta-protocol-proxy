@@ -38,7 +38,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
                            fmt::format("meta protocol router: no cluster match for request '{}'",
                                        metadata->getRequestId())}),
         false);
-    return FilterStatus::StopIteration;
+    return FilterStatus::AbortIteration;
   }
 
   route_entry_ = route_->routeEntry();
@@ -53,7 +53,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
                            fmt::format("meta protocol router: unknown cluster '{}'",
                                        route_entry_->clusterName())}),
         false);
-    return FilterStatus::StopIteration;
+    return FilterStatus::AbortIteration;
   }
 
   cluster_ = cluster->info();
@@ -66,7 +66,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
                            fmt::format("meta protocol router: maintenance mode for cluster '{}'",
                                        route_entry_->clusterName())}),
         false);
-    return FilterStatus::StopIteration;
+    return FilterStatus::AbortIteration;
   }
 
   auto conn_pool = cluster->tcpConnPool(Upstream::ResourcePriority::Default, this);
@@ -76,7 +76,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
                            fmt::format("meta protocol router: no healthy upstream for '{}'",
                                        route_entry_->clusterName())}),
         false);
-    return FilterStatus::StopIteration;
+    return FilterStatus::AbortIteration;
   }
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
@@ -96,7 +96,7 @@ void Router::setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks) {
 
 FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr) {
   if (upstream_request_ == nullptr) {
-    return FilterStatus::Continue;
+    return FilterStatus::ContinueIteration;
   }
 
   ENVOY_STREAM_LOG(trace, "meta protocol router: response status: {}", *encoder_callbacks_,
@@ -120,7 +120,7 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
     break;
   }
 
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
@@ -223,10 +223,10 @@ FilterStatus Router::UpstreamRequest::start() {
   if (handle) {
     // Pause while we wait for a connection.
     conn_pool_handle_ = handle;
-    return FilterStatus::StopIteration;
+    return FilterStatus::PauseIteration;
   }
 
-  return FilterStatus::Continue;
+  return FilterStatus::ContinueIteration;
 }
 
 void Router::UpstreamRequest::resetStream() {
@@ -257,7 +257,8 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   conn_data_->connection().write(data, false);
 }
 
-void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
+void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason,
+                                            absl::string_view,
                                             Upstream::HostDescriptionConstSharedPtr host) {
   conn_pool_handle_ = nullptr;
 
