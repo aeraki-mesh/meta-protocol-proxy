@@ -36,13 +36,13 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
       proto_config, context, *singletons.route_config_provider_manager_));
 
-  // This lambda captures the shared_ptrs created above, thus preserving the
-  // reference count.
+  // This lambda captures the singletons created above, thus preserving the reference count.
   // Keep in mind the lambda capture list **doesn't** determine the destruction order, but it's fine
   // as these captured objects are also global singletons.
   return [singletons, filter_config, &context](Network::FilterManager& filter_manager) -> void {
-    filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
-        *filter_config, context.api().randomGenerator(), context.mainThreadDispatcher().timeSource()));
+    filter_manager.addReadFilter(
+        std::make_shared<ConnectionManager>(*filter_config, context.api().randomGenerator(),
+                                            context.mainThreadDispatcher().timeSource()));
   };
 }
 

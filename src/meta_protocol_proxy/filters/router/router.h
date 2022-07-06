@@ -20,8 +20,30 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
+/**
+ * This interface is used by an upstream request to communicate its state.
+ */
+class RequestOwner : public Logger::Loggable<Logger::Id::filter> {
+public:
+  /**
+   * @return ConnectionPool::UpstreamCallbacks& the handler for upstream data.
+   */
+  virtual Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() PURE;
+
+  /*
+   * @return DecoderFilterCallbacks
+   */
+  virtual DecoderFilterCallbacks& decoderFilterCallbacks() PURE;
+
+  /*
+   * @return EncoderFilterCallbacks
+   */
+  virtual EncoderFilterCallbacks& encoderFilterCallbacks() PURE;
+};
+
 class Router : public Tcp::ConnectionPool::UpstreamCallbacks,
                public Upstream::LoadBalancerContextBase,
+               public RequestOwner,
                public CodecFilter,
                Logger::Loggable<Logger::Id::filter> {
 public:
@@ -49,13 +71,18 @@ public:
   void onAboveWriteBufferHighWatermark() override {}
   void onBelowWriteBufferLowWatermark() override {}
 
+  // RequestOwner
+  Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() override;
+  DecoderFilterCallbacks& decoderFilterCallbacks() override;
+  EncoderFilterCallbacks& encoderFilterCallbacks() override;
+
   // This function is for testing only.
   Envoy::Buffer::Instance& upstreamRequestBufferForTest() { return upstream_request_buffer_; }
 
 private:
   struct UpstreamRequest : public Tcp::ConnectionPool::Callbacks {
-    UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool,
-                    MetadataSharedPtr& metadata, MutationSharedPtr& mutation);
+    UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool, MetadataSharedPtr& metadata,
+                    MutationSharedPtr& mutation);
     ~UpstreamRequest() override;
 
     FilterStatus start();
@@ -74,7 +101,7 @@ private:
     void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host);
     void onResetStream(ConnectionPool::PoolFailureReason reason);
 
-    Router& router_;
+    RequestOwner& parent_;
     Upstream::TcpPoolData& conn_pool_;
     MetadataSharedPtr metadata_;
     MutationSharedPtr mutation_;
@@ -82,6 +109,7 @@ private:
     Tcp::ConnectionPool::Cancellable* conn_pool_handle_{};
     Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
     Upstream::HostDescriptionConstSharedPtr upstream_host_;
+    Envoy::Buffer::OwnedImpl upstream_request_buffer_;
 
     bool request_complete_ : 1;
     bool response_started_ : 1;
@@ -93,14 +121,13 @@ private:
 
   Upstream::ClusterManager& cluster_manager_;
 
-  DecoderFilterCallbacks* callbacks_{};
-  EncoderFilterCallbacks* encoder_callbacks_{};
+  DecoderFilterCallbacks* decoder_filter_callbacks_{};
+  EncoderFilterCallbacks* encoder_filter_callbacks_{};
   Route::RouteConstSharedPtr route_{};
   const Route::RouteEntry* route_entry_{};
   Upstream::ClusterInfoConstSharedPtr cluster_;
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
-  Envoy::Buffer::OwnedImpl upstream_request_buffer_;
   MetadataSharedPtr requestMetadata_;
 
   bool filter_complete_{false};

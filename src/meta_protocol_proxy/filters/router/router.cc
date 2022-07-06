@@ -20,7 +20,7 @@ void Router::onDestroy() {
 }
 
 void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
-  callbacks_ = &callbacks;
+  decoder_filter_callbacks_ = &callbacks;
 }
 
 FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
@@ -29,11 +29,11 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   ASSERT(messageType == MessageType::Request || messageType == MessageType::Stream_Init);
 
   requestMetadata_ = metadata;
-  route_ = callbacks_->route();
+  route_ = decoder_filter_callbacks_->route();
   if (!route_) {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'", *callbacks_,
-                     metadata->getRequestId());
-    callbacks_->sendLocalReply(
+    ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'",
+                     *decoder_filter_callbacks_, metadata->getRequestId());
+    decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::RouteNotFound,
                            fmt::format("meta protocol router: no cluster match for request '{}'",
                                        metadata->getRequestId())}),
@@ -46,9 +46,9 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   Upstream::ThreadLocalCluster* cluster =
       cluster_manager_.getThreadLocalCluster(route_entry_->clusterName());
   if (!cluster) {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: unknown cluster '{}'", *callbacks_,
-                     route_entry_->clusterName());
-    callbacks_->sendLocalReply(
+    ENVOY_STREAM_LOG(debug, "meta protocol router: unknown cluster '{}'",
+                     *decoder_filter_callbacks_, route_entry_->clusterName());
+    decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::ClusterNotFound,
                            fmt::format("meta protocol router: unknown cluster '{}'",
                                        route_entry_->clusterName())}),
@@ -57,11 +57,11 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   }
 
   cluster_ = cluster->info();
-  ENVOY_STREAM_LOG(debug, "meta protocol router: cluster {} match for request '{}'", *callbacks_,
-                   cluster_->name(), metadata->getRequestId());
+  ENVOY_STREAM_LOG(debug, "meta protocol router: cluster {} match for request '{}'",
+                   *decoder_filter_callbacks_, cluster_->name(), metadata->getRequestId());
 
   if (cluster_->maintenanceMode()) {
-    callbacks_->sendLocalReply(
+    decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::Unspecified,
                            fmt::format("meta protocol router: maintenance mode for cluster '{}'",
                                        route_entry_->clusterName())}),
@@ -71,7 +71,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
 
   auto conn_pool = cluster->tcpConnPool(Upstream::ResourcePriority::Default, this);
   if (!conn_pool) {
-    callbacks_->sendLocalReply(
+    decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::NoHealthyUpstream,
                            fmt::format("meta protocol router: no healthy upstream for '{}'",
                                        route_entry_->clusterName())}),
@@ -79,19 +79,19 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
     return FilterStatus::AbortIteration;
   }
 
-  ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *callbacks_);
+  ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
   // move buffer into the upstream request
-  upstream_request_buffer_.move(metadata->getOriginMessage(),
-                                metadata->getOriginMessage().length());
+  // upstream_request_buffer_.move(metadata->getOriginMessage(),
+  //                              metadata->getOriginMessage().length());
   route_entry_->requestMutation(requestMutation);
   upstream_request_ =
-      std::make_unique<UpstreamRequest>(*this, *conn_pool, metadata, requestMutation);
+      std::make_unique<UpstreamRequest>(*this, *conn_pool, requestMetadata_, requestMutation);
   return upstream_request_->start();
 }
 
 void Router::setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks) {
-  encoder_callbacks_ = &callbacks;
+  encoder_filter_callbacks_ = &callbacks;
 }
 
 FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr) {
@@ -99,7 +99,7 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
     return FilterStatus::ContinueIteration;
   }
 
-  ENVOY_STREAM_LOG(trace, "meta protocol router: response status: {}", *encoder_callbacks_,
+  ENVOY_STREAM_LOG(trace, "meta protocol router: response status: {}", *encoder_filter_callbacks_,
                    metadata->getResponseStatus());
 
   switch (metadata->getResponseStatus()) {
@@ -126,23 +126,23 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
 void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   ASSERT(!upstream_request_->response_complete_);
 
-  ENVOY_STREAM_LOG(trace, "meta protocol router: reading response: {} bytes", *callbacks_,
-                   data.length());
+  ENVOY_STREAM_LOG(trace, "meta protocol router: reading response: {} bytes",
+                   *decoder_filter_callbacks_, data.length());
 
   // Handle normal response.
   if (!upstream_request_->response_started_) {
-    callbacks_->startUpstreamResponse(*requestMetadata_);
+    decoder_filter_callbacks_->startUpstreamResponse(*requestMetadata_);
     upstream_request_->response_started_ = true;
   }
 
-  UpstreamResponseStatus status = callbacks_->upstreamData(data);
+  UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
   if (status == UpstreamResponseStatus::Complete) {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *callbacks_);
+    ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
     upstream_request_->onResponseComplete();
     cleanup();
     return;
   } else if (status == UpstreamResponseStatus::Reset) {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *callbacks_);
+    ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
     // When the upstreamData function returns Reset,
     // the current stream is already released from the upper layer,
     // so there is no need to call callbacks_->resetStream() to notify
@@ -153,7 +153,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 
   if (end_stream) {
     // Response is incomplete, but no more data is coming.
-    ENVOY_STREAM_LOG(debug, "meta protocol router: response underflow", *callbacks_);
+    ENVOY_STREAM_LOG(debug, "meta protocol router: response underflow", *decoder_filter_callbacks_);
     upstream_request_->onResetStream(ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
     upstream_request_->onResponseComplete();
     cleanup();
@@ -188,6 +188,15 @@ void Router::onEvent(Network::ConnectionEvent event) {
   }
 }
 
+// ---- RequestOwner ----
+Tcp::ConnectionPool::UpstreamCallbacks& Router::upstreamCallbacks() { return *this; }
+
+DecoderFilterCallbacks& Router::decoderFilterCallbacks() { return *decoder_filter_callbacks_; }
+
+EncoderFilterCallbacks& Router::encoderFilterCallbacks() { return *encoder_filter_callbacks_; }
+// ---- RequestOwner ----
+
+// ---- Upstream::LoadBalancerContextBase ----
 absl::optional<uint64_t> Router::computeHashKey() {
   if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {
     auto hash = hash_policy->generateHash(*requestMetadata_);
@@ -201,8 +210,9 @@ absl::optional<uint64_t> Router::computeHashKey() {
 }
 
 const Network::Connection* Router::downstreamConnection() const {
-  return callbacks_ != nullptr ? callbacks_->connection() : nullptr;
+  return decoder_filter_callbacks_ != nullptr ? decoder_filter_callbacks_->connection() : nullptr;
 }
+// ---- Upstream::LoadBalancerContextBase ----
 
 void Router::cleanup() {
   if (upstream_request_) {
@@ -210,11 +220,14 @@ void Router::cleanup() {
   }
 }
 
-Router::UpstreamRequest::UpstreamRequest(Router& parent, Upstream::TcpPoolData& pool,
+Router::UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool,
                                          MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
-    : router_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
+    : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
       request_complete_(false), response_started_(false), response_complete_(false),
-      stream_reset_(false) {}
+      stream_reset_(false) {
+  upstream_request_buffer_.move(metadata->getOriginMessage(),
+                                metadata->getOriginMessage().length());
+}
 
 Router::UpstreamRequest::~UpstreamRequest() = default;
 
@@ -251,8 +264,8 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(conn_data_);
   ASSERT(!conn_pool_handle_);
 
-  ENVOY_STREAM_LOG(trace, "proxying {} bytes", *router_.callbacks_, data.length());
-  auto codec = router_.callbacks_->createCodec(); // TODO just create codec once
+  ENVOY_STREAM_LOG(trace, "proxying {} bytes", parent_.decoderFilterCallbacks(), data.length());
+  auto codec = parent_.decoderFilterCallbacks().createCodec(); // TODO just create codec once
   codec->encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }
@@ -266,7 +279,7 @@ void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason re
   onUpstreamHostSelected(host);
   onResetStream(reason);
 
-  router_.upstream_request_buffer_.drain(router_.upstream_request_buffer_.length());
+  upstream_request_buffer_.drain(upstream_request_buffer_.length());
 
   // If it is a connection error, it means that the connection pool returned
   // the error asynchronously and the upper layer needs to be notified to continue decoding.
@@ -280,7 +293,7 @@ void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason re
     } else if (reason == ConnectionPool::PoolFailureReason::RemoteConnectionFailure) {
       host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectFailed);
     }
-    router_.callbacks_->continueDecoding();
+    parent_.decoderFilterCallbacks().continueDecoding();
   }
 }
 
@@ -296,24 +309,24 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
 
   conn_data_ = std::move(conn_data);
   if (metadata_->getMessageType() == MessageType::Request) {
-    conn_data_->addUpstreamCallbacks(router_);
+    conn_data_->addUpstreamCallbacks(parent_.upstreamCallbacks());
   }
   conn_pool_handle_ = nullptr;
 
   // Store the upstream ip to the metadata, which will be used in the response
-  router_.requestMetadata_->putString(
+  metadata_->putString(
       Metadata::HEADER_REAL_SERVER_ADDRESS,
       conn_data_->connection().connectionInfoProvider().remoteAddress()->asString());
 
   onRequestStart(continue_decoding);
-  encodeData(router_.upstream_request_buffer_);
+  encodeData(upstream_request_buffer_);
 
   if (metadata_->getMessageType() == MessageType::Stream_Init) {
     // For streaming requests, we handle the following server response message in the stream
     ENVOY_LOG(debug, "meta protocol upstream request: the request is a stream init message");
-    router_.callbacks_
-        ->resetStream(); // todo change to a more appreciate method name, maybe clearMessage()
-    router_.callbacks_->setUpstreamConnection(std::move(conn_data_));
+    // todo change to a more appreciate method name, maybe clearMessage()
+    parent_.decoderFilterCallbacks().resetStream();
+    parent_.decoderFilterCallbacks().setUpstreamConnection(std::move(conn_data_));
   }
 }
 
@@ -322,7 +335,7 @@ void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {
             upstream_host_->address()->asString());
 
   if (continue_decoding) {
-    router_.callbacks_->continueDecoding();
+    parent_.decoderFilterCallbacks().continueDecoding();
   }
   onRequestComplete();
 }
@@ -346,7 +359,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
     // an error.
     ENVOY_LOG(debug,
               "meta protocol upstream request: the request is oneway, reset downstream stream");
-    router_.callbacks_->resetStream();
+    parent_.decoderFilterCallbacks().resetStream();
     return;
   }
 
@@ -354,7 +367,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
   // triggers the release of the current stream at the end of the filter's callback.
   switch (reason) {
   case ConnectionPool::PoolFailureReason::Overflow:
-    router_.callbacks_->sendLocalReply(
+    parent_.decoderFilterCallbacks().sendLocalReply(
         AppException(Error{ErrorType::Unspecified,
                            fmt::format("meta protocol upstream request: too many connections")}),
         false);
@@ -362,7 +375,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
   case ConnectionPool::PoolFailureReason::LocalConnectionFailure:
     // Should only happen if we closed the connection, due to an error condition, in which case
     // we've already handled any possible downstream response.
-    router_.callbacks_->sendLocalReply(
+    parent_.decoderFilterCallbacks().sendLocalReply(
         AppException(
             Error{ErrorType::Unspecified,
                   fmt::format("meta protocol upstream request: local connection failure '{}'",
@@ -370,7 +383,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
         false);
     break;
   case ConnectionPool::PoolFailureReason::RemoteConnectionFailure:
-    router_.callbacks_->sendLocalReply(
+    parent_.decoderFilterCallbacks().sendLocalReply(
         AppException(
             Error{ErrorType::Unspecified,
                   fmt::format("meta protocol upstream request: remote connection failure '{}'",
@@ -378,7 +391,7 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
         false);
     break;
   case ConnectionPool::PoolFailureReason::Timeout:
-    router_.callbacks_->sendLocalReply(
+    parent_.decoderFilterCallbacks().sendLocalReply(
         AppException(Error{
             ErrorType::Unspecified,
             fmt::format("meta protocol upstream request: connection failure '{}' due to timeout",
@@ -388,12 +401,12 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
   default:
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
-
-  if (router_.filter_complete_ && !response_complete_) {
-    // When the filter's callback has ended and the reply message has not been processed,
-    // call resetStream to release the current stream.
-    // the resetStream eventually triggers the onDestroy function call.
-    router_.callbacks_->resetStream();
+  if (!response_complete_) {
+    // if (router_.filter_complete_ && !response_complete_) {
+    //  When the filter's callback has ended and the reply message has not been processed,
+    //  call resetStream to release the current stream.
+    //  the resetStream eventually triggers the onDestroy function call.
+    parent_.decoderFilterCallbacks().resetStream();
   }
 }
 
