@@ -12,11 +12,14 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
+// ---- DecoderFilter ---- handle request path
 void Router::onDestroy() {
-  if (upstream_request_) {
-    upstream_request_->resetStream();
+  // close the upstream connection if the upstream request has not been completed because there may
+  // be more data coming later on the connection after destroying the router
+  if (!upstreamRequestFinished()) {
+    upstream_request_->releaseUpStreamConnection(true);
   }
-  cleanup();
+  cleanUpstreamRequest();
 }
 
 void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
@@ -80,16 +83,14 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   }
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
-
-  // move buffer into the upstream request
-  // upstream_request_buffer_.move(metadata->getOriginMessage(),
-  //                              metadata->getOriginMessage().length());
   route_entry_->requestMutation(requestMutation);
   upstream_request_ =
       std::make_unique<UpstreamRequest>(*this, *conn_pool, requestMetadata_, requestMutation);
   return upstream_request_->start();
 }
+// ---- DecoderFilter ----
 
+// ---- EncoderFilter ---- handle response path
 void Router::setEncoderFilterCallbacks(EncoderFilterCallbacks& callbacks) {
   encoder_filter_callbacks_ = &callbacks;
 }
@@ -105,15 +106,15 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
   switch (metadata->getResponseStatus()) {
   case ResponseStatus::Ok:
     if (metadata->getMessageType() == MessageType::Error) {
-      upstream_request_->upstream_host_->outlierDetector().putResult(
+      upstream_request_->upstreamHost()->outlierDetector().putResult(
           Upstream::Outlier::Result::ExtOriginRequestFailed);
     } else {
-      upstream_request_->upstream_host_->outlierDetector().putResult(
+      upstream_request_->upstreamHost()->outlierDetector().putResult(
           Upstream::Outlier::Result::ExtOriginRequestSuccess);
     }
     break;
   case ResponseStatus::Error:
-    upstream_request_->upstream_host_->outlierDetector().putResult(
+    upstream_request_->upstreamHost()->outlierDetector().putResult(
         Upstream::Outlier::Result::ExtOriginRequestFailed);
     break;
   default:
@@ -122,71 +123,64 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
 
   return FilterStatus::ContinueIteration;
 }
+// ---- EncoderFilter ---
 
+// ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
-  ASSERT(!upstream_request_->response_complete_);
-
-  ENVOY_STREAM_LOG(trace, "meta protocol router: reading response: {} bytes",
+  // We shouldn't get more data after a response is completed, otherwise it's a codec issue
+  ASSERT(!upstream_request_->responseCompleted());
+  ENVOY_STREAM_LOG(debug, "meta protocol router: reading response: {} bytes",
                    *decoder_filter_callbacks_, data.length());
 
-  // Handle normal response.
-  if (!upstream_request_->response_started_) {
+  // Start response when receiving the first packet
+  if (!upstream_request_->responseStarted()) {
     decoder_filter_callbacks_->startUpstreamResponse(*requestMetadata_);
-    upstream_request_->response_started_ = true;
+    upstream_request_->onResponseStarted();
   }
 
   UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
-  if (status == UpstreamResponseStatus::Complete) {
+  switch (status) {
+  case UpstreamResponseStatus::Complete:
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
     upstream_request_->onResponseComplete();
-    cleanup();
+    cleanUpstreamRequest();
     return;
-  } else if (status == UpstreamResponseStatus::Reset) {
+  case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
     // When the upstreamData function returns Reset,
     // the current stream is already released from the upper layer,
     // so there is no need to call callbacks_->resetStream() to notify
     // the upper layer to release the stream.
-    upstream_request_->resetStream();
+    upstream_request_->releaseUpStreamConnection(true);
     return;
-  }
-
-  if (end_stream) {
-    // Response is incomplete, but no more data is coming.
-    ENVOY_STREAM_LOG(debug, "meta protocol router: response underflow", *decoder_filter_callbacks_);
-    upstream_request_->onResetStream(ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
-    upstream_request_->onResponseComplete();
-    cleanup();
-    // todo we also need to clean the stream
+  case UpstreamResponseStatus::MoreData:
+    // Response is incomplete, but no more data is coming. Probably codec or application side error.
+    if (end_stream) {
+      ENVOY_STREAM_LOG(debug,
+                       "meta protocol router: response is incomplete, but no more data is coming",
+                       *decoder_filter_callbacks_);
+      upstream_request_->onUpstreamConnectionReset(
+          ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
+      upstream_request_->onResponseComplete();
+      cleanUpstreamRequest();
+      return;
+      // todo we also need to clean the stream
+    default:
+      NOT_REACHED_GCOVR_EXCL_LINE;
+    }
   }
 }
 
 void Router::onEvent(Network::ConnectionEvent event) {
-  if (!upstream_request_ || upstream_request_->response_complete_) {
-    // Client closed connection after completing response.
-    ENVOY_LOG(debug, "meta protocol upstream request: the upstream request had completed");
-    return;
-  }
+  ASSERT(upstream_request_);
 
-  if (upstream_request_->stream_reset_ && event == Network::ConnectionEvent::LocalClose) {
-    ENVOY_LOG(debug, "meta protocol upstream request: the stream reset");
-    return;
-  }
-
-  switch (event) {
-  case Network::ConnectionEvent::RemoteClose:
-    upstream_request_->onResetStream(ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
-    upstream_request_->upstream_host_->outlierDetector().putResult(
-        Upstream::Outlier::Result::LocalOriginConnectFailed);
-    break;
-  case Network::ConnectionEvent::LocalClose:
-    upstream_request_->onResetStream(ConnectionPool::PoolFailureReason::LocalConnectionFailure);
-    break;
-  default:
-    // Connected is consumed by the connection pool.
-    NOT_REACHED_GCOVR_EXCL_LINE;
-  }
+//  if (upstream_request_->stream_reset_ && event == Network::ConnectionEvent::LocalClose) {
+//    ENVOY_LOG(debug, "meta protocol upstream request: the stream reset");
+//    return;
+//  }
+  upstream_request_->onUpstreamConnectionEvent(event);
 }
+// ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 
 // ---- RequestOwner ----
 Tcp::ConnectionPool::UpstreamCallbacks& Router::upstreamCallbacks() { return *this; }
@@ -214,14 +208,15 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 // ---- Upstream::LoadBalancerContextBase ----
 
-void Router::cleanup() {
+void Router::cleanUpstreamRequest() {
+  ENVOY_LOG(debug, "meta protocol router: clean upstream request");
   if (upstream_request_) {
     upstream_request_.reset();
   }
-}
+};
 
-Router::UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool,
-                                         MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
+UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool,
+                                 MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
     : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
       request_complete_(false), response_started_(false), response_complete_(false),
       stream_reset_(false) {
@@ -229,9 +224,9 @@ Router::UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPool
                                 metadata->getOriginMessage().length());
 }
 
-Router::UpstreamRequest::~UpstreamRequest() = default;
+UpstreamRequest::~UpstreamRequest() = default;
 
-FilterStatus Router::UpstreamRequest::start() {
+FilterStatus UpstreamRequest::start() {
   Tcp::ConnectionPool::Cancellable* handle = conn_pool_.newConnection(*this);
   if (handle) {
     // Pause while we wait for a connection.
@@ -242,25 +237,55 @@ FilterStatus Router::UpstreamRequest::start() {
   return FilterStatus::ContinueIteration;
 }
 
-void Router::UpstreamRequest::resetStream() {
+void UpstreamRequest::onUpstreamConnectionEvent(Network::ConnectionEvent event) {
+  ASSERT(!response_complete_);
+
+  switch (event) {
+  case Network::ConnectionEvent::RemoteClose:
+    ENVOY_LOG(debug, "meta protocol router: upstream remote close");
+    onUpstreamConnectionReset(ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
+    upstream_host_->outlierDetector().putResult(
+        Upstream::Outlier::Result::LocalOriginConnectFailed);
+    break;
+  case Network::ConnectionEvent::LocalClose:
+    ENVOY_LOG(debug, "meta protocol router: upstream local close");
+    onUpstreamConnectionReset(ConnectionPool::PoolFailureReason::LocalConnectionFailure);
+    break;
+  default:
+    // Connected event is consumed by the connection pool.
+    NOT_REACHED_GCOVR_EXCL_LINE;
+  }
+}
+
+void UpstreamRequest::releaseUpStreamConnection(bool close) {
   stream_reset_ = true;
 
+  // we're still waiting for the connection pool to create an upstream connection
   if (conn_pool_handle_) {
     ASSERT(!conn_data_);
     conn_pool_handle_->cancel(Tcp::ConnectionPool::CancelPolicy::Default);
     conn_pool_handle_ = nullptr;
-    ENVOY_LOG(debug, "meta protocol upstream request: reset connection pool handler");
+    ENVOY_LOG(debug, "meta protocol upstream request: cancel pending upstream connection");
   }
 
+  // we already got an upstream connection from the pool
   if (conn_data_) {
     ASSERT(!conn_pool_handle_);
-    conn_data_->connection().close(Network::ConnectionCloseType::NoFlush);
+
+    // we shouldn't close the upstream connection unless explicitly asked at some exceptional cases
+    if (close) {
+      conn_data_->connection().close(Network::ConnectionCloseType::NoFlush);
+      ENVOY_LOG(warn, "meta protocol upstream request: close upstream connection");
+    }
+
+    // upstream connection is released back to the pool for re-use when it's containing
+    // ConnectionData is destroyed
     conn_data_.reset();
-    ENVOY_LOG(debug, "meta protocol upstream request: reset connection data");
+    ENVOY_LOG(debug, "meta protocol upstream request: release upstream connection");
   }
 }
 
-void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
+void UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(conn_data_);
   ASSERT(!conn_pool_handle_);
 
@@ -270,14 +295,13 @@ void Router::UpstreamRequest::encodeData(Buffer::Instance& data) {
   conn_data_->connection().write(data, false);
 }
 
-void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason,
-                                            absl::string_view,
-                                            Upstream::HostDescriptionConstSharedPtr host) {
+void UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
+                                    Upstream::HostDescriptionConstSharedPtr host) {
   conn_pool_handle_ = nullptr;
 
   // Mimic an upstream reset.
   onUpstreamHostSelected(host);
-  onResetStream(reason);
+  onUpstreamConnectionReset(reason);
 
   upstream_request_buffer_.drain(upstream_request_buffer_.length());
 
@@ -297,8 +321,8 @@ void Router::UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason re
   }
 }
 
-void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
-                                          Upstream::HostDescriptionConstSharedPtr host) {
+void UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
+                                  Upstream::HostDescriptionConstSharedPtr host) {
   ENVOY_LOG(debug, "meta protocol upstream request: tcp connection has ready");
 
   // Only invoke continueDecoding if we'd previously stopped the filter chain.
@@ -330,7 +354,7 @@ void Router::UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr
   }
 }
 
-void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {
+void UpstreamRequest::onRequestStart(bool continue_decoding) {
   ENVOY_LOG(debug, "meta protocol upstream request: start sending data to the server {}",
             upstream_host_->address()->asString());
 
@@ -340,20 +364,20 @@ void Router::UpstreamRequest::onRequestStart(bool continue_decoding) {
   onRequestComplete();
 }
 
-void Router::UpstreamRequest::onRequestComplete() { request_complete_ = true; }
+void UpstreamRequest::onRequestComplete() { request_complete_ = true; }
 
-void Router::UpstreamRequest::onResponseComplete() {
+void UpstreamRequest::onResponseComplete() {
   response_complete_ = true;
   conn_data_.reset();
 }
 
-void Router::UpstreamRequest::onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) {
+void UpstreamRequest::onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) {
   ENVOY_LOG(debug, "meta protocol upstream request: selected upstream {}",
             host->address()->asString());
   upstream_host_ = host;
 }
 
-void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason reason) {
+void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReason reason) {
   if (metadata_->getMessageType() == MessageType::Oneway) {
     // For oneway requests, we should not attempt a response. Reset the downstream to signal
     // an error.
@@ -402,10 +426,6 @@ void Router::UpstreamRequest::onResetStream(ConnectionPool::PoolFailureReason re
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
   if (!response_complete_) {
-    // if (router_.filter_complete_ && !response_complete_) {
-    //  When the filter's callback has ended and the reply message has not been processed,
-    //  call resetStream to release the current stream.
-    //  the resetStream eventually triggers the onDestroy function call.
     parent_.decoderFilterCallbacks().resetStream();
   }
 }

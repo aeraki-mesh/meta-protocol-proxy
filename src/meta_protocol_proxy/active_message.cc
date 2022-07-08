@@ -16,7 +16,7 @@ ActiveResponseDecoder::ActiveResponseDecoder(ActiveMessage& parent, MetaProtocol
                                              Network::Connection& connection,
                                              std::string applicationProtocol, CodecPtr&& codec,
                                              Metadata& requestMetadata)
-    : parent_(parent), stats_(stats), response_connection_(connection),
+    : parent_(parent), stats_(stats), downstream_connection_(connection),
       application_protocol_(applicationProtocol), codec_(std::move(codec)),
       requestMetadata_(requestMetadata),
       decoder_(std::make_unique<ResponseDecoder>(*codec_, *this)), complete_(false),
@@ -44,7 +44,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
     return;
   }
 
-  if (response_connection_.state() != Network::Connection::State::Open) {
+  if (downstream_connection_.state() != Network::Connection::State::Open) {
     throw DownstreamConnectionCloseException("Downstream has closed or closing");
   }
 
@@ -53,7 +53,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
                        requestMetadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
   // TODO support response mutation
   codec_->encode(*metadata_, Mutation{}, metadata->getOriginMessage());
-  response_connection_.write(metadata->getOriginMessage(), false);
+  downstream_connection_.write(metadata->getOriginMessage(), false);
   ENVOY_LOG(debug,
             "meta protocol {} response: the upstream response message has been forwarded to the "
             "downstream",
