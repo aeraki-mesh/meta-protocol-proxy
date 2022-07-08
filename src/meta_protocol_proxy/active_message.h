@@ -51,7 +51,7 @@ private:
 
   ActiveMessage& parent_;
   MetaProtocolProxyStats& stats_;
-  Network::Connection& response_connection_;
+  Network::Connection& downstream_connection_;
   std::string application_protocol_;
   CodecPtr codec_;
   Metadata& requestMetadata_;

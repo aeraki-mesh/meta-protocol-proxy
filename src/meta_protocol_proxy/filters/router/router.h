@@ -23,8 +23,9 @@ namespace Router {
 /**
  * This interface is used by an upstream request to communicate its state.
  */
-class RequestOwner : public Logger::Loggable<Logger::Id::filter> {
+class RequestOwner {
 public:
+   virtual ~RequestOwner() = default;
   /**
    * @return ConnectionPool::UpstreamCallbacks& the handler for upstream data.
    */
@@ -39,6 +40,51 @@ public:
    * @return EncoderFilterCallbacks
    */
   virtual EncoderFilterCallbacks& encoderFilterCallbacks() PURE;
+};
+
+class UpstreamRequest : public Tcp::ConnectionPool::Callbacks,
+                        Logger::Loggable<Logger::Id::filter> {
+public:
+  UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool, MetadataSharedPtr& metadata,
+                  MutationSharedPtr& mutation);
+  ~UpstreamRequest() override;
+
+  // Tcp::ConnectionPool::Callbacks
+  void onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
+                     Upstream::HostDescriptionConstSharedPtr host) override;
+  void onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn,
+                   Upstream::HostDescriptionConstSharedPtr host) override;
+
+  FilterStatus start();
+  void onUpstreamConnectionEvent(Network::ConnectionEvent event);
+  void releaseUpStreamConnection(const bool close);
+  void encodeData(Buffer::Instance& data);
+  void onRequestStart(bool continue_decoding);
+  void onRequestComplete();
+  void onResponseComplete();
+  void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host);
+  void onUpstreamConnectionReset(ConnectionPool::PoolFailureReason reason);
+  bool requestCompleted() { return request_complete_; };
+  bool responseCompleted() { return response_complete_; };
+  bool responseStarted() { return response_started_; };
+  void onResponseStarted() { response_started_ = true; };
+  Upstream::HostDescriptionConstSharedPtr upstreamHost() { return upstream_host_; };
+
+private:
+  RequestOwner& parent_;
+  Upstream::TcpPoolData& conn_pool_;
+  MetadataSharedPtr metadata_;
+  MutationSharedPtr mutation_;
+
+  Tcp::ConnectionPool::Cancellable* conn_pool_handle_{};
+  Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
+  Upstream::HostDescriptionConstSharedPtr upstream_host_;
+  Envoy::Buffer::OwnedImpl upstream_request_buffer_;
+
+  bool request_complete_ : 1;
+  bool response_started_ : 1;
+  bool response_complete_ : 1;
+  bool stream_reset_ : 1;
 };
 
 class Router : public Tcp::ConnectionPool::UpstreamCallbacks,
@@ -77,47 +123,11 @@ public:
   EncoderFilterCallbacks& encoderFilterCallbacks() override;
 
   // This function is for testing only.
-  Envoy::Buffer::Instance& upstreamRequestBufferForTest() { return upstream_request_buffer_; }
+  // Envoy::Buffer::Instance& upstreamRequestBufferForTest() { return upstream_request_buffer_; }
 
 private:
-  struct UpstreamRequest : public Tcp::ConnectionPool::Callbacks {
-    UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool, MetadataSharedPtr& metadata,
-                    MutationSharedPtr& mutation);
-    ~UpstreamRequest() override;
-
-    FilterStatus start();
-    void resetStream();
-    void encodeData(Buffer::Instance& data);
-
-    // Tcp::ConnectionPool::Callbacks
-    void onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
-                       Upstream::HostDescriptionConstSharedPtr host) override;
-    void onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn,
-                     Upstream::HostDescriptionConstSharedPtr host) override;
-
-    void onRequestStart(bool continue_decoding);
-    void onRequestComplete();
-    void onResponseComplete();
-    void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host);
-    void onResetStream(ConnectionPool::PoolFailureReason reason);
-
-    RequestOwner& parent_;
-    Upstream::TcpPoolData& conn_pool_;
-    MetadataSharedPtr metadata_;
-    MutationSharedPtr mutation_;
-
-    Tcp::ConnectionPool::Cancellable* conn_pool_handle_{};
-    Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
-    Upstream::HostDescriptionConstSharedPtr upstream_host_;
-    Envoy::Buffer::OwnedImpl upstream_request_buffer_;
-
-    bool request_complete_ : 1;
-    bool response_started_ : 1;
-    bool response_complete_ : 1;
-    bool stream_reset_ : 1;
-  };
-
-  void cleanup();
+  void cleanUpstreamRequest();
+  bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
 
   Upstream::ClusterManager& cluster_manager_;
 
@@ -129,8 +139,6 @@ private:
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
   MetadataSharedPtr requestMetadata_;
-
-  bool filter_complete_{false};
 };
 
 } // namespace Router
