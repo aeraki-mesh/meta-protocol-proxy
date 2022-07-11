@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/router_impl.h"
+#include "src/meta_protocol_proxy/filters/router/upstream_request.h"
 
 #include "envoy/upstream/cluster_manager.h"
 #include "envoy/upstream/thread_local_cluster.h"

@@ -29,7 +29,6 @@ envoy_cc_library(
     name = "router_interface",
     repository = "@envoy",
     hdrs = ["router.h"],
-    external_deps = ["abseil_optional"],
     deps = [
         "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//envoy/tcp:conn_pool_interface",
@@ -38,12 +37,30 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "upstream_request_lib",
+    repository = "@envoy",
+    srcs = ["upstream_request.cc"],
+    hdrs = ["upstream_request.h"],
+    deps = [
+        ":router_interface",
+        "//src/meta_protocol_proxy:app_exception_lib",
+        "//src/meta_protocol_proxy/filters:filter_interface",
+        "//src/meta_protocol_proxy/route:route_interface",
+        "@envoy//envoy/tcp:conn_pool_interface",
+        "@envoy//envoy/upstream:cluster_manager_interface",
+        "@envoy//envoy/upstream:thread_local_cluster_interface",
+        "@envoy//source/common/common:logger_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "router_lib",
     repository = "@envoy",
-    srcs = ["router_impl.cc","upstream_request.cc"],
+    srcs = ["router_impl.cc"],
     hdrs = ["router_impl.h"],
     deps = [
         ":router_interface",
+        ":upstream_request_lib",
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "//src/meta_protocol_proxy/route:route_interface",
