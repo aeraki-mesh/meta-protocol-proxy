@@ -26,11 +26,24 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "router_interface",
+    repository = "@envoy",
+    hdrs = ["router.h"],
+    external_deps = ["abseil_optional"],
+    deps = [
+        "//src/meta_protocol_proxy/filters:filter_interface",
+        "@envoy//envoy/tcp:conn_pool_interface",
+        "@envoy//envoy/upstream:thread_local_cluster_interface",
+    ],
+)
+
+envoy_cc_library(
     name = "router_lib",
     repository = "@envoy",
-    srcs = ["router.cc","upstream_request.cc"],
-    hdrs = ["router.h"],
+    srcs = ["router_impl.cc","upstream_request.cc"],
+    hdrs = ["router_impl.h"],
     deps = [
+        ":router_interface",
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "//src/meta_protocol_proxy/route:route_interface",

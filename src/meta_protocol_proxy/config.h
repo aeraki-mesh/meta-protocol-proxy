@@ -9,8 +9,6 @@
 #include "source/extensions/filters/network/well_known_names.h"
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
-#include "src/meta_protocol_proxy/route/route_matcher_impl.h"
-#include "src/meta_protocol_proxy/filters/router/router.h"
 #include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
 
 namespace Envoy {
