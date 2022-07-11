@@ -28,7 +28,7 @@ envoy_cc_library(
 envoy_cc_library(
     name = "router_lib",
     repository = "@envoy",
-    srcs = ["router.cc"],
+    srcs = ["router.cc","upstream_request.cc"],
     hdrs = ["router.h"],
     deps = [
         "//src/meta_protocol_proxy:app_exception_lib",
