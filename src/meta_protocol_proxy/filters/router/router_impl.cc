@@ -20,6 +20,12 @@ void Router::onDestroy() {
     upstream_request_->releaseUpStreamConnection(true);
   }
   cleanUpstreamRequest();
+
+  for (auto& shadow_router : shadow_routers_) {
+    shadow_router.get().onRouterDestroy();
+  }
+
+  shadow_routers_.clear();
 }
 
 void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
@@ -45,48 +51,38 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   }
 
   route_entry_ = route_->routeEntry();
+  const std::string& cluster_name = route_entry_->clusterName();
 
-  Upstream::ThreadLocalCluster* cluster =
-      cluster_manager_.getThreadLocalCluster(route_entry_->clusterName());
-  if (!cluster) {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: unknown cluster '{}'",
-                     *decoder_filter_callbacks_, route_entry_->clusterName());
-    decoder_filter_callbacks_->sendLocalReply(
-        AppException(Error{ErrorType::ClusterNotFound,
-                           fmt::format("meta protocol router: unknown cluster '{}'",
-                                       route_entry_->clusterName())}),
-        false);
+  auto prepare_result =
+      prepareUpstreamRequest(cluster_name, metadata, this);
+  if (prepare_result.exception.has_value()) {
+    decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
     return FilterStatus::AbortIteration;
   }
-
-  cluster_ = cluster->info();
-  ENVOY_STREAM_LOG(debug, "meta protocol router: cluster {} match for request '{}'",
-                   *decoder_filter_callbacks_, cluster_->name(), metadata->getRequestId());
-
-  if (cluster_->maintenanceMode()) {
-    decoder_filter_callbacks_->sendLocalReply(
-        AppException(Error{ErrorType::Unspecified,
-                           fmt::format("meta protocol router: maintenance mode for cluster '{}'",
-                                       route_entry_->clusterName())}),
-        false);
-    return FilterStatus::AbortIteration;
-  }
-
-  auto conn_pool = cluster->tcpConnPool(Upstream::ResourcePriority::Default, this);
-  if (!conn_pool) {
-    decoder_filter_callbacks_->sendLocalReply(
-        AppException(Error{ErrorType::NoHealthyUpstream,
-                           fmt::format("meta protocol router: no healthy upstream for '{}'",
-                                       route_entry_->clusterName())}),
-        false);
-    return FilterStatus::AbortIteration;
-  }
+  auto& upstream_req_info = prepare_result.upstream_request_info.value();
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
+
   route_entry_->requestMutation(requestMutation);
   upstream_request_ =
-      std::make_unique<UpstreamRequest>(*this, *conn_pool, requestMetadata_, requestMutation);
-  return upstream_request_->start();
+      std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data, requestMetadata_, requestMutation);
+  auto filter_status = upstream_request_->start();
+
+  // Prepare connections for shadow routers, if there are mirror policies configured and currently
+  // enabled.
+  /*const auto& policies = route_entry_->requestMirrorPolicies();
+  if (!policies.empty()) {
+    for (const auto& policy : policies) {
+      if (policy->enabled(runtime_)) {
+        auto shadow_router = shadow_writer_.submit(policy->clusterName(), metadata);
+        if (shadow_router.has_value()) {
+          shadow_routers_.push_back(shadow_router.value());
+        }
+      }
+    }
+  }*/
+
+  return filter_status;
 }
 // ---- DecoderFilter ----
 
