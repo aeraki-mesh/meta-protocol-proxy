@@ -1,8 +1,12 @@
 #pragma once
 
 #include "envoy/tcp/conn_pool.h"
+#include "envoy/upstream/cluster_manager.h"
 #include "envoy/upstream/thread_local_cluster.h"
 
+#include "source/common/common/logger.h"
+
+#include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 
 namespace Envoy {
@@ -14,9 +18,11 @@ namespace Router {
 /**
  * This interface is used by an upstream request to communicate its state.
  */
-class RequestOwner {
+class RequestOwner : public Logger::Loggable<Logger::Id::filter> {
 public:
+  RequestOwner(Upstream::ClusterManager& cluster_manager) : cluster_manager_(cluster_manager) {}
   virtual ~RequestOwner() = default;
+
   /**
    * @return ConnectionPool::UpstreamCallbacks& the handler for upstream data.
    */
@@ -31,6 +37,104 @@ public:
    * @return EncoderFilterCallbacks
    */
   virtual EncoderFilterCallbacks& encoderFilterCallbacks() PURE;
+
+protected:
+  struct UpstreamRequestInfo {
+    absl::optional<Upstream::TcpPoolData> conn_pool_data;
+  };
+
+  struct PrepareUpstreamRequestResult {
+    absl::optional<AppException> exception;
+    absl::optional<UpstreamRequestInfo> upstream_request_info;
+  };
+
+  PrepareUpstreamRequestResult prepareUpstreamRequest(const std::string& cluster_name,
+                                                      MetadataSharedPtr& metadata,
+                                                      Upstream::LoadBalancerContext* lb_context) {
+    Upstream::ThreadLocalCluster* cluster = cluster_manager_.getThreadLocalCluster(cluster_name);
+    if (!cluster) {
+      ENVOY_LOG(warn, "meta protocol router: unknown cluster '{}'", cluster_name);
+      return {AppException(
+                  Error{ErrorType::ClusterNotFound,
+                        fmt::format("meta protocol router: unknown cluster '{}'", cluster_name)}),
+              absl::nullopt};
+    }
+
+    cluster_ = cluster->info();
+    ENVOY_LOG(debug, "meta protocol router: cluster {} match for request '{}'", cluster_->name(),
+              metadata->getRequestId());
+
+    if (cluster_->maintenanceMode()) {
+      return {
+          AppException(Error{ErrorType::Unspecified,
+                             fmt::format("meta protocol router: maintenance mode for cluster '{}'",
+                                         cluster_name)}),
+          absl::nullopt};
+    }
+
+    auto conn_pool_data = cluster->tcpConnPool(Upstream::ResourcePriority::Default, lb_context);
+    if (!conn_pool_data) {
+      return {AppException(Error{
+                  ErrorType::NoHealthyUpstream,
+                  fmt::format("meta protocol router: no healthy upstream for '{}'", cluster_name)}),
+              absl::nullopt};
+    }
+
+    UpstreamRequestInfo result = {conn_pool_data}; // TODO zhaohuabing
+    return {absl::nullopt, result};
+  }
+
+  Upstream::ClusterInfoConstSharedPtr cluster_;
+
+private:
+  Upstream::ClusterManager& cluster_manager_;
+};
+
+/**
+ * ShadowRouterHandle is used to write a request or release a connection early if needed.
+ */
+class ShadowRouterHandle {
+public:
+  virtual ~ShadowRouterHandle() = default;
+
+  /**
+   * Called after the Router is destroyed.
+   */
+  virtual void onRouterDestroy() PURE;
+
+  /**
+   * Checks if the request is currently waiting for an upstream connection to become available.
+   */
+  virtual bool waitingForConnection() const PURE;
+
+  /**
+   * @return RequestOwner& the interface associated with this ShadowRouter.
+   */
+  virtual RequestOwner& requestOwner() PURE;
+};
+
+/**
+ * ShadowWriter is used for submitting requests and ignoring the response.
+ */
+class ShadowWriter {
+public:
+  virtual ~ShadowWriter() = default;
+
+  /**
+   * @return Upstream::ClusterManager& the cluster manager.
+   */
+  virtual Upstream::ClusterManager& clusterManager() PURE;
+
+  /**
+   * @return Dispatcher& the dispatcher.
+   */
+  virtual Event::Dispatcher& dispatcher() PURE;
+
+  /**
+   * Starts the shadow request by requesting an upstream connection.
+   */
+  virtual absl::optional<std::reference_wrapper<ShadowRouterHandle>>
+  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata) PURE;
 };
 
 } // namespace Router

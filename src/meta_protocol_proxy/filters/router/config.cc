@@ -3,6 +3,7 @@
 #include "envoy/registry/registry.h"
 
 #include "src/meta_protocol_proxy/filters/router/router_impl.h"
+//#include "src/meta_protocol_proxy/filters/router/shadow_writer_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -19,9 +20,11 @@ FilterFactoryCb RouterFilterConfig::createFilterFactoryFromProtoTyped(
 
   // This lambda captures the shadow_writer created above, thus shadowed requests won't be
   // destructed after the main request is finished.
+  // The life span of shadow_writer is as long as the MetaProtocol ConfigImpl, see filter_factories_
+  // member of the MetaProtocol ConfigImpl
   return [&context](FilterChainFactoryCallbacks& callbacks) -> void {
-    // callbacks.addFilter(std::make_shared<Router>(context.clusterManager()), *shadow_writer);
     callbacks.addFilter(std::make_shared<Router>(context.clusterManager()));
+    // std::make_shared<Router>(context.clusterManager(), context.runtime(), *shadow_writer));
   };
 }
 

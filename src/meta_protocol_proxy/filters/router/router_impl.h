@@ -6,7 +6,6 @@
 #include "envoy/tcp/conn_pool.h"
 #include "envoy/upstream/thread_local_cluster.h"
 
-#include "source/common/common/logger.h"
 #include "source/common/buffer/buffer_impl.h"
 #include "source/common/upstream/load_balancer_impl.h"
 
@@ -24,10 +23,13 @@ namespace Router {
 class Router : public Tcp::ConnectionPool::UpstreamCallbacks,
                public Upstream::LoadBalancerContextBase,
                public RequestOwner,
-               public CodecFilter,
-               Logger::Loggable<Logger::Id::filter> {
+               public CodecFilter {
 public:
-  Router(Upstream::ClusterManager& cluster_manager) : cluster_manager_(cluster_manager) {}
+  //Router(Upstream::ClusterManager& cluster_manager, Runtime::Loader& runtime)
+  Router(Upstream::ClusterManager& cluster_manager)
+//         ShadowWriter& shadow_writer)
+      : RequestOwner(cluster_manager) {}
+  //: RequestOwner(cluster_manager), runtime_(runtime), shadow_writer_(shadow_writer) {}
   ~Router() override = default;
 
   // DecoderFilter
@@ -63,8 +65,6 @@ private:
   void cleanUpstreamRequest();
   bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
 
-  Upstream::ClusterManager& cluster_manager_;
-
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
   Route::RouteConstSharedPtr route_{};
@@ -73,6 +73,11 @@ private:
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
   MetadataSharedPtr requestMetadata_;
+
+  // member variables for traffic mirroring
+  //Runtime::Loader& runtime_;
+  //ShadowWriter& shadow_writer_;
+  std::vector<std::reference_wrapper<ShadowRouterHandle>> shadow_routers_{};
 };
 
 } // namespace Router
