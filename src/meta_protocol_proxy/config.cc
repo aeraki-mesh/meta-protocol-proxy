@@ -107,13 +107,20 @@ Route::RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata,
   // return route_matcher_->route(metadata, random_value);
 }
 
-CodecPtr ConfigImpl::createCodec() {
+CodecSharedPtr ConfigImpl::createCodec() {
   auto& factory = Envoy::Config::Utility::getAndCheckFactoryByName<NamedCodecConfigFactory>(
       codecConfig_.name());
   ProtobufTypes::MessagePtr message = factory.createEmptyConfigProto();
   Envoy::Config::Utility::translateOpaqueConfig(codecConfig_.config(),
                                                 context_.messageValidationVisitor(), *message);
-  return factory.createCodec(*message);
+  auto key = message->SerializeAsString();
+  auto result = codec_map_.find(key);
+  if (result != codec_map_.end()) {
+    return result->second;
+  }
+  CodecSharedPtr codec = factory.createCodec(*message);
+  codec_map_.insert({key, codec});
+  return codec;
 }
 
 void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {

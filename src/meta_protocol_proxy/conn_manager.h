@@ -31,7 +31,7 @@ public:
 
   virtual FilterChainFactory& filterFactory() PURE;
   virtual MetaProtocolProxyStats& stats() PURE;
-  virtual CodecPtr createCodec() PURE;
+  virtual CodecSharedPtr createCodec() PURE;
   virtual Route::Config& routerConfig() PURE;
   virtual std::string applicationProtocol() PURE;
   /**
@@ -99,7 +99,7 @@ private:
   MetaProtocolProxyStats& stats_;
   Random::RandomGenerator& random_generator_;
 
-  CodecPtr codec_;
+  CodecSharedPtr codec_;
   RequestDecoderPtr decoder_;
   Network::ReadFilterCallbacks* read_callbacks_{};
 };
