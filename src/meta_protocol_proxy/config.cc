@@ -118,6 +118,7 @@ CodecSharedPtr ConfigImpl::createCodec() {
   if (result != codec_map_.end()) {
     return result->second;
   }
+  ENVOY_LOG(trace, "meta protocol: create codec {}", codecConfig_.name());
   CodecSharedPtr codec = factory.createCodec(*message);
   codec_map_.insert({key, codec});
   return codec;

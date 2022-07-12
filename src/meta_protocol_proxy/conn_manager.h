@@ -51,7 +51,7 @@ public:
   ConnectionManager(Config& config, Random::RandomGenerator& random_generator,
                     TimeSource& time_system);
   ~ConnectionManager() override {
-    ENVOY_LOG(debug, "**********release conn manager ***********8");
+    ENVOY_LOG(trace, "********** ConnectionManager destructed ***********");
   };
 
   // Network::ReadFilter

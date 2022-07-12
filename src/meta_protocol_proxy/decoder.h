@@ -69,6 +69,9 @@ public:
   DecoderStateMachine(Codec& codec, MessageType messageType, Delegate& delegate)
       : codec_(codec), messageType_(messageType), delegate_(delegate),
         state_(ProtocolState::OnDecodeStreamData) {}
+  ~DecoderStateMachine() {
+    ENVOY_LOG(trace, "********** DecoderStateMachine destructed ***********");
+  }
 
   /**
    * Consumes as much data from the configured Buffer as possible and executes the decoding state
@@ -152,6 +155,7 @@ class RequestDecoder : public Decoder<RequestDecoderCallbacks> {
 public:
   RequestDecoder(Codec& codec, RequestDecoderCallbacks& callbacks)
       : Decoder(codec, callbacks, MessageType::Request) {}
+  ~RequestDecoder() { ENVOY_LOG(trace, "********** RequestDecoder destructed ***********"); };
 };
 
 using RequestDecoderPtr = std::unique_ptr<RequestDecoder>;
@@ -160,6 +164,7 @@ class ResponseDecoder : public Decoder<ResponseDecoderCallbacks> {
 public:
   ResponseDecoder(Codec& codec, ResponseDecoderCallbacks& callbacks)
       : Decoder(codec, callbacks, MessageType::Response) {}
+  ~ResponseDecoder() { ENVOY_LOG(trace, "********** ResponseDecoder destructed ***********"); };
 };
 
 using ResponseDecoderPtr = std::unique_ptr<ResponseDecoder>;
