@@ -87,7 +87,7 @@ void UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(!conn_pool_handle_);
 
   ENVOY_STREAM_LOG(trace, "proxying {} bytes", parent_.decoderFilterCallbacks(), data.length());
-  auto codec = parent_.decoderFilterCallbacks().createCodec(); // TODO just create codec once
+  auto codec = parent_.decoderFilterCallbacks().codec();
   codec->encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }

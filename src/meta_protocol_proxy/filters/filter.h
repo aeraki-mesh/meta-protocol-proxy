@@ -138,10 +138,10 @@ public:
   virtual void resetDownstreamConnection() PURE;
 
   /**
-   * Create a codec, which will be used by the router to encode request and response
+   * Get the codec, which will be used by the router to encode request and response
    * @return CodecPtr
    */
-  virtual CodecPtr createCodec() PURE;
+  virtual CodecSharedPtr codec() PURE;
 
   /**
    * Set the selected upstream connection, used by router.

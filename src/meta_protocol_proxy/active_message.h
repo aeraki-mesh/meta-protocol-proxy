@@ -32,7 +32,7 @@ class ActiveResponseDecoder : public ResponseDecoderCallbacks,
 public:
   ActiveResponseDecoder(ActiveMessage& parent, MetaProtocolProxyStats& stats,
                         Network::Connection& connection, std::string applicationProtocol,
-                        CodecPtr&& codec, Metadata& requestMetadata);
+                        Codec& codec, Metadata& requestMetadata);
   ~ActiveResponseDecoder() override = default;
 
   UpstreamResponseStatus onData(Buffer::Instance& data);
@@ -53,7 +53,7 @@ private:
   MetaProtocolProxyStats& stats_;
   Network::Connection& downstream_connection_;
   std::string application_protocol_;
-  CodecPtr codec_;
+  Codec& codec_;
   Metadata& requestMetadata_;
   ResponseDecoderPtr decoder_;
   MetadataSharedPtr metadata_;
@@ -101,7 +101,7 @@ public:
   void startUpstreamResponse(Metadata& requestMetadata) override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
-  CodecPtr createCodec() override;
+  CodecSharedPtr codec() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
@@ -174,7 +174,7 @@ public:
   void startUpstreamResponse(Metadata& requestMetadata) override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
-  CodecPtr createCodec() override;
+  CodecSharedPtr codec() override;
   Event::Dispatcher& dispatcher() override;
   void resetStream() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
