@@ -104,7 +104,7 @@ public:
     protocol_ = NamedProtocolConfigFactory::getFactory(ProtocolType::Dubbo)
                     .createProtocol(SerializationType::Hessian2);
   };
-  ~DubboCodec() override { ENVOY_LOG(debug, "dubbo codec destructor executed"); };
+  ~DubboCodec() override { ENVOY_LOG(trace, "********** DubboCodec destructed ***********"); };
 
   MetaProtocolProxy::DecodeStatus decode(Buffer::Instance& buffer,
                                          MetaProtocolProxy::Metadata& metadata) override;

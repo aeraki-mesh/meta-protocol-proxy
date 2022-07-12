@@ -25,12 +25,12 @@ class Router : public Tcp::ConnectionPool::UpstreamCallbacks,
                public RequestOwner,
                public CodecFilter {
 public:
-  //Router(Upstream::ClusterManager& cluster_manager, Runtime::Loader& runtime)
+  // Router(Upstream::ClusterManager& cluster_manager, Runtime::Loader& runtime)
   Router(Upstream::ClusterManager& cluster_manager)
-//         ShadowWriter& shadow_writer)
+      //         ShadowWriter& shadow_writer)
       : RequestOwner(cluster_manager) {}
   //: RequestOwner(cluster_manager), runtime_(runtime), shadow_writer_(shadow_writer) {}
-  ~Router() override = default;
+  ~Router() override { ENVOY_LOG(trace, "********** Router destructed ***********"); };
 
   // DecoderFilter
   void onDestroy() override;
@@ -75,8 +75,8 @@ private:
   MetadataSharedPtr requestMetadata_;
 
   // member variables for traffic mirroring
-  //Runtime::Loader& runtime_;
-  //ShadowWriter& shadow_writer_;
+  // Runtime::Loader& runtime_;
+  // ShadowWriter& shadow_writer_;
   std::vector<std::reference_wrapper<ShadowRouterHandle>> shadow_routers_{};
 };
 

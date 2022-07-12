@@ -209,6 +209,7 @@ ActiveMessage::ActiveMessage(ConnectionManager& connection_manager)
 }
 
 ActiveMessage::~ActiveMessage() {
+  ENVOY_LOG(trace, "********** ActiveMessage destructed ***********");
   connection_manager_.stats().request_active_.dec();
   request_timer_->complete();
   for (auto& filter : decoder_filters_) {

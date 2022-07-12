@@ -94,7 +94,9 @@ class ActiveMessageDecoderFilter : public DecoderFilterCallbacks,
 public:
   ActiveMessageDecoderFilter(ActiveMessage& parent, DecoderFilterSharedPtr filter,
                              bool dual_filter);
-  ~ActiveMessageDecoderFilter() override = default;
+  ~ActiveMessageDecoderFilter() override {
+    ENVOY_LOG(trace, "********** ActiveMessageDecoderFilter destructed ***********");
+  };
 
   void continueDecoding() override;
   void sendLocalReply(const DirectResponse& response, bool end_stream) override;
@@ -121,7 +123,9 @@ class ActiveMessageEncoderFilter : public ActiveMessageFilterBase,
 public:
   ActiveMessageEncoderFilter(ActiveMessage& parent, EncoderFilterSharedPtr filter,
                              bool dual_filter);
-  ~ActiveMessageEncoderFilter() override = default;
+  ~ActiveMessageEncoderFilter() override {
+    ENVOY_LOG(trace, "********** ActiveMessageEncoderFilter destructed ***********");
+  };
 
   void continueEncoding() override;
   EncoderFilterSharedPtr handler() { return handle_; }
