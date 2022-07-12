@@ -33,11 +33,6 @@ public:
    */
   virtual DecoderFilterCallbacks& decoderFilterCallbacks() PURE;
 
-  /*
-   * @return EncoderFilterCallbacks
-   */
-  virtual EncoderFilterCallbacks& encoderFilterCallbacks() PURE;
-
 protected:
   struct UpstreamRequestInfo {
     absl::optional<Upstream::TcpPoolData> conn_pool_data;
