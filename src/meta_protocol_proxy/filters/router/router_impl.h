@@ -56,7 +56,6 @@ public:
   // RequestOwner
   Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() override;
   DecoderFilterCallbacks& decoderFilterCallbacks() override;
-  EncoderFilterCallbacks& encoderFilterCallbacks() override;
 
   // This function is for testing only.
   // Envoy::Buffer::Instance& upstreamRequestBufferForTest() { return upstream_request_buffer_; }

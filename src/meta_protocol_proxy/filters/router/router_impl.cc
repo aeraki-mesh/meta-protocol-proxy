@@ -53,8 +53,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   route_entry_ = route_->routeEntry();
   const std::string& cluster_name = route_entry_->clusterName();
 
-  auto prepare_result =
-      prepareUpstreamRequest(cluster_name, metadata, this);
+  auto prepare_result = prepareUpstreamRequest(cluster_name, metadata, this);
   if (prepare_result.exception.has_value()) {
     decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
     return FilterStatus::AbortIteration;
@@ -64,8 +63,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
   route_entry_->requestMutation(requestMutation);
-  upstream_request_ =
-      std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data, requestMetadata_, requestMutation);
+  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data,
+                                                        requestMetadata_, requestMutation);
   auto filter_status = upstream_request_->start();
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
@@ -183,7 +182,6 @@ Tcp::ConnectionPool::UpstreamCallbacks& Router::upstreamCallbacks() { return *th
 
 DecoderFilterCallbacks& Router::decoderFilterCallbacks() { return *decoder_filter_callbacks_; }
 
-EncoderFilterCallbacks& Router::encoderFilterCallbacks() { return *encoder_filter_callbacks_; }
 // ---- RequestOwner ----
 
 // ---- Upstream::LoadBalancerContextBase ----
