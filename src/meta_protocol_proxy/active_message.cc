@@ -169,7 +169,7 @@ void ActiveMessageDecoderFilter::resetDownstreamConnection() {
   activeMessage_.resetDownstreamConnection();
 }
 
-CodecSharedPtr ActiveMessageDecoderFilter::codec() { return activeMessage_.codec(); }
+Codec& ActiveMessageDecoderFilter::codec() { return activeMessage_.codec(); }
 
 void ActiveMessageDecoderFilter::setUpstreamConnection(
     Tcp::ConnectionPool::ConnectionDataPtr conn) {
@@ -475,12 +475,12 @@ void ActiveMessage::startUpstreamResponse(Metadata& requestMetadata) {
 
   ASSERT(response_decoder_ == nullptr);
 
-  auto codec = connection_manager_.config().createCodec();
+  Codec& codec = connection_manager_.config().createCodec();
 
   // Create a response message decoder.
   response_decoder_ = std::make_unique<ActiveResponseDecoder>(
       *this, connection_manager_.stats(), connection_manager_.connection(),
-      connection_manager_.config().applicationProtocol(), *codec, requestMetadata);
+      connection_manager_.config().applicationProtocol(), codec, requestMetadata);
 }
 
 UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
@@ -525,7 +525,7 @@ void ActiveMessage::resetDownstreamConnection() {
   connection_manager_.connection().close(Network::ConnectionCloseType::NoFlush);
 }
 
-CodecSharedPtr ActiveMessage::codec() { return connection_manager_.config().createCodec(); }
+Codec& ActiveMessage::codec() { return connection_manager_.config().createCodec(); }
 
 void ActiveMessage::resetStream() { connection_manager_.deferredDeleteMessage(*this); }
 

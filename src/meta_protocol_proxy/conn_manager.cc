@@ -20,7 +20,7 @@ ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& ra
                                      TimeSource& time_system)
     : config_(config), time_system_(time_system), stats_(config_.stats()),
       random_generator_(random_generator), codec_(config.createCodec()),
-      decoder_(std::make_unique<RequestDecoder>(*codec_, *this)) {}
+      decoder_(std::make_unique<RequestDecoder>(codec_, *this)) {}
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: read {} bytes", data.length());
@@ -88,7 +88,7 @@ void ConnectionManager::onHeartbeat(MetadataSharedPtr metadata) {
   HeartbeatResponse heartbeat;
   Buffer::OwnedImpl response_buffer;
 
-  heartbeat.encode(*metadata, *codec_, response_buffer);
+  heartbeat.encode(*metadata, codec_, response_buffer);
   read_callbacks_->connection().write(response_buffer, false);
 }
 
@@ -150,7 +150,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
 
 Stream& ConnectionManager::newActiveStream(uint64_t stream_id) {
   ENVOY_CONN_LOG(debug, "meta protocol: create an active stream: {}", connection(), stream_id);
-  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection(), *this, *codec_));
+  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection(), *this, codec_));
   active_stream_map_[stream_id] = std::move(new_stream);
   return *active_stream_map_.find(stream_id)->second;
 }

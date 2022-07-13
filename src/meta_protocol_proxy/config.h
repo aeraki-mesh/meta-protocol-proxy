@@ -63,6 +63,7 @@ public:
              Route::RouteConfigProviderManager& route_config_provider_manager);
   ~ConfigImpl() override {
     ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl destructed ***********");
+    codec_map_.clear();
   }
 
   // FilterChainFactory
@@ -79,7 +80,7 @@ public:
   MetaProtocolProxyStats& stats() override { return stats_; }
   FilterChainFactory& filterFactory() override { return *this; }
   Route::Config& routerConfig() override { return *this; }
-  CodecSharedPtr createCodec() override;
+  Codec& createCodec() override;
   std::string applicationProtocol() override { return application_protocol_; };
 
 private:
@@ -94,7 +95,7 @@ private:
   std::list<FilterFactoryCb> filter_factories_;
   Route::RouteConfigProviderSharedPtr route_config_provider_;
   Route::RouteConfigProviderManager& route_config_provider_manager_;
-  std::map<std::string, CodecSharedPtr> codec_map_;
+  std::map<std::string, CodecPtr> codec_map_;
 };
 
 } // namespace MetaProtocolProxy
