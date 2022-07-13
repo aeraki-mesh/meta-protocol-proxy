@@ -62,6 +62,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       stats_(MetaProtocolProxyStats::generateStats(stats_prefix_, context_.scope())),
       application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
       route_config_provider_manager_(route_config_provider_manager) {
+  ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl constructor ***********");
   switch (config.route_specifier_case()) {
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRds:
     route_config_provider_ = route_config_provider_manager_.createRdsRouteConfigProvider(
