@@ -54,8 +54,16 @@ public:
   void onBelowWriteBufferLowWatermark() override {}
 
   // RequestOwner
-  Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() override;
-  DecoderFilterCallbacks& decoderFilterCallbacks() override;
+  Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() override { return *this; };
+  void continueDecoding() override { decoder_filter_callbacks_->continueDecoding(); };
+  void sendLocalReply(const DirectResponse& response, bool end_stream) override {
+    decoder_filter_callbacks_->sendLocalReply(response, end_stream);
+  };
+  Codec& codec() override { return decoder_filter_callbacks_->codec(); };
+  void resetStream() override { decoder_filter_callbacks_->resetStream(); };
+  void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override {
+    decoder_filter_callbacks_->setUpstreamConnection(std::move(conn));
+  };
 
   // This function is for testing only.
   // Envoy::Buffer::Instance& upstreamRequestBufferForTest() { return upstream_request_buffer_; }
