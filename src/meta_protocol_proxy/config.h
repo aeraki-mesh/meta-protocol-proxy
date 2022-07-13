@@ -61,7 +61,9 @@ public:
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
              Route::RouteConfigProviderManager& route_config_provider_manager);
-  ~ConfigImpl() override = default;
+  ~ConfigImpl() override {
+    ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl destructed ***********");
+  }
 
   // FilterChainFactory
   void createFilterChain(FilterChainFactoryCallbacks& callbacks) override;
