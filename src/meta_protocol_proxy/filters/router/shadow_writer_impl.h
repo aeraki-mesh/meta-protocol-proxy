@@ -51,7 +51,6 @@ public:
   // RequestOwner
   Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() override { return *this; }
   DecoderFilterCallbacks& decoderFilterCallbacks() override;
-  EncoderFilterCallbacks& encoderFilterCallbacks() override;
 
   // Tcp::ConnectionPool::UpstreamCallbacks
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override;
