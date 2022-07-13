@@ -103,7 +103,7 @@ public:
   void startUpstreamResponse(Metadata& requestMetadata) override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
-  CodecSharedPtr codec() override;
+  Codec& codec() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
@@ -178,7 +178,7 @@ public:
   void startUpstreamResponse(Metadata& requestMetadata) override;
   UpstreamResponseStatus upstreamData(Buffer::Instance& buffer) override;
   void resetDownstreamConnection() override;
-  CodecSharedPtr codec() override;
+  Codec& codec() override;
   Event::Dispatcher& dispatcher() override;
   void resetStream() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;

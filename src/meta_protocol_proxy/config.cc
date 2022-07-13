@@ -108,7 +108,7 @@ Route::RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata,
   // return route_matcher_->route(metadata, random_value);
 }
 
-CodecSharedPtr ConfigImpl::createCodec() {
+Codec& ConfigImpl::createCodec() {
   auto& factory = Envoy::Config::Utility::getAndCheckFactoryByName<NamedCodecConfigFactory>(
       codecConfig_.name());
   ProtobufTypes::MessagePtr message = factory.createEmptyConfigProto();
@@ -117,12 +117,14 @@ CodecSharedPtr ConfigImpl::createCodec() {
   auto key = message->SerializeAsString();
   auto result = codec_map_.find(key);
   if (result != codec_map_.end()) {
-    return result->second;
+    return *result->second;
   }
   ENVOY_LOG(trace, "meta protocol: create codec {}", codecConfig_.name());
-  CodecSharedPtr codec = factory.createCodec(*message);
-  codec_map_.insert({key, codec});
-  return codec;
+  CodecPtr codec = factory.createCodec(*message);
+  codec_map_.insert({key, std::move(codec)});
+  // We use reference at all other places because the life span of unique_ptr codec in this map is
+  // always longer than everywhere else
+  return *codec;
 }
 
 void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {

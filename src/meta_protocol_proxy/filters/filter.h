@@ -141,7 +141,7 @@ public:
    * Get the codec, which will be used by the router to encode request and response
    * @return CodecPtr
    */
-  virtual CodecSharedPtr codec() PURE;
+  virtual Codec& codec() PURE;
 
   /**
    * Set the selected upstream connection, used by router.

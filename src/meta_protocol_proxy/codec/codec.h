@@ -169,7 +169,6 @@ public:
 };
 
 using CodecPtr = std::unique_ptr<Codec>;
-using CodecSharedPtr = std::shared_ptr<Codec>;
 
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
