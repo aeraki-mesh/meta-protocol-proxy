@@ -28,10 +28,11 @@ public:
    */
   virtual Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() PURE;
 
-  /*
-   * @return DecoderFilterCallbacks
-   */
-  virtual DecoderFilterCallbacks& decoderFilterCallbacks() PURE;
+  virtual void continueDecoding() PURE;
+  virtual void sendLocalReply(const DirectResponse& response, bool end_stream) PURE;
+  virtual Codec& codec() PURE;
+  virtual void resetStream() PURE;
+  virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
 
 protected:
   struct UpstreamRequestInfo {

@@ -122,7 +122,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
 
   try {
     Buffer::OwnedImpl buffer;
-    result = response.encode(metadata, *codec_, buffer);
+    result = response.encode(metadata, codec_, buffer);
 
     read_callbacks_->connection().write(buffer, end_stream);
   } catch (const EnvoyException& ex) {

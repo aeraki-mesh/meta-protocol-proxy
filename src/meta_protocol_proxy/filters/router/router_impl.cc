@@ -177,13 +177,6 @@ void Router::onEvent(Network::ConnectionEvent event) {
 }
 // ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 
-// ---- RequestOwner ----
-Tcp::ConnectionPool::UpstreamCallbacks& Router::upstreamCallbacks() { return *this; }
-
-DecoderFilterCallbacks& Router::decoderFilterCallbacks() { return *decoder_filter_callbacks_; }
-
-// ---- RequestOwner ----
-
 // ---- Upstream::LoadBalancerContextBase ----
 absl::optional<uint64_t> Router::computeHashKey() {
   if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {

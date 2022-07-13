@@ -86,8 +86,8 @@ void UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(conn_data_);
   ASSERT(!conn_pool_handle_);
 
-  ENVOY_STREAM_LOG(trace, "proxying {} bytes", parent_.decoderFilterCallbacks(), data.length());
-  Codec& codec = parent_.decoderFilterCallbacks().codec();
+  ENVOY_LOG(trace, "proxying {} bytes", data.length());
+  Codec& codec = parent_.codec();
   codec.encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }
@@ -114,7 +114,7 @@ void UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, ab
     } else if (reason == ConnectionPool::PoolFailureReason::RemoteConnectionFailure) {
       host->outlierDetector().putResult(Upstream::Outlier::Result::LocalOriginConnectFailed);
     }
-    parent_.decoderFilterCallbacks().continueDecoding();
+    parent_.continueDecoding();
   }
 }
 
@@ -146,8 +146,8 @@ void UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_
     // For streaming requests, we handle the following server response message in the stream
     ENVOY_LOG(debug, "meta protocol upstream request: the request is a stream init message");
     // todo change to a more appreciate method name, maybe clearMessage()
-    parent_.decoderFilterCallbacks().resetStream();
-    parent_.decoderFilterCallbacks().setUpstreamConnection(std::move(conn_data_));
+    parent_.resetStream();
+    parent_.setUpstreamConnection(std::move(conn_data_));
   }
 }
 
@@ -156,7 +156,7 @@ void UpstreamRequest::onRequestStart(bool continue_decoding) {
             upstream_host_->address()->asString());
 
   if (continue_decoding) {
-    parent_.decoderFilterCallbacks().continueDecoding();
+    parent_.continueDecoding();
   }
   onRequestComplete();
 }
@@ -180,7 +180,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
     // an error.
     ENVOY_LOG(debug,
               "meta protocol upstream request: the request is oneway, reset downstream stream");
-    parent_.decoderFilterCallbacks().resetStream();
+    parent_.resetStream();
     return;
   }
 
@@ -188,7 +188,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
   // triggers the release of the current stream at the end of the filter's callback.
   switch (reason) {
   case ConnectionPool::PoolFailureReason::Overflow:
-    parent_.decoderFilterCallbacks().sendLocalReply(
+    parent_.sendLocalReply(
         AppException(Error{ErrorType::Unspecified,
                            fmt::format("meta protocol upstream request: too many connections")}),
         false);
@@ -196,7 +196,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
   case ConnectionPool::PoolFailureReason::LocalConnectionFailure:
     // Should only happen if we closed the connection, due to an error condition, in which case
     // we've already handled any possible downstream response.
-    parent_.decoderFilterCallbacks().sendLocalReply(
+    parent_.sendLocalReply(
         AppException(
             Error{ErrorType::Unspecified,
                   fmt::format("meta protocol upstream request: local connection failure '{}'",
@@ -204,7 +204,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
         false);
     break;
   case ConnectionPool::PoolFailureReason::RemoteConnectionFailure:
-    parent_.decoderFilterCallbacks().sendLocalReply(
+    parent_.sendLocalReply(
         AppException(
             Error{ErrorType::Unspecified,
                   fmt::format("meta protocol upstream request: remote connection failure '{}'",
@@ -212,7 +212,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
         false);
     break;
   case ConnectionPool::PoolFailureReason::Timeout:
-    parent_.decoderFilterCallbacks().sendLocalReply(
+    parent_.sendLocalReply(
         AppException(Error{
             ErrorType::Unspecified,
             fmt::format("meta protocol upstream request: connection failure '{}' due to timeout",
@@ -223,7 +223,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
   if (!response_complete_) {
-    parent_.decoderFilterCallbacks().resetStream();
+    parent_.resetStream();
   }
 }
 

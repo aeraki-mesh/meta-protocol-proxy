@@ -120,11 +120,10 @@ Codec& ConfigImpl::createCodec() {
     return *result->second;
   }
   ENVOY_LOG(trace, "meta protocol: create codec {}", codecConfig_.name());
-  CodecPtr codec = factory.createCodec(*message);
-  codec_map_.insert({key, std::move(codec)});
+  codec_map_.insert({key, factory.createCodec(*message)});
   // We use reference at all other places because the life span of unique_ptr codec in this map is
   // always longer than everywhere else
-  return *codec;
+  return *codec_map_.find(key)->second;
 }
 
 void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {
