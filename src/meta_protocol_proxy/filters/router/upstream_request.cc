@@ -120,7 +120,7 @@ void UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, ab
 
 void UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
                                   Upstream::HostDescriptionConstSharedPtr host) {
-  ENVOY_LOG(debug, "meta protocol upstream request: tcp connection has ready");
+  ENVOY_LOG(debug, "meta protocol upstream request: tcp connection is ready");
 
   // Only invoke continueDecoding if we'd previously stopped the filter chain.
   bool continue_decoding = conn_pool_handle_ != nullptr;

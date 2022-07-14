@@ -102,6 +102,7 @@ public:
   virtual size_t getHeaderSize() const PURE;
   virtual void setBodySize(size_t bodySize) PURE;
   virtual size_t getBodySize() const PURE;
+  virtual std::shared_ptr<Metadata> clone() const PURE;
 };
 using MetadataSharedPtr = std::shared_ptr<Metadata>;
 

@@ -32,7 +32,7 @@ envoy_cc_library(
     deps = [
         "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//envoy/tcp:conn_pool_interface",
-	"@envoy//envoy/upstream:cluster_manager_interface",
+	    "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//envoy/upstream:thread_local_cluster_interface",
     ],
 )
@@ -55,6 +55,28 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "shadow_writer_lib",
+    repository = "@envoy",
+    srcs = ["shadow_writer_impl.cc"],
+    hdrs = ["shadow_writer_impl.h"],
+    deps = [
+        ":router_interface",
+        ":upstream_request_lib",
+        "//src/meta_protocol_proxy:decoder_lib",
+        "//src/meta_protocol_proxy:app_exception_lib",
+        "//src/meta_protocol_proxy/filters:filter_interface",
+        "//src/meta_protocol_proxy/route:route_interface",
+        "@envoy//envoy/tcp:conn_pool_interface",
+        "@envoy//envoy/upstream:cluster_manager_interface",
+        "@envoy//envoy/upstream:load_balancer_interface",
+        "@envoy//envoy/upstream:thread_local_cluster_interface",
+        "@envoy//source/common/common:linked_object",
+        "@envoy//source/common/upstream:load_balancer_lib",
+        "@envoy//source/extensions/filters/network:well_known_names",
+    ],
+)
+
+envoy_cc_library(
     name = "router_lib",
     repository = "@envoy",
     srcs = ["router_impl.cc"],
@@ -62,6 +84,7 @@ envoy_cc_library(
     deps = [
         ":router_interface",
         ":upstream_request_lib",
+        ":shadow_writer_lib",
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "//src/meta_protocol_proxy/route:route_interface",
