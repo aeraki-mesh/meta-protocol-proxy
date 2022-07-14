@@ -52,7 +52,7 @@ public:
   uint32_t getUint32(std::string key) const override { return properties_.getUint32(key); };
 
   void setOriginMessage(Buffer::Instance& originMessage) override {
-    origin_message_ = originMessage;
+    origin_message_.move(originMessage)
   };
   Buffer::Instance& getOriginMessage() override { return origin_message_; };
   void setMessageType(MessageType messageType) override { message_type_ = messageType; };
@@ -74,7 +74,7 @@ public:
     auto copy = std::make_shared<MetadataImpl>();
 
     Buffer::OwnedImpl originalMessage;
-    originalMessage.add(copy->origin_message_);
+    originalMessage.add(copy->getOriginMessage());
     copy->setOriginMessage(originalMessage);
 
     copy->setMessageType(getMessageType());
