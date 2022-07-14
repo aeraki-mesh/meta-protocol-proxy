@@ -70,6 +70,23 @@ public:
   size_t getHeaderSize() const override { return header_size_; };
   void setBodySize(size_t bodySize) override { body_size_ = bodySize; };
   size_t getBodySize() const override { return body_size_; };
+  MetadataSharedPtr clone() const override{
+    auto copy = std::make_shared<MetadataImpl>();
+
+    Buffer::OwnedImpl originalMessage;
+    originalMessage.add(copy->origin_message_);
+    copy->setOriginMessage(originalMessage);
+
+    copy->setMessageType(getMessageType());
+    copy->setResponseStatus(getResponseStatus());
+    copy->setBodySize(getBodySize());
+    copy->setHeaderSize(getHeaderSize());
+    copy->setRequestId(getRequestId());
+    copy->setStreamId(getStreamId());
+
+    //TODO copy headers
+    return copy;
+  };
   const Http::HeaderMap& getHeaders() const { return *headers_; }
 
 private:

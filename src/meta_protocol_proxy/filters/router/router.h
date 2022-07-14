@@ -130,7 +130,8 @@ public:
    * Starts the shadow request by requesting an upstream connection.
    */
   virtual absl::optional<std::reference_wrapper<ShadowRouterHandle>>
-  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata) PURE;
+  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
+         MutationSharedPtr mutation, Codec& codec) PURE;
 };
 
 } // namespace Router

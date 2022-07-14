@@ -62,6 +62,9 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
+  // Save the clone for request mirroring
+  auto metadata_clone = requestMetadata_->clone();
+
   route_entry_->requestMutation(requestMutation);
   upstream_request_ = std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data,
                                                         requestMetadata_, requestMutation);
@@ -69,17 +72,24 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
   // enabled.
-  /*const auto& policies = route_entry_->requestMirrorPolicies();
+  const auto& policies = route_entry_->requestMirrorPolicies();
+  ENVOY_LOG(debug, "meta protocol router: requestMirrorPolicies size:{}", policies.size());
+
   if (!policies.empty()) {
     for (const auto& policy : policies) {
       if (policy->enabled(runtime_)) {
-        auto shadow_router = shadow_writer_.submit(policy->clusterName(), metadata);
+        // Reset original message since
+        auto shadow_router =
+            // We can reuse the same metadata for each request because its original message will be
+            // drained in the request
+            shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), requestMutation,
+                                  decoder_filter_callbacks_->codec());
         if (shadow_router.has_value()) {
           shadow_routers_.push_back(shadow_router.value());
         }
       }
     }
-  }*/
+  }
 
   return filter_status;
 }

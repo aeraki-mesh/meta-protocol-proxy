@@ -11,6 +11,7 @@
 #include "source/common/buffer/buffer_impl.h"
 #include "source/common/upstream/load_balancer_impl.h"
 
+#include "src/meta_protocol_proxy/decoder.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/filters/router/router.h"
 #include "src/meta_protocol_proxy/filters/router/upstream_request.h"
@@ -22,6 +23,40 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
+class NullResponseDecoder : public ResponseDecoderCallbacks,
+                            public MessageHandler,
+                            Logger::Loggable<Logger::Id::filter> {
+public:
+  NullResponseDecoder(Codec& codec) : decoder_(std::make_unique<ResponseDecoder>(codec, *this)) {}
+
+  UpstreamResponseStatus onData(Buffer::Instance& data) {
+    ENVOY_LOG(debug, "meta protocol shadow router: response: the received reply data length is {}",
+              data.length());
+
+    bool underflow = false;
+    decoder_->onData(data, underflow);
+
+    if (underflow) {
+      return UpstreamResponseStatus::MoreData;
+    }
+    return UpstreamResponseStatus::Complete;
+  }
+
+  // StreamHandler
+  void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override {
+    (void)metadata;
+    (void)mutation;
+  };
+
+  // ResponseDecoderCallbacks
+  MessageHandler& newMessageHandler() override { return *this; }
+  void onHeartbeat(MetadataSharedPtr) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
+
+private:
+  ResponseDecoderPtr decoder_;
+};
+using NullResponseDecoderPtr = std::unique_ptr<NullResponseDecoder>;
+
 class ShadowWriterImpl;
 
 class ShadowRouterImpl : public ShadowRouterHandle,
@@ -32,16 +67,11 @@ class ShadowRouterImpl : public ShadowRouterHandle,
                          public LinkedObject<ShadowRouterImpl> {
 public:
   ShadowRouterImpl(ShadowWriterImpl& parent, const std::string& cluster_name,
-                   MetadataSharedPtr& metadata);
+                   MetadataSharedPtr metadata, MutationSharedPtr mutation, Codec& codec);
   ~ShadowRouterImpl() override = default;
 
   bool createUpstreamRequest();
   void maybeCleanup();
-  void resetStream() {
-    if (upstream_request_ != nullptr) {
-      upstream_request_->releaseUpStreamConnection(true);
-    }
-  }
 
   // ShadowRouterHandle
   void onRouterDestroy() override;
@@ -50,11 +80,22 @@ public:
 
   // RequestOwner
   Tcp::ConnectionPool::UpstreamCallbacks& upstreamCallbacks() override { return *this; }
-  DecoderFilterCallbacks& decoderFilterCallbacks() override;
+  void continueDecoding() override{}; // todo
+  void sendLocalReply(const DirectResponse& response, bool end_stream) override {
+    (void)response;
+    (void)end_stream;
+  };
+  Codec& codec() override { return codec_; };
+  void resetStream() override { // TODO
+    if (upstream_request_ != nullptr) {
+      upstream_request_->releaseUpStreamConnection(true);
+    }
+  }
+  void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override { (void)conn; };
 
   // Tcp::ConnectionPool::UpstreamCallbacks
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override;
-  void onEvent(Network::ConnectionEvent event) override;
+  void onEvent(Network::ConnectionEvent event) override { (void)event; }; // todo
   void onAboveWriteBufferHighWatermark() override {}
   void onBelowWriteBufferLowWatermark() override {}
 
@@ -79,6 +120,7 @@ private:
   ShadowWriterImpl& parent_;
   const std::string cluster_name_;
   MetadataSharedPtr metadata_;
+  MutationSharedPtr mutation_;
   bool router_destroyed_{};
   bool request_sent_{};
   Buffer::OwnedImpl upstream_request_buffer_;
@@ -90,6 +132,9 @@ private:
   std::list<ConverterCallback> pending_callbacks_;
   bool removed_{};
   bool deferred_deleting_{};
+
+  Codec& codec_;
+  NullResponseDecoder decoder_;
 };
 
 class ActiveRouters : public ThreadLocal::ThreadLocalObject {
@@ -132,7 +177,8 @@ public:
   Upstream::ClusterManager& clusterManager() override { return cm_; }
   Event::Dispatcher& dispatcher() override { return dispatcher_; }
   absl::optional<std::reference_wrapper<ShadowRouterHandle>>
-  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata) override;
+  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
+         MutationSharedPtr mutation, Codec& codec) override;
 
 private:
   friend class ShadowRouterImpl;
