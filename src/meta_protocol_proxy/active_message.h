@@ -54,7 +54,7 @@ private:
   Network::Connection& downstream_connection_;
   std::string application_protocol_;
   Codec& codec_;
-  Metadata& requestMetadata_;
+  Metadata& request_metadata_;
   ResponseDecoderPtr decoder_;
   MetadataSharedPtr metadata_;
   bool complete_ : 1;

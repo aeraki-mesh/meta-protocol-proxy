@@ -17,7 +17,7 @@ ActiveResponseDecoder::ActiveResponseDecoder(ActiveMessage& parent, MetaProtocol
                                              std::string applicationProtocol, Codec& codec,
                                              Metadata& requestMetadata)
     : parent_(parent), stats_(stats), downstream_connection_(connection),
-      application_protocol_(applicationProtocol), codec_(codec), requestMetadata_(requestMetadata),
+      application_protocol_(applicationProtocol), codec_(codec), request_metadata_(requestMetadata),
       decoder_(std::make_unique<ResponseDecoder>(codec_, *this)), complete_(false),
       response_status_(UpstreamResponseStatus::MoreData) {}
 
@@ -49,7 +49,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
 
   // put real server ip in the response
   metadata_->putString(Metadata::HEADER_REAL_SERVER_ADDRESS,
-                       requestMetadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
+                       request_metadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
   // TODO support response mutation
   codec_.encode(*metadata_, Mutation{}, metadata->getOriginMessage());
   downstream_connection_.write(metadata->getOriginMessage(), false);

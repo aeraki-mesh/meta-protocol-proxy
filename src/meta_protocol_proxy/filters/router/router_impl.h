@@ -77,7 +77,7 @@ private:
   Upstream::ClusterInfoConstSharedPtr cluster_;
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
-  MetadataSharedPtr requestMetadata_;
+  MetadataSharedPtr request_metadata_;
 
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;

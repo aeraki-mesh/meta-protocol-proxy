@@ -32,20 +32,20 @@ void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
   decoder_filter_callbacks_ = &callbacks;
 }
 
-FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
-                                      MutationSharedPtr requestMutation) {
-  auto messageType = metadata->getMessageType();
+FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
+                                      MutationSharedPtr request_mutation) {
+  auto messageType = request_metadata->getMessageType();
   ASSERT(messageType == MessageType::Request || messageType == MessageType::Stream_Init);
 
-  requestMetadata_ = metadata;
+  request_metadata_ = request_metadata;
   route_ = decoder_filter_callbacks_->route();
   if (!route_) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'",
-                     *decoder_filter_callbacks_, metadata->getRequestId());
+                     *decoder_filter_callbacks_, request_metadata_->getRequestId());
     decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::RouteNotFound,
                            fmt::format("meta protocol router: no cluster match for request '{}'",
-                                       metadata->getRequestId())}),
+                                       request_metadata_->getRequestId())}),
         false);
     return FilterStatus::AbortIteration;
   }
@@ -53,7 +53,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   route_entry_ = route_->routeEntry();
   const std::string& cluster_name = route_entry_->clusterName();
 
-  auto prepare_result = prepareUpstreamRequest(cluster_name, metadata, this);
+  auto prepare_result = prepareUpstreamRequest(cluster_name, request_metadata_, this);
   if (prepare_result.exception.has_value()) {
     decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
     return FilterStatus::AbortIteration;
@@ -63,12 +63,13 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
   // Save the clone for request mirroring
-  auto metadata_clone = requestMetadata_->clone();
-  ENVOY_LOG(debug, "meta protocol router: mirror request size:{}", metadata_clone->getOriginMessage().length());
-  
-  route_entry_->requestMutation(requestMutation);
+  auto metadata_clone = request_metadata_->clone();
+  ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",
+            metadata_clone->getOriginMessage().length());
+
+  route_entry_->requestMutation(request_mutation);
   upstream_request_ = std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data,
-                                                        requestMetadata_, requestMutation);
+                                                        request_metadata_, request_mutation);
   auto filter_status = upstream_request_->start();
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
@@ -81,9 +82,10 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
       if (policy->enabled(runtime_)) {
         // We can reuse the same metadata for each request because its original message will be
         // drained in the request
-        ENVOY_LOG(debug, "meta protocol router: mirror request size:{}", metadata_clone->getOriginMessage().length());
+        ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",
+                  metadata_clone->getOriginMessage().length());
         auto shadow_router =
-            shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), requestMutation,
+            shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), request_mutation,
                                   decoder_filter_callbacks_->codec());
         if (shadow_router.has_value()) {
           shadow_routers_.push_back(shadow_router.value());
@@ -140,7 +142,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 
   // Start response when receiving the first packet
   if (!upstream_request_->responseStarted()) {
-    decoder_filter_callbacks_->startUpstreamResponse(*requestMetadata_);
+    decoder_filter_callbacks_->startUpstreamResponse(*request_metadata_);
     upstream_request_->onResponseStarted();
   }
 
@@ -191,7 +193,7 @@ void Router::onEvent(Network::ConnectionEvent event) {
 // ---- Upstream::LoadBalancerContextBase ----
 absl::optional<uint64_t> Router::computeHashKey() {
   if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {
-    auto hash = hash_policy->generateHash(*requestMetadata_);
+    auto hash = hash_policy->generateHash(*request_metadata_);
     if (hash.has_value()) {
       ENVOY_LOG(debug, "meta protocol router: computeHashKey: {}", hash.value());
     }
@@ -218,4 +220,3 @@ void Router::cleanUpstreamRequest() {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
