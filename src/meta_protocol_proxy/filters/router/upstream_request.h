@@ -22,7 +22,7 @@ class UpstreamRequest : public Tcp::ConnectionPool::Callbacks,
 public:
   UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool, MetadataSharedPtr& metadata,
                   MutationSharedPtr& mutation);
-  ~UpstreamRequest() override;
+  ~UpstreamRequest() { ENVOY_LOG(trace, "********** UpstreamRequest destructed ***********"); };
 
   // Tcp::ConnectionPool::Callbacks
   void onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
