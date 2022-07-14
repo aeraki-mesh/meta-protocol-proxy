@@ -68,7 +68,9 @@ class ShadowRouterImpl : public ShadowRouterHandle,
 public:
   ShadowRouterImpl(ShadowWriterImpl& parent, const std::string& cluster_name,
                    MetadataSharedPtr metadata, MutationSharedPtr mutation, Codec& codec);
-  ~ShadowRouterImpl() override = default;
+  ~ShadowRouterImpl() override {
+    ENVOY_LOG(trace, "********** ShadowRouter destructed ***********");
+  };
 
   bool createUpstreamRequest();
   void maybeCleanup();
