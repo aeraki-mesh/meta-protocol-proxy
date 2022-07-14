@@ -34,10 +34,12 @@ static_resources:
                     exact_match: bar
               route:
                 cluster: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+                request_mirror_policies:
+                - cluster: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice.mirror
           statPrefix: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
 
   clusters:
-    name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+  - name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
     type: STATIC
     connect_timeout: 5s
     load_assignment:
@@ -49,3 +51,15 @@ static_resources:
               socket_address:
                 address: 127.0.0.1
                 port_value: 20881
+  - name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice.mirror
+    type: STATIC
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice.mirror
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 20882

@@ -64,7 +64,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
 
   // Save the clone for request mirroring
   auto metadata_clone = requestMetadata_->clone();
-
+  ENVOY_LOG(debug, "meta protocol router: mirror request size:{}", metadata_clone->getOriginMessage().length());
+  
   route_entry_->requestMutation(requestMutation);
   upstream_request_ = std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data,
                                                         requestMetadata_, requestMutation);
@@ -78,10 +79,10 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr metadata,
   if (!policies.empty()) {
     for (const auto& policy : policies) {
       if (policy->enabled(runtime_)) {
-        // Reset original message since
+        // We can reuse the same metadata for each request because its original message will be
+        // drained in the request
+        ENVOY_LOG(debug, "meta protocol router: mirror request size:{}", metadata_clone->getOriginMessage().length());
         auto shadow_router =
-            // We can reuse the same metadata for each request because its original message will be
-            // drained in the request
             shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), requestMutation,
                                   decoder_filter_callbacks_->codec());
         if (shadow_router.has_value()) {
@@ -217,3 +218,4 @@ void Router::cleanUpstreamRequest() {
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
