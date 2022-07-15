@@ -29,23 +29,27 @@ class NullResponseDecoder : public ResponseDecoderCallbacks,
 public:
   NullResponseDecoder(Codec& codec) : decoder_(std::make_unique<ResponseDecoder>(codec, *this)) {}
 
-  UpstreamResponseStatus onData(Buffer::Instance& data) {
+  UpstreamResponseStatus decode(Buffer::Instance& data) {
     ENVOY_LOG(debug, "meta protocol shadow router: response: the received reply data length is {}",
               data.length());
 
     bool underflow = false;
-    decoder_->onData(data, underflow);
-
-    if (underflow) {
-      return UpstreamResponseStatus::MoreData;
+    try {
+      decoder_->onData(data, underflow); // todo why underflow is true after completed
+    } catch (const EnvoyException& ex) {
+      ENVOY_LOG(error, "meta protocol error: {}", ex.what());
+      return UpstreamResponseStatus::Reset;
     }
-    return UpstreamResponseStatus::Complete;
+
+    ASSERT(complete_ || underflow);
+    return complete_ ? UpstreamResponseStatus::Complete : UpstreamResponseStatus::MoreData;
   }
 
   // StreamHandler
   void onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override {
     (void)metadata;
     (void)mutation;
+    complete_ = true;
   };
 
   // ResponseDecoderCallbacks
@@ -54,6 +58,7 @@ public:
 
 private:
   ResponseDecoderPtr decoder_;
+  bool complete_ : 1;
 };
 using NullResponseDecoderPtr = std::unique_ptr<NullResponseDecoder>;
 
@@ -74,6 +79,7 @@ public:
 
   bool createUpstreamRequest();
   void maybeCleanup();
+  void cleanup();
 
   // ShadowRouterHandle
   void onRouterDestroy() override;
@@ -97,7 +103,7 @@ public:
 
   // Tcp::ConnectionPool::UpstreamCallbacks
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override;
-  void onEvent(Network::ConnectionEvent event) override { (void)event; }; // todo
+  void onEvent(Network::ConnectionEvent event) override;
   void onAboveWriteBufferHighWatermark() override {}
   void onBelowWriteBufferLowWatermark() override {}
 
@@ -124,7 +130,6 @@ private:
   MetadataSharedPtr metadata_;
   MutationSharedPtr mutation_;
   bool router_destroyed_{};
-  bool request_sent_{};
   Buffer::OwnedImpl upstream_request_buffer_;
   std::unique_ptr<UpstreamRequest> upstream_request_;
   uint64_t request_size_{};
@@ -139,10 +144,13 @@ private:
   NullResponseDecoder decoder_;
 };
 
-class ActiveRouters : public ThreadLocal::ThreadLocalObject {
+// TODO
+class ActiveRouters : public ThreadLocal::ThreadLocalObject,
+                      public Logger::Loggable<Logger::Id::filter> {
 public:
   ActiveRouters(Event::Dispatcher& dispatcher) : dispatcher_(dispatcher) {}
   ~ActiveRouters() override {
+    ENVOY_LOG(trace, "********** ActiveRouters destructed ***********");
     while (!active_routers_.empty()) {
       auto& router = active_routers_.front();
       router->resetStream();
@@ -166,6 +174,7 @@ public:
   ShadowWriterImpl(Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
                    ThreadLocal::SlotAllocator& tls)
       : cm_(cm), dispatcher_(dispatcher), tls_(tls.allocateSlot()) {
+    // each thread will hold an ActiveRouters, which is a list of shadow routers for that thread
     tls_->set([](Event::Dispatcher& dispatcher) -> ThreadLocal::ThreadLocalObjectSharedPtr {
       return std::make_shared<ActiveRouters>(dispatcher);
     });
