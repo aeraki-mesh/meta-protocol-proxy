@@ -29,6 +29,8 @@ UpstreamResponseStatus ActiveResponseDecoder::onData(Buffer::Instance& data) {
   decoder_->onData(data, underflow);
   ASSERT(complete_ || underflow);
 
+  ENVOY_LOG(debug, "************ meta protocol {} response underflow: {}", application_protocol_,
+            underflow);
   return response_status_; // TODO 该处返回的状态有问题
 }
 

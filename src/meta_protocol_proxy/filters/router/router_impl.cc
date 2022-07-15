@@ -20,11 +20,6 @@ void Router::onDestroy() {
     upstream_request_->releaseUpStreamConnection(true);
   }
   cleanUpstreamRequest();
-
-  for (auto& shadow_router : shadow_routers_) {
-    shadow_router.get().onRouterDestroy();
-  }
-
   shadow_routers_.clear();
 }
 
@@ -173,9 +168,10 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       cleanUpstreamRequest();
       return;
       // todo we also need to clean the stream
-    default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
     }
+    return;
+  default:
+    NOT_REACHED_GCOVR_EXCL_LINE;
   }
 }
 

@@ -49,13 +49,31 @@ bool ShadowRouterImpl::createUpstreamRequest() {
   upstream_request_->start();
   return true;
 }
-void ShadowRouterImpl::ShadowRouterImpl::maybeCleanup() {
-  // TODO
+
+void ShadowRouterImpl::cleanup() {
+  if (removed_) {
+    return;
+  }
+  removed_ = true;
+
+  ASSERT(!deferred_deleting_);
+  upstream_request_->releaseUpStreamConnection(false);
+  parent_.remove(*this);
 }
+
+bool ShadowRouterImpl::requestInProgress() { return !upstream_request_->requestCompleted(); }
 
 // ---- ShadowRouterHandle ----
 void ShadowRouterImpl::onRouterDestroy() {
-  // TODO do we need this method?
+  // ASSERT(!deferred_deleting_);
+
+  // Mark the shadow request to be destroyed when the response gets back
+  // or the upstream connection finally fails.
+  // router_destroyed_ = true;
+
+  // if (!requestInProgress()) {
+  //   cleanup();
+  // }
 }
 bool ShadowRouterImpl::waitingForConnection() const {
   // return upstream_request_->conn_pool_handle_ != nullptr;
@@ -72,24 +90,30 @@ void ShadowRouterImpl::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     upstream_request_->onResponseStarted();
   }
 
-  UpstreamResponseStatus status = decoder_.onData(data);
+  UpstreamResponseStatus status = decoder_.decode(data);
+  ENVOY_LOG(debug, "******** meta protocol shadow router: response status {}", status);
   switch (status) {
   case UpstreamResponseStatus::Complete:
     ENVOY_LOG(debug, "meta protocol shadow router: response complete");
     upstream_request_->onResponseComplete();
-    return;
-  case UpstreamResponseStatus::Reset:
-    ENVOY_LOG(debug, "meta protocol shadow router: upstream reset");
+    cleanup();
     return;
   case UpstreamResponseStatus::MoreData:
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
     if (end_stream) {
       ENVOY_LOG(debug, "meta protocol router: response is incomplete, but no more data is coming");
+      cleanup();
       return;
-    default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
     }
+    return;
+  default:
+    NOT_REACHED_GCOVR_EXCL_LINE;
   }
+}
+
+void ShadowRouterImpl::onEvent(Network::ConnectionEvent event) {
+  upstream_request_->onUpstreamConnectionEvent(event);
+  cleanup();
 }
 
 // ---- ShadowRouterHandle ----

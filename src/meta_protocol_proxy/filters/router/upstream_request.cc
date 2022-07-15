@@ -21,8 +21,6 @@ UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& po
                                 metadata->getOriginMessage().length());
 }
 
-UpstreamRequest::~UpstreamRequest() = default;
-
 FilterStatus UpstreamRequest::start() {
   Tcp::ConnectionPool::Cancellable* handle = conn_pool_.newConnection(*this);
   if (handle) {
@@ -52,6 +50,7 @@ void UpstreamRequest::onUpstreamConnectionEvent(Network::ConnectionEvent event) 
     // Connected event is consumed by the connection pool.
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
+
 }
 
 void UpstreamRequest::releaseUpStreamConnection(bool close) {
@@ -149,6 +148,7 @@ void UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_
     parent_.resetStream();
     parent_.setUpstreamConnection(std::move(conn_data_));
   }
+  request_complete_ = true;
 }
 
 void UpstreamRequest::onRequestStart(bool continue_decoding) {
@@ -158,10 +158,7 @@ void UpstreamRequest::onRequestStart(bool continue_decoding) {
   if (continue_decoding) {
     parent_.continueDecoding();
   }
-  onRequestComplete();
 }
-
-void UpstreamRequest::onRequestComplete() { request_complete_ = true; }
 
 void UpstreamRequest::onResponseComplete() {
   response_complete_ = true;
