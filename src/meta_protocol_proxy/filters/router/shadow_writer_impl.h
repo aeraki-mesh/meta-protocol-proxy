@@ -82,8 +82,6 @@ public:
   void cleanup();
 
   // ShadowRouterHandle
-  void onRouterDestroy() override;
-  bool waitingForConnection() const override;
   RequestOwner& requestOwner() override { return *this; }
 
   // RequestOwner
@@ -111,11 +109,7 @@ public:
   const Network::Connection* downstreamConnection() const override { return nullptr; }
   const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() override { return nullptr; }
 
-  // Event::DeferredDeletable
-  void deleteIsPending() override { deferred_deleting_ = true; }
-
 private:
-  friend class ShadowWriterTest;
   using ConverterCallback = std::function<FilterStatus()>;
 
   void writeRequest();
@@ -138,13 +132,11 @@ private:
 
   std::list<ConverterCallback> pending_callbacks_;
   bool removed_{};
-  bool deferred_deleting_{};
 
   Codec& codec_;
   NullResponseDecoder decoder_;
 };
 
-// TODO
 class ActiveRouters : public ThreadLocal::ThreadLocalObject,
                       public Logger::Loggable<Logger::Id::filter> {
 public:
@@ -196,9 +188,8 @@ public:
   // Router::ShadowWriter
   Upstream::ClusterManager& clusterManager() override { return cm_; }
   Event::Dispatcher& dispatcher() override { return dispatcher_; }
-  absl::optional<std::reference_wrapper<ShadowRouterHandle>>
-  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
-         MutationSharedPtr mutation, Codec& codec) override;
+  void submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
+              MutationSharedPtr mutation, Codec& codec) override;
 
 private:
   friend class ShadowRouterImpl;

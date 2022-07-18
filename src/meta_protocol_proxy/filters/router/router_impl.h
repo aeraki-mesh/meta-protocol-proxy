@@ -82,7 +82,6 @@ private:
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;
   ShadowWriter& shadow_writer_;
-  std::vector<std::reference_wrapper<ShadowRouterHandle>> shadow_routers_{};
 };
 
 } // namespace Router

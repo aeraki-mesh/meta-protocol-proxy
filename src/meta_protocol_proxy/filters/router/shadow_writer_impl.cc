@@ -12,21 +12,20 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-absl::optional<std::reference_wrapper<ShadowRouterHandle>>
-ShadowWriterImpl::submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
-                         MutationSharedPtr request_mutation, Codec& codec) {
+void ShadowWriterImpl::submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
+                              MutationSharedPtr request_mutation, Codec& codec) {
   auto shadow_router = std::make_unique<ShadowRouterImpl>(*this, cluster_name, request_metadata,
                                                           request_mutation, codec);
   ENVOY_LOG(debug, "meta protocol shadow router: send request to mirror host: {}", cluster_name);
   const bool created = shadow_router->createUpstreamRequest();
   if (!created) {
-    return absl::nullopt;
+    return;
   }
 
   auto& active_routers = tls_->getTyped<ActiveRouters>().activeRouters();
 
   LinkedList::moveIntoList(std::move(shadow_router), active_routers);
-  return *active_routers.front();
+  return;
 }
 
 ShadowRouterImpl::ShadowRouterImpl(ShadowWriterImpl& parent, const std::string& cluster_name,
@@ -56,30 +55,13 @@ void ShadowRouterImpl::cleanup() {
   }
   removed_ = true;
 
-  ASSERT(!deferred_deleting_);
   upstream_request_->releaseUpStreamConnection(false);
   parent_.remove(*this);
 }
 
 bool ShadowRouterImpl::requestInProgress() { return !upstream_request_->requestCompleted(); }
 
-// ---- ShadowRouterHandle ----
-void ShadowRouterImpl::onRouterDestroy() {
-  // ASSERT(!deferred_deleting_);
-
-  // Mark the shadow request to be destroyed when the response gets back
-  // or the upstream connection finally fails.
-  // router_destroyed_ = true;
-
-  // if (!requestInProgress()) {
-  //   cleanup();
-  // }
-}
-bool ShadowRouterImpl::waitingForConnection() const {
-  // return upstream_request_->conn_pool_handle_ != nullptr;
-  return true; // TODO clear this method, not used
-}
-
+// ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 void ShadowRouterImpl::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   // We shouldn't get more data after a response is completed, otherwise it's a codec issue
   ASSERT(!upstream_request_->responseCompleted());
@@ -116,7 +98,7 @@ void ShadowRouterImpl::onEvent(Network::ConnectionEvent event) {
   cleanup();
 }
 
-// ---- ShadowRouterHandle ----
+// ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 
 } // namespace Router
 } // namespace  MetaProtocolProxy

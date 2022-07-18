@@ -20,7 +20,6 @@ void Router::onDestroy() {
     upstream_request_->releaseUpStreamConnection(true);
   }
   cleanUpstreamRequest();
-  shadow_routers_.clear();
 }
 
 void Router::setDecoderFilterCallbacks(DecoderFilterCallbacks& callbacks) {
@@ -79,12 +78,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
         // drained in the request
         ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",
                   metadata_clone->getOriginMessage().length());
-        auto shadow_router =
-            shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), request_mutation,
-                                  decoder_filter_callbacks_->codec());
-        if (shadow_router.has_value()) {
-          shadow_routers_.push_back(shadow_router.value());
-        }
+        shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), request_mutation,
+                              decoder_filter_callbacks_->codec());
       }
     }
   }
