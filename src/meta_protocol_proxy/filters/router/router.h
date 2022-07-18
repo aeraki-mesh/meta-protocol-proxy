@@ -61,6 +61,7 @@ protected:
               metadata->getRequestId());
 
     if (cluster_->maintenanceMode()) {
+      ENVOY_LOG(warn, "meta protocol router: maintenance mode for cluster '{}'", cluster_name);
       return {
           AppException(Error{ErrorType::Unspecified,
                              fmt::format("meta protocol router: maintenance mode for cluster '{}'",
@@ -70,6 +71,7 @@ protected:
 
     auto conn_pool_data = cluster->tcpConnPool(Upstream::ResourcePriority::Default, lb_context);
     if (!conn_pool_data) {
+      ENVOY_LOG(warn, "meta protocol router: no healthy upstream for '{}'", cluster_name);
       return {AppException(Error{
                   ErrorType::NoHealthyUpstream,
                   fmt::format("meta protocol router: no healthy upstream for '{}'", cluster_name)}),
@@ -92,16 +94,6 @@ private:
 class ShadowRouterHandle {
 public:
   virtual ~ShadowRouterHandle() = default;
-
-  /**
-   * Called after the Router is destroyed.
-   */
-  virtual void onRouterDestroy() PURE;
-
-  /**
-   * Checks if the request is currently waiting for an upstream connection to become available.
-   */
-  virtual bool waitingForConnection() const PURE;
 
   /**
    * @return RequestOwner& the interface associated with this ShadowRouter.
@@ -129,9 +121,8 @@ public:
   /**
    * Starts the shadow request by requesting an upstream connection.
    */
-  virtual absl::optional<std::reference_wrapper<ShadowRouterHandle>>
-  submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
-         MutationSharedPtr mutation, Codec& codec) PURE;
+  virtual void submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
+                      MutationSharedPtr mutation, Codec& codec) PURE;
 };
 
 } // namespace Router
