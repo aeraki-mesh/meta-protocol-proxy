@@ -78,7 +78,7 @@ public:
   };
 
   bool createUpstreamRequest();
-  void maybeCleanup();
+  // void maybeCleanup();
   void cleanup();
 
   // ShadowRouterHandle
@@ -149,6 +149,7 @@ class ActiveRouters : public ThreadLocal::ThreadLocalObject,
                       public Logger::Loggable<Logger::Id::filter> {
 public:
   ActiveRouters(Event::Dispatcher& dispatcher) : dispatcher_(dispatcher) {}
+  // clean shadow router when dispatcher worker threads are destroyed
   ~ActiveRouters() override {
     ENVOY_LOG(trace, "********** ActiveRouters destructed ***********");
     while (!active_routers_.empty()) {
@@ -161,6 +162,7 @@ public:
   std::list<std::unique_ptr<ShadowRouterImpl>>& activeRouters() { return active_routers_; }
 
   void remove(ShadowRouterImpl& router) {
+    ENVOY_LOG(trace, "********** remove shadow router from active routers ***********");
     dispatcher_.deferredDelete(router.removeFromList(active_routers_));
   }
 
@@ -174,7 +176,14 @@ public:
   ShadowWriterImpl(Upstream::ClusterManager& cm, Event::Dispatcher& dispatcher,
                    ThreadLocal::SlotAllocator& tls)
       : cm_(cm), dispatcher_(dispatcher), tls_(tls.allocateSlot()) {
-    // each thread will hold an ActiveRouters, which is a list of shadow routers for that thread
+    // Since ShadowWriter is shared across all the dispatcher worker threads, it isn't thread-safe
+    // to just store shadow routers directly inside ShadowWriter.
+    // We use a thread-local store for shadow writers. Each dispatcher worker thread holds an
+    // ActiveRouters, which is a list of shadow routers for that thread.
+    //
+    //                                                  ---> Shadow routers list for worker thread 1
+    // Router Config(Global) ---> ShadowWriter(Global)  ---> Shadow routers list for worker thread 2
+    //                                                  ---> Shadow routers list for worker thread 3
     tls_->set([](Event::Dispatcher& dispatcher) -> ThreadLocal::ThreadLocalObjectSharedPtr {
       return std::make_shared<ActiveRouters>(dispatcher);
     });
