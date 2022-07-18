@@ -181,7 +181,9 @@ public:
     });
   }
 
-  ~ShadowWriterImpl() override = default;
+  ~ShadowWriterImpl() override {
+    ENVOY_LOG(trace, "********** remove shadow writer from Router Config ***********");
+  }
 
   void remove(ShadowRouterImpl& router) { tls_->getTyped<ActiveRouters>().remove(router); }
 
