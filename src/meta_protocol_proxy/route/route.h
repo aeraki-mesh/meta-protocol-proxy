@@ -29,7 +29,7 @@ public:
   /**
    * @return bool whether this policy is currently enabled.
    */
-  virtual bool enabled(Runtime::Loader& runtime) const PURE;
+  virtual bool shouldShadow(Runtime::Loader& runtime, uint64_t stable_random) const PURE;
 };
 
 /**

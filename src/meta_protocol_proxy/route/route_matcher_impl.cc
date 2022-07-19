@@ -12,6 +12,24 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Route {
 
+RequestMirrorPolicyImpl::RequestMirrorPolicyImpl(const RequestMirrorPolicy& config) {
+  cluster_name_ = config.cluster();
+  if (config.has_runtime_fraction()) {
+    runtime_key_ = config.runtime_fraction().runtime_key();
+    default_value_.set_numerator(config.runtime_fraction().default_value().numerator());
+    default_value_.set_denominator(config.runtime_fraction().default_value().denominator());
+  } else {
+    // If there is no runtime fraction specified, the default is 100% sampled. By leaving
+    // runtime_key_ empty and forcing the default to 100% this will yield the expected behavior.
+    default_value_.set_numerator(100);
+    default_value_.set_denominator(envoy::type::v3::FractionalPercent::HUNDRED);
+  }
+}
+
+bool RequestMirrorPolicyImpl::shouldShadow(Runtime::Loader& runtime, uint64_t stable_random) const {
+  return runtime.snapshot().featureEnabled(runtime_key_, default_value_, stable_random);
+}
+
 RouteEntryImplBase::RouteEntryImplBase(
     const aeraki::meta_protocol_proxy::config::route::v1alpha::Route& route)
     : cluster_name_(route.route().cluster()),
@@ -51,9 +69,7 @@ std::vector<std::shared_ptr<RequestMirrorPolicy>> RouteEntryImplBase::buildMirro
   const auto& proto_policies = route.request_mirror_policies();
   policies.reserve(proto_policies.size());
   for (const auto& policy : proto_policies) {
-    policies.push_back(std::make_shared<RequestMirrorPolicyImpl>(
-        policy.cluster(), policy.runtime_fraction().runtime_key(),
-        policy.runtime_fraction().default_value()));
+    policies.push_back(std::make_shared<RequestMirrorPolicyImpl>(policy));
   }
 
   return policies;

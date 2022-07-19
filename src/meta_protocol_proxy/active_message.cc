@@ -208,7 +208,8 @@ ActiveMessage::ActiveMessage(ConnectionManager& connection_manager)
     : connection_manager_(connection_manager),
       request_timer_(std::make_unique<Stats::HistogramCompletableTimespanImpl>(
           connection_manager.stats().request_time_ms_, connection_manager.timeSystem())),
-      stream_id_(connection_manager.randomGenerator().random()),
+      stream_id_(
+          connection_manager.randomGenerator().random()), // todo: we don't need stream id here?
       stream_info_(connection_manager.timeSystem(),
                    connection_manager.connection().connectionInfoProviderSharedPtr()),
       pending_stream_decoded_(false), local_response_sent_(false) {

@@ -36,6 +36,9 @@ static_resources:
                 cluster: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
                 request_mirror_policies:
                 - cluster: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice.mirror
+                  runtime_fraction:
+                    default_value:
+                      numerator: 50
           statPrefix: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
 
   clusters:

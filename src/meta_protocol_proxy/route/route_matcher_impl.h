@@ -28,21 +28,18 @@ namespace Route {
 
 class RequestMirrorPolicyImpl : public RequestMirrorPolicy {
 public:
-  RequestMirrorPolicyImpl(const std::string& cluster_name, const std::string& runtime_key,
-                          const envoy::type::v3::FractionalPercent& default_value)
-      : cluster_name_(cluster_name), runtime_key_(runtime_key), default_value_(default_value) {}
-
+  using RequestMirrorPolicy =
+      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction_RequestMirrorPolicy;
+  RequestMirrorPolicyImpl(const RequestMirrorPolicy& config);
   // Router::RequestMirrorPolicy
   const std::string& clusterName() const override { return cluster_name_; }
-  bool enabled(Runtime::Loader& runtime) const override {
-    return runtime_key_.empty() ? true
-                                : runtime.snapshot().featureEnabled(runtime_key_, default_value_);
-  }
+
+  bool shouldShadow(Runtime::Loader& runtime, uint64_t stable_random) const override;
 
 private:
-  const std::string cluster_name_;
-  const std::string runtime_key_;
-  const envoy::type::v3::FractionalPercent default_value_;
+  std::string cluster_name_;
+  std::string runtime_key_;
+  envoy::type::v3::FractionalPercent default_value_;
 };
 
 class RouteEntryImplBase : public RouteEntry,
