@@ -72,7 +72,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   if (!policies.empty()) {
     for (const auto& policy : policies) {
-      if (policy->enabled(runtime_)) {
+      if (policy->shouldShadow(runtime_, rand())) { // todo replace with rand generator of conn mgr
         // We can reuse the same metadata for each request because its original message will be
         // drained in the request
         ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",

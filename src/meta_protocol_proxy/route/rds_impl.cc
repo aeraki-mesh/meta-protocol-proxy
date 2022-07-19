@@ -174,6 +174,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
       auto* fraction = new envoy::config::core::v3::RuntimeFractionalPercent();
       auto* defaultValue = new envoy::type::v3::FractionalPercent();
       defaultValue->set_numerator(it->runtime_fraction().default_value().numerator());
+      defaultValue->set_denominator(it->runtime_fraction().default_value().denominator());
       fraction->set_allocated_default_value(defaultValue);
       mirrorPolicy->set_allocated_runtime_fraction(fraction);
     }
