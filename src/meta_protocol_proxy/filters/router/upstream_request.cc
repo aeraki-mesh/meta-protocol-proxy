@@ -1,6 +1,5 @@
 #include "src/meta_protocol_proxy/filters/router/upstream_request.h"
 
-#include "envoy/upstream/cluster_manager.h"
 #include "envoy/upstream/thread_local_cluster.h"
 
 #include "src/meta_protocol_proxy/app_exception.h"
@@ -50,7 +49,6 @@ void UpstreamRequest::onUpstreamConnectionEvent(Network::ConnectionEvent event) 
     // Connected event is consumed by the connection pool.
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
-
 }
 
 void UpstreamRequest::releaseUpStreamConnection(bool close) {
