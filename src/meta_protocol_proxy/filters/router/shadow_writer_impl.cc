@@ -41,10 +41,10 @@ bool ShadowRouterImpl::createUpstreamRequest() {
     return false;
   }
 
-  auto& upstream_req_info = prepare_result.upstream_request_info.value();
+  auto& conn_pool_data = prepare_result.conn_pool_data.value();
 
-  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data,
-                                                        metadata_, mutation_);
+  upstream_request_ =
+      std::make_unique<UpstreamRequest>(*this, conn_pool_data, metadata_, mutation_);
   upstream_request_->start();
   return true;
 }

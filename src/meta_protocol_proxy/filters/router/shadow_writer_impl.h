@@ -35,12 +35,19 @@ public:
 
     bool underflow = false;
     try {
-      decoder_->onData(data, underflow); // todo why underflow is true after completed
+      decoder_->onData(data, underflow);
     } catch (const EnvoyException& ex) {
       ENVOY_LOG(error, "meta protocol error: {}", ex.what());
       return UpstreamResponseStatus::Reset;
     }
 
+    // decoder return underflow in th following two cases:
+    // 1. decoder needs more data to complete the decoding of the current response, in this case,
+    // the buffer contains part of the incomplete response.
+    // 2. the response in the buffer have been processed and the buffer is already empty.
+    //
+    // Since underflow is also true when a response is completed, we need to use complete_ instead
+    // of underflow to check whether the current response is completed or not.
     ASSERT(complete_ || underflow);
     return complete_ ? UpstreamResponseStatus::Complete : UpstreamResponseStatus::MoreData;
   }

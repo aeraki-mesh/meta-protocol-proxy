@@ -52,7 +52,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
     return FilterStatus::AbortIteration;
   }
-  auto& upstream_req_info = prepare_result.upstream_request_info.value();
+  auto& conn_pool_data = prepare_result.conn_pool_data.value();
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
@@ -62,8 +62,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
             metadata_clone->getOriginMessage().length());
 
   route_entry_->requestMutation(request_mutation);
-  upstream_request_ = std::make_unique<UpstreamRequest>(*this, *upstream_req_info.conn_pool_data,
-                                                        request_metadata_, request_mutation);
+  upstream_request_ =
+      std::make_unique<UpstreamRequest>(*this, conn_pool_data, request_metadata_, request_mutation);
   auto filter_status = upstream_request_->start();
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently

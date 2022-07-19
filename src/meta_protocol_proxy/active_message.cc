@@ -27,11 +27,16 @@ UpstreamResponseStatus ActiveResponseDecoder::onData(Buffer::Instance& data) {
 
   bool underflow = false;
   decoder_->onData(data, underflow);
+  // decoder return underflow in th following two cases:
+  // 1. decoder needs more data to complete the decoding of the current response, in this case,
+  // the buffer contains part of the incomplete response.
+  // 2. the response in the buffer have been processed and the buffer is already empty.
+  //
+  // Since underflow is also true when a response is completed, we need to use response_status_
+  // instead of underflow to check whether the current response is completed or not.
   ASSERT(complete_ || underflow);
 
-  ENVOY_LOG(debug, "************ meta protocol {} response underflow: {}", application_protocol_,
-            underflow);
-  return response_status_; // TODO 该处返回的状态有问题
+  return response_status_;
 }
 
 void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
