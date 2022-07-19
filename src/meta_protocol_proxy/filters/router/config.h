@@ -1,7 +1,5 @@
 #pragma once
 
-#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.h"
-#include "api/meta_protocol_proxy/config/route/v1alpha/route.pb.validate.h"
 #include "api/meta_protocol_proxy/filters/router/v1alpha/router.pb.h"
 #include "api/meta_protocol_proxy/filters/router/v1alpha/router.pb.validate.h"
 

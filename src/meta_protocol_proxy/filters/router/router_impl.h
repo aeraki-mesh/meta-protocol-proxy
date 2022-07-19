@@ -4,9 +4,7 @@
 
 #include "envoy/buffer/buffer.h"
 #include "envoy/tcp/conn_pool.h"
-#include "envoy/upstream/thread_local_cluster.h"
 
-#include "source/common/buffer/buffer_impl.h"
 #include "source/common/upstream/load_balancer_impl.h"
 
 #include "src/meta_protocol_proxy/filters/filter.h"

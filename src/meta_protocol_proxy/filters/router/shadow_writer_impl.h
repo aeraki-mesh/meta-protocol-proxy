@@ -15,7 +15,6 @@
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/filters/router/router.h"
 #include "src/meta_protocol_proxy/filters/router/upstream_request.h"
-#include "src/meta_protocol_proxy/route/route.h"
 
 namespace Envoy {
 namespace Extensions {
