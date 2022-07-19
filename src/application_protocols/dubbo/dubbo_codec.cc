@@ -59,16 +59,20 @@ void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
     ENVOY_LOG(debug, "dubbo: codec mutation {} : {}", keyValue.first, keyValue.second);
   }
   ENVOY_LOG(debug, "dubbo: codec server real address: {} ",
-		              metadata.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
+            metadata.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
 
-  //ASSERT(buffer.length() == 0);
+  // ASSERT(buffer.length() == 0);
   switch (metadata.getMessageType()) {
   case MetaProtocolProxy::MessageType::Heartbeat: {
     encodeHeartbeat(metadata, buffer);
     break;
   }
   case MetaProtocolProxy::MessageType::Request: {
-    // TODO
+    MessageMetadata msgMetadata;
+    toMsgMetadata(metadata, msgMetadata);
+    if (!protocol_->encode(buffer, msgMetadata, "")) {
+      throw EnvoyException("failed to encode heartbeat message");
+    }
     break;
   }
   case MetaProtocolProxy::MessageType::Response: {

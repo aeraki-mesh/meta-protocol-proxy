@@ -183,6 +183,7 @@ bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& 
   case MessageType::HeartbeatResponse: {
     ASSERT(metadata.hasResponseStatus());
     ASSERT(content.empty());
+    buffer.drain(buffer.length());
     buffer.writeBEInt<uint16_t>(MagicNumber);
     uint8_t flag = static_cast<uint8_t>(metadata.serializationType());
     flag = flag ^ EventMask;
@@ -199,6 +200,7 @@ bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& 
   case MessageType::Response: {
     ASSERT(metadata.hasResponseStatus());
     ASSERT(!content.empty());
+    buffer.drain(buffer.length());
     Buffer::OwnedImpl body_buffer;
     size_t serialized_body_size = serializer_->serializeRpcResult(body_buffer, content, type);
 
@@ -211,7 +213,16 @@ bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& 
     buffer.move(body_buffer, serialized_body_size);
     return true;
   }
-  case MessageType::Request:
+  case MessageType::Request: {
+    Buffer::OwnedImpl tmp_buffer;
+    tmp_buffer.move(buffer, buffer.length());
+    buffer.move(tmp_buffer, DubboProtocolImpl::MessageSize); // fixed header
+    size_t serialized_body_size = serializer_->serializeRpcInvocation(tmp_buffer);
+    (void)serialized_body_size;
+    // todo: set body size in header
+    buffer.move(tmp_buffer, tmp_buffer.length()); // todo add mutation to attachment
+    return true;
+  }
   case MessageType::Oneway:
   case MessageType::Exception:
     PANIC("not implemented");
