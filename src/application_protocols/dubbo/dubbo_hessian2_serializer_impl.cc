@@ -16,6 +16,7 @@ namespace MetaProtocolProxy {
 namespace Dubbo {
 
 std::pair<RpcInvocationSharedPtr, bool>
+
 DubboHessian2SerializerImpl::deserializeRpcInvocation(Buffer::Instance& buffer,
                                                       ContextSharedPtr context) {
   Hessian2::Decoder decoder(std::make_unique<BufferReader>(buffer));
@@ -78,6 +79,11 @@ DubboHessian2SerializerImpl::deserializeRpcInvocation(Buffer::Instance& buffer,
   });
 
   return std::pair<RpcInvocationSharedPtr, bool>(invo, true);
+}
+
+size_t DubboHessian2SerializerImpl::serializeRpcInvocation(Buffer::Instance& output_buffer) {
+  // todo headerMutation
+  return output_buffer.length();
 }
 
 std::pair<RpcResultSharedPtr, bool>

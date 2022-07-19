@@ -48,6 +48,16 @@ public:
   deserializeRpcInvocation(Buffer::Instance& buffer, ContextSharedPtr context) PURE;
 
   /**
+   * serialize an rpc call
+   * If successful, the output_buffer is written to the serialized data
+   *
+   * @param output_buffer store the serialized data
+   * @param content the rpc response content
+   * @return size_t the length of the serialized content
+   */
+  virtual size_t serializeRpcInvocation(Buffer::Instance& output_buffer) PURE;
+
+  /**
    * deserialize result of an rpc call
    *
    * @param buffer the currently buffered dubbo data

@@ -19,6 +19,8 @@ public:
   std::pair<RpcInvocationSharedPtr, bool>
   deserializeRpcInvocation(Buffer::Instance& buffer, ContextSharedPtr context) override;
 
+  size_t serializeRpcInvocation(Buffer::Instance& output_buffer) override;
+
   std::pair<RpcResultSharedPtr, bool> deserializeRpcResult(Buffer::Instance& buffer,
                                                            ContextSharedPtr context) override;
 
