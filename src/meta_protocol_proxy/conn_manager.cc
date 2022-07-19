@@ -100,6 +100,10 @@ void ConnectionManager::dispatch() {
 
   try {
     bool underflow = false;
+    // decoder return underflow in th following two cases:
+    // 1. decoder needs more data to complete the decoding of the current message, in this case, the buffer contains
+    // part of the incomplete message.
+    // 2. all the messages in the buffer have been processed, in this case, the buffer is already empty.
     while (!underflow) {
       decoder_->onData(request_buffer_, underflow);
     }

@@ -59,6 +59,7 @@ void DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow) {
   switch (state) {
   case ProtocolState::WaitForData:
     ENVOY_LOG(debug, "MetaProtocol decoder: wait for data");
+    // set buffer_underflow as true if we need more data to complete decoding of the current message
     buffer_underflow = true;
     return;
   default:
@@ -69,6 +70,8 @@ void DecoderBase::onData(Buffer::Instance& data, bool& buffer_underflow) {
 
   // Clean up after finishing decoding a message
   complete();
+  // important: set buffer_underflow as true if all data in the current buffer has been processed to
+  // break the outer dispatching loop
   buffer_underflow = (data.length() == 0);
   ENVOY_LOG(debug, "MetaProtocol decoder: data length {}", data.length());
   return;

@@ -35,13 +35,9 @@ public:
   virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
 
 protected:
-  struct UpstreamRequestInfo {
-    absl::optional<Upstream::TcpPoolData> conn_pool_data;
-  };
-
-  struct PrepareUpstreamRequestResult {
+   struct PrepareUpstreamRequestResult {
     absl::optional<AppException> exception;
-    absl::optional<UpstreamRequestInfo> upstream_request_info;
+    absl::optional<Upstream::TcpPoolData> conn_pool_data;
   };
 
   PrepareUpstreamRequestResult prepareUpstreamRequest(const std::string& cluster_name,
@@ -78,8 +74,7 @@ protected:
               absl::nullopt};
     }
 
-    UpstreamRequestInfo result = {conn_pool_data}; // TODO zhaohuabing
-    return {absl::nullopt, result};
+    return {absl::nullopt, conn_pool_data};
   }
 
   Upstream::ClusterInfoConstSharedPtr cluster_;
