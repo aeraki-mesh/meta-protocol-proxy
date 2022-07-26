@@ -20,7 +20,7 @@ namespace MetaProtocolProxy {
 
 class PropertiesImpl : public Properties {
 public:
-  PropertiesImpl() : map_(std::make_unique<std::map<std::string, std::any>>()){};
+  PropertiesImpl(){};
   ~PropertiesImpl() override = default;
 
   void put(std::string key, std::any value) override;
@@ -29,9 +29,10 @@ public:
   std::string getString(std::string key) const override;
   bool getBool(std::string key) const override;
   uint32_t getUint32(std::string key) const override;
+  PropertiesImpl clone() const;
 
 private:
-  std::unique_ptr<std::map<std::string, std::any>> map_;
+  std::map<std::string, std::any> map_;
 };
 
 class MetadataImpl : public Metadata {
@@ -70,21 +71,18 @@ public:
   size_t getHeaderSize() const override { return header_size_; };
   void setBodySize(size_t bodySize) override { body_size_ = bodySize; };
   size_t getBodySize() const override { return body_size_; };
-  MetadataSharedPtr clone() const override{
+  MetadataSharedPtr clone() const override {
     auto copy = std::make_shared<MetadataImpl>();
-
     Buffer::OwnedImpl originalMessage;
     originalMessage.add(origin_message_);
     copy->setOriginMessage(originalMessage);
-
     copy->setMessageType(getMessageType());
     copy->setResponseStatus(getResponseStatus());
     copy->setBodySize(getBodySize());
     copy->setHeaderSize(getHeaderSize());
     copy->setRequestId(getRequestId());
     copy->setStreamId(getStreamId());
-
-    //TODO copy headers
+    copy->properties_ = properties_.clone();
     return copy;
   };
   const Http::HeaderMap& getHeaders() const { return *headers_; }

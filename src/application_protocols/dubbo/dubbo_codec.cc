@@ -63,30 +63,13 @@ void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
     break;
   }
   case MetaProtocolProxy::MessageType::Request: {
-    MessageMetadata msgMetadata;
-    toMsgMetadata(metadata, msgMetadata);
-    if (msgMetadata.hasInvocationInfo()) {
-      auto* invo = const_cast<RpcInvocationImpl*>(
-          dynamic_cast<const RpcInvocationImpl*>(&msgMetadata.invocationInfo()));
-      for (const auto& keyValue : mutation) {
-        ENVOY_LOG(debug, "dubbo: codec mutation {} : {}", keyValue.first, keyValue.second);
-        invo->attachment().insert(keyValue.first, keyValue.second);
-      }
-    }
-    ContextImpl ctx;
-    ctx.setHeaderSize(metadata.getHeaderSize());
-    ctx.setBodySize(metadata.getBodySize());
-    if (!protocol_->encode(buffer, msgMetadata, ctx, "")) {
-      throw EnvoyException("failed to encode heartbeat message");
-    }
+    encodeRequest(metadata, mutation, buffer);
     break;
   }
   case MetaProtocolProxy::MessageType::Response: {
-    // TODO
     break;
   }
   case MetaProtocolProxy::MessageType::Error: {
-    // TODO
     break;
   }
   default:
@@ -201,16 +184,14 @@ void DubboCodec::toMsgMetadata(const MetaProtocolProxy::Metadata& metadata,
   }
 
   ref = metadata.get("ProtocolType");
-  if (ref.has_value()) {
-    const auto& proto_type = ref.value();
-    msgMetadata.setProtocolType(std::any_cast<ProtocolType>(proto_type));
-  }
+  assert(ref.has_value());
+  const auto& proto_type = ref.value();
+  msgMetadata.setProtocolType(std::any_cast<ProtocolType>(proto_type));
 
   ref = metadata.get("ProtocolVersion");
-  if (ref.has_value()) {
-    const auto& version = ref.value();
-    msgMetadata.setProtocolVersion(std::any_cast<uint8_t>(version));
-  }
+  assert(ref.has_value());
+  const auto& version = ref.value();
+  msgMetadata.setProtocolVersion(std::any_cast<uint8_t>(version));
 
   ref = metadata.get("MessageType");
   assert(ref.has_value());
@@ -246,6 +227,28 @@ void DubboCodec::encodeHeartbeat(const MetaProtocolProxy::Metadata& metadata,
   ContextImpl ctx;
   if (!protocol_->encode(buffer, msgMetadata, ctx, "")) {
     throw EnvoyException("failed to encode heartbeat message");
+  }
+}
+
+void DubboCodec::encodeRequest(const MetaProtocolProxy::Metadata& metadata,
+                               const MetaProtocolProxy::Mutation& mutation,
+                               Buffer::Instance& buffer) {
+  MessageMetadata msgMetadata;
+  toMsgMetadata(metadata, msgMetadata);
+  if (msgMetadata.hasInvocationInfo()) {
+    auto* invo = const_cast<RpcInvocationImpl*>(
+        dynamic_cast<const RpcInvocationImpl*>(&msgMetadata.invocationInfo()));
+    for (const auto& keyValue : mutation) {
+      ENVOY_LOG(debug, "dubbo: codec mutation {} : {}", keyValue.first, keyValue.second);
+      invo->attachment().remove(keyValue.first);
+      invo->attachment().insert(keyValue.first, keyValue.second);
+    }
+  }
+  ContextImpl ctx;
+  ctx.setHeaderSize(metadata.getHeaderSize());
+  ctx.setBodySize(metadata.getBodySize());
+  if (!protocol_->encode(buffer, msgMetadata, ctx, "")) {
+    throw EnvoyException("failed to encode request message");
   }
 }
 

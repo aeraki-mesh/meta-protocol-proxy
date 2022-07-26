@@ -39,6 +39,11 @@ static_resources:
                   runtime_fraction:
                     default_value:
                       numerator: 50
+              request_mutation:
+              - key: foo
+                value: bar
+              - key: foo1
+                value: bar1
           statPrefix: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
 
   clusters:

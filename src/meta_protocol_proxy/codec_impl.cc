@@ -12,11 +12,11 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
-void PropertiesImpl::put(std::string key, std::any value) { map_->insert({key, value}); }
+void PropertiesImpl::put(std::string key, std::any value) { map_.insert({key, value}); }
 
 AnyOptConstRef PropertiesImpl::get(std::string key) const {
-  auto it = map_->find(key);
-  if (it != map_->end()) {
+  auto it = map_.find(key);
+  if (it != map_.end()) {
     return OptRef<const std::any>(it->second);
   }
   return OptRef<const std::any>();
@@ -46,6 +46,13 @@ uint32_t PropertiesImpl::getUint32(std::string key) const {
   return 0;
 }
 
+PropertiesImpl PropertiesImpl::clone() const {
+  PropertiesImpl copy;
+  for (const auto& [key, value] : map_) {
+    copy.put(key, value);
+  }
+  return copy;
+}
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
