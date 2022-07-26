@@ -176,7 +176,8 @@ bool DubboProtocolImpl::decodeData(Buffer::Instance& buffer, ContextSharedPtr co
 }
 
 bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& metadata,
-                               const std::string& content, RpcResponseType type) {
+                               const Context& ctx, const std::string& content,
+                               RpcResponseType type) {
   ASSERT(serializer_);
 
   switch (metadata.messageType()) {
@@ -214,13 +215,7 @@ bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& 
     return true;
   }
   case MessageType::Request: {
-    Buffer::OwnedImpl tmp_buffer;
-    tmp_buffer.move(buffer, buffer.length());
-    buffer.move(tmp_buffer, DubboProtocolImpl::MessageSize); // fixed header
-    size_t serialized_body_size = serializer_->serializeRpcInvocation(tmp_buffer);
-    (void)serialized_body_size;
-    // todo: set body size in header
-    buffer.move(tmp_buffer, tmp_buffer.length()); // todo add mutation to attachment
+    headerMutation(buffer, metadata, ctx);
     return true;
   }
   case MessageType::Oneway:
@@ -228,6 +223,44 @@ bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& 
     PANIC("not implemented");
   default:
     PANIC("not implemented");
+  }
+}
+
+void DubboProtocolImpl::headerMutation(Buffer::Instance& buffer, const MessageMetadata& metadata,
+                                       const Context& ctx) {
+  if (metadata.hasInvocationInfo()) {
+    auto* invo = const_cast<RpcInvocationImpl*>(
+        dynamic_cast<const RpcInvocationImpl*>(&metadata.invocationInfo()));
+    if (invo->hasAttachment() && invo->attachment().attachmentUpdated()) {
+      Buffer::OwnedImpl origin_buffer;
+      origin_buffer.move(buffer, buffer.length());
+
+      constexpr size_t body_length_size = sizeof(uint32_t);
+
+      const size_t attachment_offset = invo->attachment().attachmentOffset();
+      const size_t request_header_size = ctx.headerSize();
+      ASSERT(attachment_offset <= origin_buffer.length());
+
+      // Move the other parts of the request headers except the body size to the upstream request
+      // buffer.
+      buffer.move(origin_buffer, request_header_size - body_length_size);
+      // Discard the old body size.
+      origin_buffer.drain(body_length_size);
+
+      // Re-serialize the updated attachment.
+      Buffer::OwnedImpl attachment_buffer;
+      Hessian2::Encoder encoder(std::make_unique<BufferWriter>(attachment_buffer));
+      encoder.encode(invo->attachment().attachment());
+
+      size_t new_body_size = attachment_offset - request_header_size + attachment_buffer.length();
+
+      buffer.writeBEInt<uint32_t>(new_body_size);
+      buffer.move(origin_buffer, attachment_offset - request_header_size);
+      buffer.move(attachment_buffer);
+
+      // Discard the old attachment.
+      origin_buffer.drain(ctx.messageSize() - attachment_offset);
+    }
   }
 }
 

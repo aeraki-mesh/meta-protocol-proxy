@@ -84,7 +84,7 @@ const absl::optional<std::string>& RpcInvocationImpl::serviceGroup() const {
   return group_;
 }
 
-const RpcInvocationImpl::Attachment& RpcInvocationImpl::attachment() const {
+RpcInvocationImpl::Attachment& RpcInvocationImpl::attachment() const {
   assignAttachmentIfNeed();
   return *attachment_;
 }

@@ -21,11 +21,15 @@ public:
   bool decodeData(Buffer::Instance& buffer, ContextSharedPtr context,
                   MessageMetadataSharedPtr metadata) override;
 
-  bool encode(Buffer::Instance& buffer, const MessageMetadata& metadata, const std::string& content,
-              RpcResponseType type) override;
+  bool encode(Buffer::Instance& buffer, const MessageMetadata& metadata, const Context& ctx,
+              const std::string& content, RpcResponseType type) override;
 
   static constexpr uint8_t MessageSize = 16;
   static constexpr int32_t MaxBodySize = 16 * 1024 * 1024;
+
+private:
+  void headerMutation(Buffer::Instance& buffer, const MessageMetadata& metadata,
+                      const Context& context);
 };
 
 } // namespace Dubbo
