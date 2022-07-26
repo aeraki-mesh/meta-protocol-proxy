@@ -57,8 +57,6 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   // Save the clone for request mirroring
   auto metadata_clone = request_metadata_->clone();
-  ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",
-            metadata_clone->getOriginMessage().length());
 
   route_entry_->requestMutation(request_mutation);
   upstream_request_ =

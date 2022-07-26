@@ -126,6 +126,8 @@ private:
 
 private:
   void encodeHeartbeat(const MetaProtocolProxy::Metadata& metadata, Buffer::Instance& buffer);
+  void encodeRequest(const MetaProtocolProxy::Metadata& metadata,
+                     const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer);
 
   ProtocolPtr protocol_;
   DecoderStateMachinePtr state_machine_;

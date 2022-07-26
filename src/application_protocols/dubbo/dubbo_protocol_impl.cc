@@ -258,8 +258,7 @@ void DubboProtocolImpl::headerMutation(Buffer::Instance& buffer, const MessageMe
       buffer.move(origin_buffer, attachment_offset - request_header_size);
       buffer.move(attachment_buffer);
 
-      // Discard the old attachment.
-      origin_buffer.drain(ctx.messageSize() - attachment_offset);
+      origin_buffer.drain(origin_buffer.length());
     }
   }
 }
