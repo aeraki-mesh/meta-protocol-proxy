@@ -105,7 +105,7 @@ public:
   ParametersPtr& mutableParameters() const;
 
   bool hasAttachment() const { return attachment_ != nullptr; }
-  const Attachment& attachment() const;
+  Attachment& attachment() const;
   AttachmentPtr& mutableAttachment() const;
 
   void setParametersLazyCallback(ParametersLazyCallback&& callback) {

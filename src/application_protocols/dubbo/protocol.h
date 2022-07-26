@@ -83,7 +83,7 @@ public:
    * @param type the type of dubbo protocol response message
    * @return bool true if the protocol coding succeeds.
    */
-  virtual bool encode(Buffer::Instance& buffer, const MessageMetadata& metadata,
+  virtual bool encode(Buffer::Instance& buffer, const MessageMetadata& metadata, const Context& ctx,
                       const std::string& content,
                       RpcResponseType type = RpcResponseType::ResponseWithValue) PURE;
 
