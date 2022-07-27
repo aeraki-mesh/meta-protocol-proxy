@@ -8,22 +8,23 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Tracing {
 
-HttpTracerManagerImpl::HttpTracerManagerImpl(
+MetaProtocolTracerManagerImpl::MetaProtocolTracerManagerImpl(
     Server::Configuration::TracerFactoryContextPtr factory_context)
     : factory_context_(std::move(factory_context)) {}
 
-HttpTracerSharedPtr
-HttpTracerManagerImpl::getOrCreateHttpTracer(const envoy::config::trace::v3::Tracing_Http* config) {
+MetaProtocolTracerSharedPtr MetaProtocolTracerManagerImpl::getOrCreateMetaProtocolTracer(
+    const envoy::config::trace::v3::Tracing_Http* config) {
   if (!config) {
     return null_tracer_;
   }
 
   const auto cache_key = MessageUtil::hash(*config);
-  const auto it = http_tracers_.find(cache_key);
-  if (it != http_tracers_.end()) {
-    auto http_tracer = it->second.lock();
-    if (http_tracer) { // HttpTracer might have been released since it's a weak reference
-      return http_tracer;
+  const auto it = meta_protocol_tracers_.find(cache_key);
+  if (it != meta_protocol_tracers_.end()) {
+    auto meta_protocol_tracer = it->second.lock();
+    if (meta_protocol_tracer) { // MetaProtocolTracer might have been released since it's a weak
+                                // reference
+      return meta_protocol_tracer;
     }
   }
 
@@ -31,13 +32,13 @@ HttpTracerManagerImpl::getOrCreateHttpTracer(const envoy::config::trace::v3::Tra
   //
   // Given that:
   //
-  // * HttpTracer is obtained only once per listener lifecycle
+  // * MetaProtocolTracer is obtained only once per listener lifecycle
   // * in a typical case, all listeners will have identical tracing configuration and, consequently,
-  //   will share the same HttpTracer instance
+  //   will share the same MetaProtocolTracer instance
   // * amount of memory held by an expired weak reference is minimal
   //
   // it seems reasonable to avoid introducing an external sweeper and only reclaim memory at
-  // the moment when a new HttpTracer instance is about to be created.
+  // the moment when a new MetaProtocolTracer instance is about to be created.
   removeExpiredCacheEntries();
 
   // Initialize a new tracer.
@@ -49,19 +50,18 @@ HttpTracerManagerImpl::getOrCreateHttpTracer(const envoy::config::trace::v3::Tra
   ProtobufTypes::MessagePtr message = Envoy::Config::Utility::translateToFactoryConfig(
       *config, factory_context_->messageValidationVisitor(), factory);
 
-  HttpTracerSharedPtr http_tracer =
-      std::make_shared<HttpTracerImpl>(factory.createTracerDriver(*message, *factory_context_),
-                                       factory_context_->serverFactoryContext().localInfo());
-  http_tracers_.emplace(cache_key, http_tracer); // cache a weak reference
-  return http_tracer;
+  MetaProtocolTracerSharedPtr meta_protocol_tracer = std::make_shared<MetaProtocolTracerImpl>(
+      factory.createTracerDriver(*message, *factory_context_),
+      factory_context_->serverFactoryContext().localInfo());
+  meta_protocol_tracers_.emplace(cache_key, meta_protocol_tracer); // cache a weak reference
+  return meta_protocol_tracer;
 }
 
-void HttpTracerManagerImpl::removeExpiredCacheEntries() {
-  absl::erase_if(
-      http_tracers_,
-      [](const std::pair<const std::size_t, std::weak_ptr<HttpTracer>>& entry) {
-        return entry.second.expired();
-      });
+void MetaProtocolTracerManagerImpl::removeExpiredCacheEntries() {
+  absl::erase_if(meta_protocol_tracers_,
+                 [](const std::pair<const std::size_t, std::weak_ptr<MetaProtocolTracer>>& entry) {
+                   return entry.second.expired();
+                 });
 }
 
 } // namespace Tracing

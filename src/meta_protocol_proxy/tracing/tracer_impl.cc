@@ -40,10 +40,11 @@ static absl::string_view valueOrDefault(const Http::HeaderEntry* header,
   return header ? header->value().getStringView() : default_value;
 }
 
-const std::string HttpTracerUtility::IngressOperation = "ingress";
-const std::string HttpTracerUtility::EgressOperation = "egress";
+const std::string MetaProtocolTracerUtility::IngressOperation = "ingress";
+const std::string MetaProtocolTracerUtility::EgressOperation = "egress";
 
-const std::string& HttpTracerUtility::toString(Envoy::Tracing::OperationName operation_name) {
+const std::string&
+MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName operation_name) {
   switch (operation_name) {
   case Envoy::Tracing::OperationName::Ingress:
     return IngressOperation;
@@ -55,7 +56,7 @@ const std::string& HttpTracerUtility::toString(Envoy::Tracing::OperationName ope
 }
 
 Envoy::Tracing::Decision
-HttpTracerUtility::shouldTraceRequest(const StreamInfo::StreamInfo& stream_info) {
+MetaProtocolTracerUtility::shouldTraceRequest(const StreamInfo::StreamInfo& stream_info) {
   // Exclude health check requests immediately.
   if (stream_info.healthCheck()) {
     return {Envoy::Tracing::Reason::HealthCheck, false};
@@ -137,12 +138,11 @@ static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::Stream
   }
 }
 
-void HttpTracerUtility::finalizeDownstreamSpan(Envoy::Tracing::Span& span,
-                                               const Http::RequestHeaderMap* request_headers,
-                                               const Http::ResponseHeaderMap* response_headers,
-                                               const Http::ResponseTrailerMap* response_trailers,
-                                               const StreamInfo::StreamInfo& stream_info,
-                                               const Envoy::Tracing::Config& tracing_config) {
+void MetaProtocolTracerUtility::finalizeDownstreamSpan(
+    Envoy::Tracing::Span& span, const Http::RequestHeaderMap* request_headers,
+    const Http::ResponseHeaderMap* response_headers,
+    const Http::ResponseTrailerMap* response_trailers, const StreamInfo::StreamInfo& stream_info,
+    const Envoy::Tracing::Config& tracing_config) {
   // Pre response data.
   if (request_headers) {
     if (request_headers->RequestId()) {
@@ -193,11 +193,10 @@ void HttpTracerUtility::finalizeDownstreamSpan(Envoy::Tracing::Span& span,
   span.finishSpan();
 }
 
-void HttpTracerUtility::finalizeUpstreamSpan(Envoy::Tracing::Span& span,
-                                             const Http::ResponseHeaderMap* response_headers,
-                                             const Http::ResponseTrailerMap* response_trailers,
-                                             const StreamInfo::StreamInfo& stream_info,
-                                             const Envoy::Tracing::Config& tracing_config) {
+void MetaProtocolTracerUtility::finalizeUpstreamSpan(
+    Envoy::Tracing::Span& span, const Http::ResponseHeaderMap* response_headers,
+    const Http::ResponseTrailerMap* response_trailers, const StreamInfo::StreamInfo& stream_info,
+    const Envoy::Tracing::Config& tracing_config) {
   span.setTag(
       Tracing::Tags::get().HttpProtocol,
       Formatter::SubstitutionFormatUtils::protocolToStringOrDefault(stream_info.protocol()));
@@ -212,11 +211,11 @@ void HttpTracerUtility::finalizeUpstreamSpan(Envoy::Tracing::Span& span,
   span.finishSpan();
 }
 
-void HttpTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
-                                      const Http::ResponseHeaderMap* response_headers,
-                                      const Http::ResponseTrailerMap* response_trailers,
-                                      const StreamInfo::StreamInfo& stream_info,
-                                      const Envoy::Tracing::Config& tracing_config) {
+void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
+                                              const Http::ResponseHeaderMap* response_headers,
+                                              const Http::ResponseTrailerMap* response_trailers,
+                                              const StreamInfo::StreamInfo& stream_info,
+                                              const Envoy::Tracing::Config& tracing_config) {
 
   span.setTag(Tracing::Tags::get().Component, Tracing::Tags::get().Proxy);
 
@@ -248,7 +247,7 @@ void HttpTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
 }
 
 Envoy::Tracing::CustomTagConstSharedPtr
-HttpTracerUtility::createCustomTag(const envoy::type::tracing::v3::CustomTag& tag) {
+MetaProtocolTracerUtility::createCustomTag(const envoy::type::tracing::v3::CustomTag& tag) {
   switch (tag.type_case()) {
   case envoy::type::tracing::v3::CustomTag::TypeCase::kLiteral:
     return std::make_shared<const Tracing::LiteralCustomTag>(tag.tag(), tag.literal());
@@ -263,15 +262,14 @@ HttpTracerUtility::createCustomTag(const envoy::type::tracing::v3::CustomTag& ta
   }
 }
 
-HttpTracerImpl::HttpTracerImpl(Envoy::Tracing::DriverSharedPtr driver,
-                               const LocalInfo::LocalInfo& local_info)
+MetaProtocolTracerImpl::MetaProtocolTracerImpl(Envoy::Tracing::DriverSharedPtr driver,
+                                               const LocalInfo::LocalInfo& local_info)
     : driver_(std::move(driver)), local_info_(local_info) {}
 
-Envoy::Tracing::SpanPtr HttpTracerImpl::startSpan(const Envoy::Tracing::Config& config,
-                                                  Http::RequestHeaderMap& request_headers,
-                                                  const StreamInfo::StreamInfo& stream_info,
-                                                  const Envoy::Tracing::Decision tracing_decision) {
-  std::string span_name = HttpTracerUtility::toString(Envoy::Tracing::OperationName());
+Envoy::Tracing::SpanPtr MetaProtocolTracerImpl::startSpan(
+    const Envoy::Tracing::Config& config, Http::RequestHeaderMap& request_headers,
+    const StreamInfo::StreamInfo& stream_info, const Envoy::Tracing::Decision tracing_decision) {
+  std::string span_name = MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName());
 
   if (config.operationName() == Envoy::Tracing::OperationName::Egress) {
     span_name.append(" ");

@@ -14,12 +14,12 @@ namespace MetaProtocolProxy {
 namespace Tracing {
 
 /**
- * HttpTracer is responsible for handling traces and delegate actions to the
+ * MetaProtocolTracer is responsible for handling traces and delegate actions to the
  * corresponding drivers.
  */
-class HttpTracer {
+class MetaProtocolTracer {
 public:
-  virtual ~HttpTracer() = default;
+  virtual ~MetaProtocolTracer() = default;
 
   virtual Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config,
                                             Http::RequestHeaderMap& request_headers,
@@ -27,7 +27,7 @@ public:
                                             const Envoy::Tracing::Decision tracing_decision) PURE;
 };
 
-using HttpTracerSharedPtr = std::shared_ptr<HttpTracer>;
+using MetaProtocolTracerSharedPtr = std::shared_ptr<MetaProtocolTracer>;
 
 } // namespace Tracing
 } // namespace MetaProtocolProxy

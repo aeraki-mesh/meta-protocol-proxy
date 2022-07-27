@@ -23,7 +23,7 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Tracing {
 
-class HttpTracerUtility {
+class MetaProtocolTracerUtility {
 public:
   /**
    * Get string representation of the operation.
@@ -92,9 +92,9 @@ public:
 
 using EgressConfig = ConstSingleton<EgressConfigImpl>;
 
-class HttpNullTracer : public HttpTracer {
+class NullTracer : public MetaProtocolTracer {
 public:
-  // Tracing::HttpTracer
+  // Tracing::MetaProtocolTracer
   Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config&, Http::RequestHeaderMap&,
                                     const StreamInfo::StreamInfo&,
                                     const Envoy::Tracing::Decision) override {
@@ -102,11 +102,12 @@ public:
   }
 };
 
-class HttpTracerImpl : public HttpTracer {
+class MetaProtocolTracerImpl : public MetaProtocolTracer {
 public:
-  HttpTracerImpl(Envoy::Tracing::DriverSharedPtr driver, const LocalInfo::LocalInfo& local_info);
+  MetaProtocolTracerImpl(Envoy::Tracing::DriverSharedPtr driver,
+                         const LocalInfo::LocalInfo& local_info);
 
-  // Tracing::HttpTracer
+  // Tracing::MetaProtocolTracer
   Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config,
                                     Http::RequestHeaderMap& request_headers,
                                     const StreamInfo::StreamInfo& stream_info,

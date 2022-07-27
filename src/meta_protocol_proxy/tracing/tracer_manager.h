@@ -10,23 +10,23 @@ namespace MetaProtocolProxy {
 namespace Tracing {
 
 /**
- * An HttpTracer manager which ensures existence of at most one
- * HttpTracer instance for a given configuration.
+ * An MetaProtocolTracer manager which ensures existence of at most one
+ * MetaProtocolTracer instance for a given configuration.
  */
-class HttpTracerManager {
+class MetaProtocolTracerManager {
 public:
-  virtual ~HttpTracerManager() = default;
+  virtual ~MetaProtocolTracerManager() = default;
 
   /**
-   * Get an existing HttpTracer or create a new one for a given configuration.
+   * Get an existing MetaProtocolTracer or create a new one for a given configuration.
    * @param config supplies the configuration for the tracing provider.
-   * @return HttpTracerSharedPtr.
+   * @return MetaProtocolTracerSharedPtr.
    */
-  virtual HttpTracerSharedPtr
-  getOrCreateHttpTracer(const envoy::config::trace::v3::Tracing_Http* config) PURE;
+  virtual MetaProtocolTracerSharedPtr
+  getOrCreateMetaProtocolTracer(const envoy::config::trace::v3::Tracing_Http* config) PURE;
 };
 
-using HttpTracerManagerSharedPtr = std::shared_ptr<HttpTracerManager>;
+using MetaProtocolTracerManagerSharedPtr = std::shared_ptr<MetaProtocolTracerManager>;
 
 } // namespace Tracing
 } // namespace MetaProtocolProxy
