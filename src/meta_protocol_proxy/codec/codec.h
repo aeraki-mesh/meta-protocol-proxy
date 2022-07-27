@@ -5,6 +5,7 @@
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/optref.h"
 #include "envoy/common/pure.h"
+#include "envoy/tracing/trace_context.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -31,9 +32,33 @@ enum class ResponseStatus {
 };
 
 using AnyOptConstRef = OptRef<const std::any>;
-class Properties {
+
+class Metadata : public Envoy::Tracing::TraceContext {
 public:
-  virtual ~Properties() = default;
+  inline static const std::string HEADER_REAL_SERVER_ADDRESS =
+      "x-meta-protocol-real-server-address";
+
+  virtual ~Metadata() = default;
+
+  virtual Buffer::Instance& originMessage() PURE;
+  virtual void setMessageType(MessageType messageType) PURE;
+  virtual MessageType getMessageType() const PURE;
+  virtual void setResponseStatus(ResponseStatus responseStatus) PURE;
+  virtual ResponseStatus getResponseStatus() const PURE;
+  virtual void setRequestId(uint64_t requestId) PURE;
+  virtual uint64_t getRequestId() const PURE;
+  virtual void setStreamId(uint64_t streamId) PURE;
+  virtual uint64_t getStreamId() const PURE;
+  virtual size_t getMessageSize() const PURE;
+  virtual void setHeaderSize(size_t headerSize) PURE;
+  virtual size_t getHeaderSize() const PURE;
+  virtual void setBodySize(size_t bodySize) PURE;
+  virtual size_t getBodySize() const PURE;
+  // OperationName is used as the name as the generated tracing span for this request. For rpc-like
+  // protocols, we suggest using service/method as OperationName.
+  virtual void setOperationName(std::string) PURE;
+  virtual std::string getOperationName() const PURE;
+  virtual std::shared_ptr<Metadata> clone() const PURE;
 
   /**
    * Put a any type key:value pair in the metadata.
@@ -78,30 +103,6 @@ public:
    * @return
    */
   virtual uint32_t getUint32(std::string key) const PURE;
-};
-
-class Metadata : public Properties {
-public:
-  inline static const std::string HEADER_REAL_SERVER_ADDRESS =
-      "x-meta-protocol-real-server-address";
-
-  virtual ~Metadata() = default;
-
-  virtual Buffer::Instance& originMessage() PURE;
-  virtual void setMessageType(MessageType messageType) PURE;
-  virtual MessageType getMessageType() const PURE;
-  virtual void setResponseStatus(ResponseStatus responseStatus) PURE;
-  virtual ResponseStatus getResponseStatus() const PURE;
-  virtual void setRequestId(uint64_t requestId) PURE;
-  virtual uint64_t getRequestId() const PURE;
-  virtual void setStreamId(uint64_t streamId) PURE;
-  virtual uint64_t getStreamId() const PURE;
-  virtual size_t getMessageSize() const PURE;
-  virtual void setHeaderSize(size_t headerSize) PURE;
-  virtual size_t getHeaderSize() const PURE;
-  virtual void setBodySize(size_t bodySize) PURE;
-  virtual size_t getBodySize() const PURE;
-  virtual std::shared_ptr<Metadata> clone() const PURE;
 };
 using MetadataSharedPtr = std::shared_ptr<Metadata>;
 

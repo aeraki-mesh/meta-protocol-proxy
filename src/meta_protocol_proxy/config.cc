@@ -11,6 +11,8 @@
 #include "src/meta_protocol_proxy/stats.h"
 #include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
 #include "src/meta_protocol_proxy/route/rds_impl.h"
+#include "src/meta_protocol_proxy/tracing/tracer_manager_impl.h"
+#include "src/meta_protocol_proxy/tracing/tracer_config_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -19,6 +21,7 @@ namespace MetaProtocolProxy {
 
 // Singleton registration via macro defined in envoy/singleton/manager.h
 SINGLETON_MANAGER_REGISTRATION(meta_route_config_provider_manager);
+SINGLETON_MANAGER_REGISTRATION(meta_tracer_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
   Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
@@ -26,7 +29,15 @@ Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryCont
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
             return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.admin());
           });
-  return {meta_route_config_provider_manager};
+  auto tracer_manager =
+      context.singletonManager()
+          .getTyped<MetaProtocolProxy::Tracing::MetaProtocolTracerManagerImpl>(
+              SINGLETON_MANAGER_REGISTERED_NAME(meta_tracer_manager), [&context] {
+                return std::make_shared<MetaProtocolProxy::Tracing::MetaProtocolTracerManagerImpl>(
+                    std::make_unique<MetaProtocolProxy::Tracing::TracerFactoryContextImpl>(
+                        context.getServerFactoryContext(), context.messageValidationVisitor()));
+              });
+  return {meta_route_config_provider_manager, tracer_manager};
 }
 
 Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFactoryFromProtoTyped(
@@ -34,7 +45,8 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
     Server::Configuration::FactoryContext& context) {
   Utility::Singletons singletons = Utility::createSingletons(context);
   std::shared_ptr<Config> filter_config(std::make_shared<ConfigImpl>(
-      proto_config, context, *singletons.route_config_provider_manager_));
+      proto_config, context, *singletons.route_config_provider_manager_,
+      *singletons.tracer_manager_));
 
   // This lambda captures the singletons created above, thus preserving the reference count.
   // Keep in mind the lambda capture list **doesn't** determine the destruction order, but it's fine
@@ -55,7 +67,8 @@ REGISTER_FACTORY(MetaProtocolProxyFilterConfigFactory,
 // class ConfigImpl.
 ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
                        Server::Configuration::FactoryContext& context,
-                       Route::RouteConfigProviderManager& route_config_provider_manager)
+                       Route::RouteConfigProviderManager& route_config_provider_manager,
+                       MetaProtocolProxy::Tracing::MetaProtocolTracerManager& tracer_manager)
     : context_(context),
       stats_prefix_(
           fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
@@ -96,6 +109,73 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       registerFilter(filter_config);
     }
   }
+
+  if (config.has_tracing()) {
+    tracer_ = tracer_manager.getOrCreateMetaProtocolTracer(getPerFilterTracerConfig(config));
+
+    const auto& tracing_config = config.tracing();
+
+    Envoy::Tracing::OperationName tracing_operation_name;
+
+    // Listener level traffic direction overrides the operation name
+    switch (context.direction()) {
+    case envoy::config::core::v3::UNSPECIFIED: {
+      // Continuing legacy behavior; if unspecified, we treat this as ingress.
+      tracing_operation_name = Envoy::Tracing::OperationName::Ingress;
+      break;
+    }
+    case envoy::config::core::v3::INBOUND:
+      tracing_operation_name = Envoy::Tracing::OperationName::Ingress;
+      break;
+    case envoy::config::core::v3::OUTBOUND:
+      tracing_operation_name = Envoy::Tracing::OperationName::Egress;
+      break;
+    default:
+      NOT_REACHED_GCOVR_EXCL_LINE;
+    }
+
+    envoy::type::v3::FractionalPercent client_sampling;
+    client_sampling.set_numerator(
+        tracing_config.has_client_sampling() ? tracing_config.client_sampling().value() : 100);
+    envoy::type::v3::FractionalPercent random_sampling;
+    // TODO: Random sampling historically was an integer and default to out of 10,000. We should
+    // deprecate that and move to a straight fractional percent config.
+    uint64_t random_sampling_numerator{PROTOBUF_PERCENT_TO_ROUNDED_INTEGER_OR_DEFAULT(
+        tracing_config, random_sampling, 10000, 10000)};
+    random_sampling.set_numerator(random_sampling_numerator);
+    random_sampling.set_denominator(envoy::type::v3::FractionalPercent::TEN_THOUSAND);
+    envoy::type::v3::FractionalPercent overall_sampling;
+    uint64_t overall_sampling_numerator{PROTOBUF_PERCENT_TO_ROUNDED_INTEGER_OR_DEFAULT(
+        tracing_config, overall_sampling, 10000, 10000)};
+    overall_sampling.set_numerator(overall_sampling_numerator);
+    overall_sampling.set_denominator(envoy::type::v3::FractionalPercent::TEN_THOUSAND);
+
+    const uint32_t max_tag_length = PROTOBUF_GET_WRAPPED_OR_DEFAULT(
+        tracing_config, max_tag_length, Envoy::Tracing::DefaultMaxPathTagLength);
+
+    tracing_config_ = std::make_unique<Tracing::TracingConfigImpl>(
+        tracing_operation_name, client_sampling, random_sampling, overall_sampling,
+        tracing_config.verbose(), max_tag_length);
+  }
+}
+
+/**
+ * Determines what tracing provider to use for a given
+ * "envoy.filters.network.http_connection_manager" filter instance.
+ */
+const envoy::config::trace::v3::Tracing_Http*
+ConfigImpl::getPerFilterTracerConfig(const MetaProtocolProxyConfig& config) {
+  // Give precedence to tracing provider configuration defined as part of
+  // "envoy.filters.network.http_connection_manager" filter config.
+  if (config.tracing().has_provider()) {
+    return &config.tracing().provider();
+  }
+  // Otherwise, for the sake of backwards compatibility, fall back to using tracing provider
+  // configuration defined in the bootstrap config.
+  if (context_.httpContext().defaultTracingConfig().has_http()) {
+    return &context_.httpContext().defaultTracingConfig().http();
+  }
+  return nullptr;
 }
 
 void ConfigImpl::createFilterChain(FilterChainFactoryCallbacks& callbacks) {

@@ -1,9 +1,11 @@
 #include "src/meta_protocol_proxy/filters/router/router_impl.h"
 
 #include "envoy/upstream/thread_local_cluster.h"
+#include "envoy/tracing/trace_reason.h"
 
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
+#include "src/meta_protocol_proxy/tracing/tracer_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -56,6 +58,11 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
+  // only trace request if there's a tracing config
+  if (decoder_filter_callbacks_->tracingConfig()) {
+    traceRequest(request_metadata, request_mutation);
+  }
+
   // Save the clone for request mirroring
   auto metadata_clone = request_metadata_->clone();
 
@@ -95,6 +102,7 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
   if (upstream_request_ == nullptr) {
     return FilterStatus::ContinueIteration;
   }
+  response_metadata_ = metadata;
 
   ENVOY_STREAM_LOG(trace, "meta protocol router: response status: {}", *encoder_filter_callbacks_,
                    metadata->getResponseStatus());
@@ -140,6 +148,14 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
     upstream_request_->onResponseComplete();
     cleanUpstreamRequest();
+    if (active_span_) {
+      assert(response_metadata_);
+      Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+          *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+          *decoder_filter_callbacks_->tracingConfig(), request_metadata_->getResponseStatus());
+      ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                       *decoder_filter_callbacks_);
+    }
     return;
   case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
@@ -148,6 +164,13 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // so there is no need to call callbacks_->resetStream() to notify
     // the upper layer to release the stream.
     upstream_request_->releaseUpStreamConnection(true);
+    if (active_span_) {
+      Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+          *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+          *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+      ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                       *decoder_filter_callbacks_);
+    }
     return;
   case UpstreamResponseStatus::MoreData:
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
@@ -159,6 +182,12 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
           ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
       upstream_request_->onResponseComplete();
       cleanUpstreamRequest();
+      if (active_span_) {
+        Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+            *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+            *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+        ENVOY_LOG(debug, "meta protocol router: finish tracing span");
+      }
       return;
       // todo we also need to clean the stream
     }
@@ -171,11 +200,13 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 void Router::onEvent(Network::ConnectionEvent event) {
   ASSERT(upstream_request_);
 
-  //  if (upstream_request_->stream_reset_ && event == Network::ConnectionEvent::LocalClose) {
-  //    ENVOY_LOG(debug, "meta protocol upstream request: the stream reset");
-  //    return;
-  //  }
   upstream_request_->onUpstreamConnectionEvent(event);
+  if (active_span_) {
+    Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+        *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+        *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+    ENVOY_LOG(debug, "meta protocol router: finish tracing span");
+  }
 }
 // ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 
@@ -196,6 +227,20 @@ const Network::Connection* Router::downstreamConnection() const {
   return decoder_filter_callbacks_ != nullptr ? decoder_filter_callbacks_->connection() : nullptr;
 }
 // ---- Upstream::LoadBalancerContextBase ----
+
+void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation) {
+  // const Tracing::Decision tracing_decision =
+  //     Tracing::MetaProtocolTracerUtility::shouldTraceRequest(filter_manager_.streamInfo());
+  const Envoy::Tracing::Decision tracing_decision =
+      Envoy::Tracing::Decision{Envoy::Tracing::Reason::Sampling, true};
+
+  ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing span", *decoder_filter_callbacks_);
+  active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
+      *decoder_filter_callbacks_->tracingConfig(), *request_metadata, *request_mutation,
+      decoder_filter_callbacks_->streamInfo(), tracing_decision);
+}
+
+void Router::resetStream() { decoder_filter_callbacks_->resetStream(); }
 
 void Router::cleanUpstreamRequest() {
   ENVOY_LOG(debug, "meta protocol router: clean upstream request");

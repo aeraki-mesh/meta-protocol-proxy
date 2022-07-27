@@ -16,6 +16,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy:decoder_events_lib",
         "//src/meta_protocol_proxy/route:route_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
+	"//src/meta_protocol_proxy/tracing:tracer_interface",
     ],
 )
 
