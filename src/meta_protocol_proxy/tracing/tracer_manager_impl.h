@@ -13,31 +13,30 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Tracing {
 
-class HttpTracerManagerImpl : public HttpTracerManager,
-                              public Singleton::Instance,
-                              Logger::Loggable<Logger::Id::tracing> {
+class MetaProtocolTracerManagerImpl : public MetaProtocolTracerManager,
+                                      public Singleton::Instance,
+                                      Logger::Loggable<Logger::Id::tracing> {
 public:
-  HttpTracerManagerImpl(Server::Configuration::TracerFactoryContextPtr factory_context);
+  MetaProtocolTracerManagerImpl(Server::Configuration::TracerFactoryContextPtr factory_context);
 
-  // HttpTracerManager
-  HttpTracerSharedPtr
-  getOrCreateHttpTracer(const envoy::config::trace::v3::Tracing_Http* config) override;
+  // MetaProtocolTracerManager
+  MetaProtocolTracerSharedPtr
+  getOrCreateMetaProtocolTracer(const envoy::config::trace::v3::Tracing_Http* config) override;
 
-  // Take a peek into the cache of HttpTracers. This should only be used in tests.
-  const absl::flat_hash_map<std::size_t, std::weak_ptr<HttpTracer>>&
+  // Take a peek into the cache of MetaProtocolTracers. This should only be used in tests.
+  const absl::flat_hash_map<std::size_t, std::weak_ptr<MetaProtocolTracer>>&
   peekCachedTracersForTest() const {
-    return http_tracers_;
+    return meta_protocol_tracers_;
   }
 
 private:
   void removeExpiredCacheEntries();
 
   Server::Configuration::TracerFactoryContextPtr factory_context_;
-  const HttpTracerSharedPtr null_tracer_{
-      std::make_shared<Tracing::HttpNullTracer>()};
+  const MetaProtocolTracerSharedPtr null_tracer_{std::make_shared<NullTracer>()};
 
-  // HttpTracers indexed by the hash of their configuration.
-  absl::flat_hash_map<std::size_t, std::weak_ptr<HttpTracer>> http_tracers_;
+  // MetaProtocolTracers indexed by the hash of their configuration.
+  absl::flat_hash_map<std::size_t, std::weak_ptr<MetaProtocolTracer>> meta_protocol_tracers_;
 };
 
 } // namespace Tracing
