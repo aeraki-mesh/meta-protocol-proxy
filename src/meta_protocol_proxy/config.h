@@ -10,6 +10,9 @@
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
+#include "src/meta_protocol_proxy/tracing/tracer_manager.h"
+#include "src/meta_protocol_proxy/tracing/tracer.h"
+#include "src/meta_protocol_proxy/tracing/tracer_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -39,6 +42,7 @@ class Utility {
 public:
   struct Singletons {
     Route::RouteConfigProviderManagerSharedPtr route_config_provider_manager_;
+    MetaProtocolProxy::Tracing::MetaProtocolTracerManagerSharedPtr tracer_manager_;
   };
 
   /**
@@ -50,6 +54,22 @@ public:
   static Singletons createSingletons(Server::Configuration::FactoryContext& context);
 };
 
+/**
+ * Configuration for tracing which is set on the MetaProtocol Proxy level.
+ * Tracing can be enabled/disabled on a per MetaProtocol Proxy basis.
+ * Here we specify some specific for MetaProtocol Proxy settings.
+ */
+struct TracingConfig {
+  Envoy::Tracing::OperationName operation_name_;
+  // Envoy::Tracing::CustomTagMap custom_tags_;
+  envoy::type::v3::FractionalPercent client_sampling_;
+  envoy::type::v3::FractionalPercent random_sampling_;
+  envoy::type::v3::FractionalPercent overall_sampling_;
+  bool verbose_;
+  uint32_t max_tag_length_;
+};
+using TracingConfigPtr = std::unique_ptr<TracingConfig>;
+
 class ConfigImpl : public Config,
                    public Route::Config,
                    public FilterChainFactory,
@@ -60,7 +80,8 @@ public:
   using CodecConfig = aeraki::meta_protocol_proxy::v1alpha::Codec;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
-             Route::RouteConfigProviderManager& route_config_provider_manager);
+             Route::RouteConfigProviderManager& route_config_provider_manager,
+             MetaProtocolProxy::Tracing::MetaProtocolTracerManager& tracer_manager);
   ~ConfigImpl() override {
     ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl destructed ***********");
   }
@@ -85,6 +106,12 @@ public:
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
+  /**
+   * Determines what tracing provider to use for a given
+   * "envoy.filters.network.http_connection_manager" filter instance.
+   */
+  const envoy::config::trace::v3::Tracing_Http*
+  getPerFilterTracerConfig(const MetaProtocolProxyConfig& config);
 
   Server::Configuration::FactoryContext& context_;
   const std::string stats_prefix_;
@@ -96,6 +123,9 @@ private:
   Route::RouteConfigProviderSharedPtr route_config_provider_;
   Route::RouteConfigProviderManager& route_config_provider_manager_;
   absl::optional<std::chrono::milliseconds> idle_timeout_;
+  MetaProtocolProxy::Tracing::MetaProtocolTracerSharedPtr tracer_{
+      std::make_shared<MetaProtocolProxy::Tracing::NullTracer>()};
+  TracingConfigPtr tracing_config_;
 };
 
 } // namespace MetaProtocolProxy
