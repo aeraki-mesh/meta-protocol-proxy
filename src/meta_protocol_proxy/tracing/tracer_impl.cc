@@ -1,4 +1,5 @@
 #include "src/meta_protocol_proxy/tracing/tracer_impl.h"
+#include "src/meta_protocol_proxy/codec_impl.h"
 
 #include <string>
 
@@ -266,18 +267,21 @@ MetaProtocolTracerImpl::MetaProtocolTracerImpl(Envoy::Tracing::DriverSharedPtr d
                                                const LocalInfo::LocalInfo& local_info)
     : driver_(std::move(driver)), local_info_(local_info) {}
 
-Envoy::Tracing::SpanPtr MetaProtocolTracerImpl::startSpan(
-    const Envoy::Tracing::Config& config, Http::RequestHeaderMap& request_headers,
-    const StreamInfo::StreamInfo& stream_info, const Envoy::Tracing::Decision tracing_decision) {
+Envoy::Tracing::SpanPtr
+MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, const Metadata& metadata,
+                                  const StreamInfo::StreamInfo& stream_info,
+                                  const Envoy::Tracing::Decision tracing_decision) {
   std::string span_name = MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName());
 
   if (config.operationName() == Envoy::Tracing::OperationName::Egress) {
     span_name.append(" ");
-    span_name.append(std::string(request_headers.getHostValue()));
+    // todo span_name.append(std::string(request_headers.getHostValue()));
   }
 
-  Envoy::Tracing::SpanPtr active_span = driver_->startSpan(
-      config, request_headers, span_name, stream_info.startTime(), tracing_decision);
+  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
+  auto& headers = metadataImpl->getHeaders();
+  Envoy::Tracing::SpanPtr active_span =
+      driver_->startSpan(config, headers, span_name, stream_info.startTime(), tracing_decision);
 
   // Set tags related to the local environment
   if (active_span) {

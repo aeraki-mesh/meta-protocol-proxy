@@ -13,6 +13,7 @@ envoy_cc_library(
     repository = "@envoy",
     hdrs = ["tracer.h"],
     deps = [
+        "//src/meta_protocol_proxy/codec:codec_interface",
         "@envoy//envoy/tracing:trace_driver_interface",
         "@envoy//envoy/http:header_map_interface",
     ],
@@ -64,6 +65,7 @@ envoy_cc_library(
         ":common_values_lib",
         ":null_span_lib",
         ":tracer_interface",
+        "//src/meta_protocol_proxy:codec_impl_lib",
         "@envoy//envoy/http:request_id_extension_interface",
         "@envoy//envoy/local_info:local_info_interface",
         "@envoy//envoy/runtime:runtime_interface",
