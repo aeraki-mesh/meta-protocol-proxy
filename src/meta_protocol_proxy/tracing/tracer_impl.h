@@ -95,7 +95,7 @@ using EgressConfig = ConstSingleton<EgressConfigImpl>;
 class NullTracer : public MetaProtocolTracer {
 public:
   // Tracing::MetaProtocolTracer
-  Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config&, Http::RequestHeaderMap&,
+  Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config&, const Metadata&,
                                     const StreamInfo::StreamInfo&,
                                     const Envoy::Tracing::Decision) override {
     return Envoy::Tracing::SpanPtr{new NullSpan()};
@@ -108,8 +108,7 @@ public:
                          const LocalInfo::LocalInfo& local_info);
 
   // Tracing::MetaProtocolTracer
-  Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config,
-                                    Http::RequestHeaderMap& request_headers,
+  Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config, const Metadata& metadata,
                                     const StreamInfo::StreamInfo& stream_info,
                                     const Envoy::Tracing::Decision tracing_decision) override;
 

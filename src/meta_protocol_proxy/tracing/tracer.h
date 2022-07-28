@@ -3,9 +3,10 @@
 #include <memory>
 
 #include "envoy/common/pure.h"
-#include "envoy/http/header_map.h"
 #include "envoy/tracing/trace_driver.h"
 #include "envoy/tracing/trace_reason.h"
+
+#include "src/meta_protocol_proxy/codec/codec.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -22,7 +23,7 @@ public:
   virtual ~MetaProtocolTracer() = default;
 
   virtual Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config,
-                                            Http::RequestHeaderMap& request_headers,
+                                            const Metadata& metadata,
                                             const StreamInfo::StreamInfo& stream_info,
                                             const Envoy::Tracing::Decision tracing_decision) PURE;
 };

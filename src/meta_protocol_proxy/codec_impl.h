@@ -85,7 +85,7 @@ public:
     copy->properties_ = properties_->clone();
     return copy;
   };
-  const Http::HeaderMap& getHeaders() const { return *headers_; }
+  Http::RequestHeaderMap& getHeaders() const { return *headers_; }
 
 private:
   PropertiesImplPtr properties_;
@@ -97,7 +97,7 @@ private:
   size_t header_size_{0};
   size_t body_size_{0};
   // Reuse the HeaderMatcher API and related tools provided by Envoy to match the route
-  Http::HeaderMapPtr headers_;
+  std::unique_ptr<Http::RequestHeaderMap> headers_;
 };
 
 } // namespace MetaProtocolProxy
