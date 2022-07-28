@@ -18,6 +18,8 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
+class PropertiesImpl;
+using PropertiesImplPtr = std::unique_ptr<PropertiesImpl>;
 class PropertiesImpl : public Properties {
 public:
   PropertiesImpl(){};
@@ -29,7 +31,7 @@ public:
   std::string getString(std::string key) const override;
   bool getBool(std::string key) const override;
   uint32_t getUint32(std::string key) const override;
-  PropertiesImpl clone() const;
+  PropertiesImplPtr clone() const;
 
 private:
   std::map<std::string, std::any> map_;
@@ -37,20 +39,23 @@ private:
 
 class MetadataImpl : public Metadata {
 public:
-  MetadataImpl() { headers_ = Http::RequestHeaderMapImpl::create(); };
+  MetadataImpl() {
+    headers_ = Http::RequestHeaderMapImpl::create();
+    properties_ = std::make_unique<PropertiesImpl>();
+  };
   ~MetadataImpl() = default;
 
-  void put(std::string key, std::any value) override { properties_.put(key, value); };
-  AnyOptConstRef get(std::string key) const override { return properties_.get(key); };
+  void put(std::string key, std::any value) override { properties_->put(key, value); };
+  AnyOptConstRef get(std::string key) const override { return properties_->get(key); };
   void putString(std::string key, std::string value) override {
     this->put(key, value);
     auto lowcase_key = Http::LowerCaseString(key);
     headers_->remove(lowcase_key);
     headers_->addCopy(lowcase_key, value);
   };
-  std::string getString(std::string key) const override { return properties_.getString(key); };
-  bool getBool(std::string key) const override { return properties_.getBool(key); };
-  uint32_t getUint32(std::string key) const override { return properties_.getUint32(key); };
+  std::string getString(std::string key) const override { return properties_->getString(key); };
+  bool getBool(std::string key) const override { return properties_->getBool(key); };
+  uint32_t getUint32(std::string key) const override { return properties_->getUint32(key); };
 
   void setOriginMessage(Buffer::Instance& originMessage) override {
     origin_message_ = originMessage;
@@ -82,13 +87,13 @@ public:
     copy->setHeaderSize(getHeaderSize());
     copy->setRequestId(getRequestId());
     copy->setStreamId(getStreamId());
-    copy->properties_ = properties_.clone();
+    copy->properties_ = properties_->clone();
     return copy;
   };
   const Http::HeaderMap& getHeaders() const { return *headers_; }
 
 private:
-  PropertiesImpl properties_;
+  PropertiesImplPtr properties_;
   Buffer::OwnedImpl origin_message_;
   MessageType message_type_{MessageType::Request};
   ResponseStatus response_status_{ResponseStatus::Ok};

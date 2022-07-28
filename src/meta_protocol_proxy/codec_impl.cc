@@ -46,10 +46,10 @@ uint32_t PropertiesImpl::getUint32(std::string key) const {
   return 0;
 }
 
-PropertiesImpl PropertiesImpl::clone() const {
-  PropertiesImpl copy;
+PropertiesImplPtr PropertiesImpl::clone() const {
+  PropertiesImplPtr copy = std::make_unique<PropertiesImpl>();
   for (const auto& [key, value] : map_) {
-    copy.put(key, value);
+    copy->put(key, value);
   }
   return copy;
 }
