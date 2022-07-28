@@ -15,6 +15,7 @@ api_proto_package(
     deps = [
         "//api/meta_protocol_proxy/config/route/v1alpha:pkg",
         "@envoy_api//envoy/config/core/v3:pkg",
+        "@envoy_api//envoy/config/trace/v3:pkg",
         "@envoy_api//envoy/config/route/v3:pkg",
         "@envoy_api//envoy/type/matcher/v3:pkg",
         "@envoy_api//envoy/type/v3:pkg",
