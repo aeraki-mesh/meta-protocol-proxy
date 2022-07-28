@@ -3,10 +3,13 @@ syntax = "proto3";
 package aeraki.meta_protocol_proxy.v1alpha;
 
 import "envoy/config/core/v3/config_source.proto";
+import "envoy/config/trace/v3/http_tracer.proto";
+import "envoy/type/v3/percent.proto";
 
 import "api/meta_protocol_proxy/config/route/v1alpha/route.proto";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 import "udpa/annotations/status.proto";
 import "validate/validate.proto";
@@ -104,13 +107,13 @@ message Tracing {
   // traced if the x-client-trace-id header is set. This field is a direct analog for the
   // runtime variable 'tracing.client_sampling' in the Connection Manager.
   // Default: 100%
-  type.v3.Percent client_sampling = 3;
+  envoy.type.v3.Percent client_sampling = 3;
 
   // Target percentage of requests managed by this connection manager that will be randomly
   // selected for trace generation, if not requested by the client or not forced. This field is
   // a direct analog for the runtime variable 'tracing.random_sampling' in the Connection Manager.
   // Default: 100%
-  type.v3.Percent random_sampling = 4;
+  envoy.type.v3.Percent random_sampling = 4;
 
   // Target percentage of requests managed by this connection manager that will be traced
   // after all other sampling checks have been applied (client-directed, force tracing, random
@@ -119,7 +122,7 @@ message Tracing {
   // of client requests with the appropriate headers to be force traced. This field is a direct
   // analog for the runtime variable 'tracing.global_enabled' in the Connection Manager.
   // Default: 100%
-  type.v3.Percent overall_sampling = 5;
+  envoy.type.v3.Percent overall_sampling = 5;
 
   // Whether to annotate spans with additional data. If true, spans will include logs for stream
   // events.
@@ -140,6 +143,6 @@ message Tracing {
   //   will be rejected.
   //   Such a constraint is inherent to OpenCensus itself. It cannot be overcome without changes
   //   on OpenCensus side.
-  config.trace.v3.Tracing.Http provider = 9;
+  envoy.config.trace.v3.Tracing.Http provider = 9;
 }
 
