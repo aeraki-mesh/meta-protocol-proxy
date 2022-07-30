@@ -38,11 +38,11 @@ using MetaProtocolTracerSharedPtr = std::shared_ptr<MetaProtocolTracer>;
 class TracingConfig : public Envoy::Tracing::Config {
 public:
   virtual ~TracingConfig() = default;
-  virtual envoy::type::v3::FractionalPercent clientSampling();
-  virtual envoy::type::v3::FractionalPercent randomSampling();
-  virtual envoy::type::v3::FractionalPercent overallSampling();
+  virtual envoy::type::v3::FractionalPercent clientSampling() PURE;
+  virtual envoy::type::v3::FractionalPercent randomSampling() PURE;
+  virtual envoy::type::v3::FractionalPercent overallSampling() PURE;
 };
-using TracingConfigSharedPtr = std::shared_ptr<TracingConfig>;
+using TracingConfigPtr = std::unique_ptr<TracingConfig>;
 
 } // namespace Tracing
 } // namespace MetaProtocolProxy

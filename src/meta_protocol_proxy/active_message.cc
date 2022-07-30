@@ -188,6 +188,10 @@ Tracing::MetaProtocolTracerSharedPtr ActiveMessageDecoderFilter::tracer() {
   return activeMessage_.tracer();
 }
 
+Tracing::TracingConfig& ActiveMessageDecoderFilter::tracingConfig() {
+  return activeMessage_.tracingConfig();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
