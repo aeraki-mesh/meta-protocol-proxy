@@ -186,6 +186,41 @@ protected:
   const std::string default_value_;
 };
 
+/**
+ * Configuration for tracing which is set on the MetaProtocol Proxy level.
+ * Tracing can be enabled/disabled on a per MetaProtocol Proxy basis.
+ * Here we specify some specific for MetaProtocol Proxy settings.
+ */
+class TracingConfigImpl : public Tracing::TracingConfig {
+public:
+  TracingConfigImpl(Envoy::Tracing::OperationName operation_name,
+                    envoy::type::v3::FractionalPercent client_sampling,
+                    envoy::type::v3::FractionalPercent random_sampling,
+                    envoy::type::v3::FractionalPercent overall_sampling, bool verbose,
+                    int32_t max_tag_length)
+      : operation_name_(operation_name), client_sampling_(client_sampling),
+        random_sampling_(random_sampling), overall_sampling_(overall_sampling), verbose_(verbose),
+        max_tag_length_(max_tag_length) {
+    custom_tags_ = std::make_unique<Envoy::Tracing::CustomTagMap>();
+  }
+  Envoy::Tracing::OperationName operationName() const override { return operation_name_; };
+  const Envoy::Tracing::CustomTagMap* customTags() const override { return custom_tags_.get(); };
+  bool verbose() const override { return verbose_; };
+  uint32_t maxPathTagLength() const override { return max_tag_length_; };
+  envoy::type::v3::FractionalPercent clientSampling() override { return client_sampling_; };
+  envoy::type::v3::FractionalPercent randomSampling() override { return random_sampling_; };
+  envoy::type::v3::FractionalPercent overallSampling() override { return overall_sampling_; };
+
+private:
+  Envoy::Tracing::OperationName operation_name_;
+  std::unique_ptr<Envoy::Tracing::CustomTagMap> custom_tags_;
+  envoy::type::v3::FractionalPercent client_sampling_;
+  envoy::type::v3::FractionalPercent random_sampling_;
+  envoy::type::v3::FractionalPercent overall_sampling_;
+  bool verbose_;
+  uint32_t max_tag_length_;
+};
+using TracingConfigSharedPtr = std::shared_ptr<TracingConfig>;
 } // namespace Tracing
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters

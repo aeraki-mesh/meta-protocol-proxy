@@ -197,6 +197,16 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 // ---- Upstream::LoadBalancerContextBase ----
 
+/*
+void Router::traceRequest() {
+  const Tracing::Decision tracing_decision =
+      Tracing::MetaProtocolTracerUtility::shouldTraceRequest(filter_manager_.streamInfo());
+
+  active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
+      *this, *request_headers_, filter_manager_.streamInfo(), tracing_decision);
+}
+ */
+
 void Router::cleanUpstreamRequest() {
   ENVOY_LOG(debug, "meta protocol router: clean upstream request");
   if (upstream_request_) {

@@ -30,6 +30,20 @@ public:
 
 using MetaProtocolTracerSharedPtr = std::shared_ptr<MetaProtocolTracer>;
 
+/**
+ * Configuration for tracing which is set on the MetaProtocol Proxy level.
+ * Tracing can be enabled/disabled on a per MetaProtocol Proxy basis.
+ * Here we specify some specific for MetaProtocol Proxy settings.
+ */
+class TracingConfig : public Envoy::Tracing::Config {
+public:
+  virtual ~TracingConfig() = default;
+  virtual envoy::type::v3::FractionalPercent clientSampling();
+  virtual envoy::type::v3::FractionalPercent randomSampling();
+  virtual envoy::type::v3::FractionalPercent overallSampling();
+};
+using TracingConfigSharedPtr = std::shared_ptr<TracingConfig>;
+
 } // namespace Tracing
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters

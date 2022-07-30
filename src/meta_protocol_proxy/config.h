@@ -5,8 +5,11 @@
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.validate.h"
 
+#include "envoy/tracing/trace_driver.h"
+
 #include "source/extensions/filters/network/common/factory_base.h"
 #include "source/extensions/filters/network/well_known_names.h"
+
 #include "src/meta_protocol_proxy/conn_manager.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/route/route_config_provider_manager.h"
@@ -54,22 +57,6 @@ public:
   static Singletons createSingletons(Server::Configuration::FactoryContext& context);
 };
 
-/**
- * Configuration for tracing which is set on the MetaProtocol Proxy level.
- * Tracing can be enabled/disabled on a per MetaProtocol Proxy basis.
- * Here we specify some specific for MetaProtocol Proxy settings.
- */
-struct TracingConfig {
-  Envoy::Tracing::OperationName operation_name_;
-  // Envoy::Tracing::CustomTagMap custom_tags_;
-  envoy::type::v3::FractionalPercent client_sampling_;
-  envoy::type::v3::FractionalPercent random_sampling_;
-  envoy::type::v3::FractionalPercent overall_sampling_;
-  bool verbose_;
-  uint32_t max_tag_length_;
-};
-using TracingConfigPtr = std::unique_ptr<TracingConfig>;
-
 class ConfigImpl : public Config,
                    public Route::Config,
                    public FilterChainFactory,
@@ -103,6 +90,8 @@ public:
   CodecPtr createCodec() override;
   std::string applicationProtocol() override { return application_protocol_; };
   absl::optional<std::chrono::milliseconds> idleTimeout() override { return idle_timeout_; };
+  Tracing::MetaProtocolTracerSharedPtr tracer() override { return tracer_; };
+  Tracing::TracingConfig& tracingConfig() override { return *tracing_config_ };
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
@@ -125,7 +114,7 @@ private:
   absl::optional<std::chrono::milliseconds> idle_timeout_;
   MetaProtocolProxy::Tracing::MetaProtocolTracerSharedPtr tracer_{
       std::make_shared<MetaProtocolProxy::Tracing::NullTracer>()};
-  TracingConfigPtr tracing_config_;
+  std::shared_ptr<Tracing::TracingConfig> tracing_config_;
 };
 
 } // namespace MetaProtocolProxy

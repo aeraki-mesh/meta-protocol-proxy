@@ -184,6 +184,10 @@ void ActiveMessageDecoderFilter::setUpstreamConnection(
   return activeMessage_.setUpstreamConnection(std::move(conn));
 }
 
+Tracing::MetaProtocolTracerSharedPtr ActiveMessageDecoderFilter::tracer() {
+  return activeMessage_.tracer();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
@@ -369,6 +373,14 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
 
 void ActiveMessage::setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) {
   connection_manager_.getActiveStream(metadata_->getStreamId()).setUpstreamConn(std::move(conn));
+}
+
+Tracing::MetaProtocolTracerSharedPtr ActiveMessage::tracer() {
+  return connection_manager_.tracer();
+}
+
+Tracing::TracingConfig& ActiveMessage::tracingConfig() {
+  return connection_manager_.tracingConfig();
 }
 
 void ActiveMessage::maybeDeferredDeleteMessage() {
