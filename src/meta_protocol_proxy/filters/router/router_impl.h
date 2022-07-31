@@ -4,6 +4,7 @@
 
 #include "envoy/buffer/buffer.h"
 #include "envoy/tcp/conn_pool.h"
+#include "envoy/tracing/trace_driver.h"
 
 #include "source/common/upstream/load_balancer_impl.h"
 
@@ -57,6 +58,7 @@ public:
   };
   CodecPtr createCodec() override { return decoder_filter_callbacks_->createCodec(); };
   void resetStream() override { decoder_filter_callbacks_->resetStream(); };
+  void resetStream() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override {
     decoder_filter_callbacks_->setUpstreamConnection(std::move(conn));
   };
@@ -67,6 +69,7 @@ public:
 private:
   void cleanUpstreamRequest();
   bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
+  void traceRequest();
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
@@ -80,6 +83,8 @@ private:
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;
   ShadowWriter& shadow_writer_;
+
+  Envoy::Tracing::SpanPtr active_span_;
 };
 
 } // namespace Router

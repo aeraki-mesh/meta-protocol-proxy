@@ -4,6 +4,16 @@ admin:
     socket_address:
       address: 127.0.0.1
       port_value: 8080
+tracing:
+  http:
+    name: envoy.tracers.zipkin
+    typed_config:
+      '@type': type.googleapis.com/envoy.config.trace.v3.ZipkinConfig
+      collector_cluster: "zipkin"
+      collector_endpoint: "/api/v2/spans"
+      trace_id_128bit: true
+      shared_span_context: false
+      collector_endpoint_version: "HTTP_JSON"
 static_resources:
   listeners:
     name: listener_meta_protocol
@@ -17,6 +27,13 @@ static_resources:
         typed_config:
           '@type': type.googleapis.com/aeraki.meta_protocol_proxy.v1alpha.MetaProtocolProxy
           application_protocol: dubbo
+          tracing:
+            client_sampling:
+              value: 100
+            random_sampling:
+              value: 100
+            overall_sampling:
+              value: 100
           codec:
             name: aeraki.meta_protocol.codec.dubbo
           metaProtocolFilters:
@@ -71,3 +88,15 @@ static_resources:
               socket_address:
                 address: 127.0.0.1
                 port_value: 20882
+  - name: zipkin
+    type: STATIC
+    connect_timeout: 5s
+    load_assignment:
+      cluster_name: zipkin
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 9411

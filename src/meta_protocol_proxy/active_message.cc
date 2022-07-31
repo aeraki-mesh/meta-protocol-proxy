@@ -188,7 +188,7 @@ Tracing::MetaProtocolTracerSharedPtr ActiveMessageDecoderFilter::tracer() {
   return activeMessage_.tracer();
 }
 
-Tracing::TracingConfig& ActiveMessageDecoderFilter::tracingConfig() {
+Tracing::TracingConfig* ActiveMessageDecoderFilter::tracingConfig() {
   return activeMessage_.tracingConfig();
 }
 
@@ -383,7 +383,7 @@ Tracing::MetaProtocolTracerSharedPtr ActiveMessage::tracer() {
   return connection_manager_.tracer();
 }
 
-Tracing::TracingConfig& ActiveMessage::tracingConfig() {
+Tracing::TracingConfig* ActiveMessage::tracingConfig() {
   return connection_manager_.tracingConfig();
 }
 

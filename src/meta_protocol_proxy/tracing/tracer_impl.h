@@ -44,10 +44,9 @@ public:
    * Adds information obtained from the downstream request headers as tags to the active span.
    * Then finishes the span.
    */
-  static void finalizeDownstreamSpan(Envoy::Tracing::Span& span,
-                                     const Http::RequestHeaderMap* request_headers,
-                                     const Http::ResponseHeaderMap* response_headers,
-                                     const Http::ResponseTrailerMap* response_trailers,
+  static void finalizeDownstreamSpan(Envoy::Tracing::Span& span, const Metadata& metadata,
+                                     // const Http::ResponseHeaderMap* response_headers,
+                                     // const Http::ResponseTrailerMap* response_trailers,
                                      const StreamInfo::StreamInfo& stream_info,
                                      const Envoy::Tracing::Config& tracing_config);
 
@@ -56,8 +55,8 @@ public:
    * Then finishes the span.
    */
   static void finalizeUpstreamSpan(Envoy::Tracing::Span& span,
-                                   const Http::ResponseHeaderMap* response_headers,
-                                   const Http::ResponseTrailerMap* response_trailers,
+                                   // const Http::ResponseHeaderMap* response_headers,
+                                   // const Http::ResponseTrailerMap* response_trailers,
                                    const StreamInfo::StreamInfo& stream_info,
                                    const Envoy::Tracing::Config& tracing_config);
 
@@ -70,8 +69,8 @@ public:
 
 private:
   static void setCommonTags(Envoy::Tracing::Span& span,
-                            const Http::ResponseHeaderMap* response_headers,
-                            const Http::ResponseTrailerMap* response_trailers,
+                            // const Http::ResponseHeaderMap* response_headers,
+                            // const Http::ResponseTrailerMap* response_trailers,
                             const StreamInfo::StreamInfo& stream_info,
                             const Envoy::Tracing::Config& tracing_config);
 

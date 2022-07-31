@@ -167,9 +167,9 @@ public:
 
   /**
    * Get the Tracing Config of this MetaProtocol Proxy
-   * @return
+   * @return null pointer if tracing is not enabled
    */
-  virtual Tracing::TracingConfig& tracingConfig() PURE;
+  virtual Tracing::TracingConfig* tracingConfig() PURE;
 };
 
 /**

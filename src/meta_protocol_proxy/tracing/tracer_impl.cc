@@ -36,10 +36,11 @@ static std::string buildResponseCode(const StreamInfo::StreamInfo& info) {
   return info.responseCode() ? std::to_string(info.responseCode().value()) : "0";
 }
 
+/*
 static absl::string_view valueOrDefault(const Http::HeaderEntry* header,
                                         const char* default_value) {
   return header ? header->value().getStringView() : default_value;
-}
+}*/
 
 const std::string MetaProtocolTracerUtility::IngressOperation = "ingress";
 const std::string MetaProtocolTracerUtility::EgressOperation = "egress";
@@ -76,18 +77,12 @@ MetaProtocolTracerUtility::shouldTraceRequest(const StreamInfo::StreamInfo& stre
   NOT_REACHED_GCOVR_EXCL_LINE;
 }
 
+/*
 static void addTagIfNotNull(Envoy::Tracing::Span& span, const std::string& tag,
                             const Http::HeaderEntry* entry) {
   if (entry != nullptr) {
     span.setTag(tag, entry->value().getStringView());
   }
-}
-
-static void addGrpcRequestTags(Envoy::Tracing::Span& span, const Http::RequestHeaderMap& headers) {
-  addTagIfNotNull(span, Tracing::Tags::get().GrpcPath, headers.Path());
-  addTagIfNotNull(span, Tracing::Tags::get().GrpcAuthority, headers.Host());
-  addTagIfNotNull(span, Tracing::Tags::get().GrpcContentType, headers.ContentType());
-  addTagIfNotNull(span, Tracing::Tags::get().GrpcTimeout, headers.GrpcTimeout());
 }
 
 template <class T> static void addGrpcResponseTags(Envoy::Tracing::Span& span, const T& headers) {
@@ -99,7 +94,9 @@ template <class T> static void addGrpcResponseTags(Envoy::Tracing::Span& span, c
     span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
   }
 }
+ */
 
+/*
 static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::StreamInfo& stream_info) {
   const auto start_time = stream_info.startTime();
   if (stream_info.lastDownstreamRxByteReceived()) {
@@ -138,46 +135,49 @@ static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::Stream
              Tracing::Logs::get().LastDownstreamTxByteSent);
   }
 }
+*/
 
 void MetaProtocolTracerUtility::finalizeDownstreamSpan(
-    Envoy::Tracing::Span& span, const Http::RequestHeaderMap* request_headers,
-    const Http::ResponseHeaderMap* response_headers,
-    const Http::ResponseTrailerMap* response_trailers, const StreamInfo::StreamInfo& stream_info,
+    Envoy::Tracing::Span& span, const Metadata& metadata, const StreamInfo::StreamInfo& stream_info,
     const Envoy::Tracing::Config& tracing_config) {
+  std::cout << "xxxxx 1\n";
+  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
+  std::cout << "xxxxx 2\n";
+  auto& request_headers = metadataImpl->getHeaders();
+  std::cout << "xxxxx 3\n";
   // Pre response data.
-  if (request_headers) {
-    if (request_headers->RequestId()) {
-      span.setTag(Tracing::Tags::get().GuidXRequestId, request_headers->getRequestIdValue());
-    }
-    span.setTag(
-        Tracing::Tags::get().HttpUrl,
-        Http::Utility::buildOriginalUri(*request_headers, tracing_config.maxPathTagLength()));
-    span.setTag(Tracing::Tags::get().HttpMethod, request_headers->getMethodValue());
-    span.setTag(Tracing::Tags::get().DownstreamCluster,
-                valueOrDefault(request_headers->EnvoyDownstreamServiceCluster(), "-"));
-    span.setTag(Tracing::Tags::get().UserAgent, valueOrDefault(request_headers->UserAgent(), "-"));
-    span.setTag(
-        Tracing::Tags::get().HttpProtocol,
-        Formatter::SubstitutionFormatUtils::protocolToStringOrDefault(stream_info.protocol()));
 
-    const auto& remote_address = stream_info.downstreamAddressProvider().directRemoteAddress();
-
-    if (remote_address->type() == Network::Address::Type::Ip) {
-      const auto remote_ip = remote_address->ip();
-      span.setTag(Tracing::Tags::get().PeerAddress, remote_ip->addressAsString());
-    } else {
-      span.setTag(Tracing::Tags::get().PeerAddress, remote_address->logicalName());
-    }
-
-    if (request_headers->ClientTraceId()) {
-      span.setTag(Tracing::Tags::get().GuidXClientTraceId,
-                  request_headers->getClientTraceIdValue());
-    }
-
-    if (Grpc::Common::isGrpcRequestHeaders(*request_headers)) {
-      addGrpcRequestTags(span, *request_headers);
-    }
+  if (request_headers.RequestId()) {
+    span.setTag(Tracing::Tags::get().GuidXRequestId, request_headers.getRequestIdValue());
   }
+
+  /*
+  span.setTag(
+      Tracing::Tags::get().HttpUrl,
+      Http::Utility::buildOriginalUri(*request_headers, tracing_config.maxPathTagLength()));
+  span.setTag(Tracing::Tags::get().HttpMethod, request_headers->getMethodValue());
+  span.setTag(Tracing::Tags::get().DownstreamCluster,
+              valueOrDefault(request_headers->EnvoyDownstreamServiceCluster(), "-"));
+  span.setTag(Tracing::Tags::get().UserAgent, valueOrDefault(request_headers->UserAgent(), "-"));
+  span.setTag(
+      Tracing::Tags::get().HttpProtocol,
+      Formatter::SubstitutionFormatUtils::protocolToStringOrDefault(stream_info.protocol()));
+      */
+
+  const auto& remote_address = stream_info.downstreamAddressProvider().directRemoteAddress();
+
+  if (remote_address->type() == Network::Address::Type::Ip) {
+    const auto remote_ip = remote_address->ip();
+    span.setTag(Tracing::Tags::get().PeerAddress, remote_ip->addressAsString());
+  } else {
+    span.setTag(Tracing::Tags::get().PeerAddress, remote_address->logicalName());
+  }
+
+  if (request_headers.ClientTraceId()) {
+    span.setTag(Tracing::Tags::get().GuidXClientTraceId, request_headers.getClientTraceIdValue());
+  }
+
+  /*
   Envoy::Tracing::CustomTagContext ctx{request_headers, stream_info};
 
   const Envoy::Tracing::CustomTagMap* custom_tag_map = tracing_config.customTags();
@@ -188,16 +188,17 @@ void MetaProtocolTracerUtility::finalizeDownstreamSpan(
   }
   span.setTag(Tracing::Tags::get().RequestSize, std::to_string(stream_info.bytesReceived()));
   span.setTag(Tracing::Tags::get().ResponseSize, std::to_string(stream_info.bytesSent()));
-
-  setCommonTags(span, response_headers, response_trailers, stream_info, tracing_config);
-
+  */
+  std::cout << "xxxxx 4\n";
+  setCommonTags(span, stream_info, tracing_config);
+  std::cout << "xxxxx 5\n";
   span.finishSpan();
+  std::cout << "xxxxx 6\n";
 }
 
-void MetaProtocolTracerUtility::finalizeUpstreamSpan(
-    Envoy::Tracing::Span& span, const Http::ResponseHeaderMap* response_headers,
-    const Http::ResponseTrailerMap* response_trailers, const StreamInfo::StreamInfo& stream_info,
-    const Envoy::Tracing::Config& tracing_config) {
+void MetaProtocolTracerUtility::finalizeUpstreamSpan(Envoy::Tracing::Span& span,
+                                                     const StreamInfo::StreamInfo& stream_info,
+                                                     const Envoy::Tracing::Config& tracing_config) {
   span.setTag(
       Tracing::Tags::get().HttpProtocol,
       Formatter::SubstitutionFormatUtils::protocolToStringOrDefault(stream_info.protocol()));
@@ -207,44 +208,50 @@ void MetaProtocolTracerUtility::finalizeUpstreamSpan(
                 stream_info.upstreamHost()->address()->asStringView());
   }
 
-  setCommonTags(span, response_headers, response_trailers, stream_info, tracing_config);
+  setCommonTags(span, stream_info, tracing_config);
 
   span.finishSpan();
 }
 
 void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
-                                              const Http::ResponseHeaderMap* response_headers,
-                                              const Http::ResponseTrailerMap* response_trailers,
+                                              // const Http::ResponseHeaderMap* response_headers,
+                                              // const Http::ResponseTrailerMap* response_trailers,
                                               const StreamInfo::StreamInfo& stream_info,
                                               const Envoy::Tracing::Config& tracing_config) {
 
   span.setTag(Tracing::Tags::get().Component, Tracing::Tags::get().Proxy);
-
+  std::cout << "xxxxx 5.1\n";
   if (nullptr != stream_info.upstreamHost()) {
+    std::cout << "xxxxx 5.2\n";
     span.setTag(Tracing::Tags::get().UpstreamCluster, stream_info.upstreamHost()->cluster().name());
+    std::cout << "xxxxx 5.3\n";
     span.setTag(Tracing::Tags::get().UpstreamClusterName,
                 stream_info.upstreamHost()->cluster().observabilityName());
   }
-
+  std::cout << "xxxxx 5.4\n";
   // Post response data.
   span.setTag(Tracing::Tags::get().HttpStatusCode, buildResponseCode(stream_info));
+  std::cout << "xxxxx 5.5\n";
   span.setTag(Tracing::Tags::get().ResponseFlags,
               StreamInfo::ResponseFlagUtils::toShortString(stream_info));
 
   // GRPC data.
-  if (response_trailers && response_trailers->GrpcStatus() != nullptr) {
+  /*if (response_trailers && response_trailers->GrpcStatus() != nullptr) {
     addGrpcResponseTags(span, *response_trailers);
   } else if (response_headers && response_headers->GrpcStatus() != nullptr) {
     addGrpcResponseTags(span, *response_headers);
-  }
-
+  }*/
+  std::cout << "xxxxx 5.6\n";
   if (tracing_config.verbose()) {
-    annotateVerbose(span, stream_info);
+    // todo add log to tracing
+    // annotateVerbose(span, stream_info);
   }
+  std::cout << "xxxxx 5.7\n";
 
   if (!stream_info.responseCode() || Http::CodeUtility::is5xx(stream_info.responseCode().value())) {
     span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
   }
+  std::cout << "xxxxx 5.8\n";
 }
 
 Envoy::Tracing::CustomTagConstSharedPtr

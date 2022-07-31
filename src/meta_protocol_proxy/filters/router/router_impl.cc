@@ -1,9 +1,11 @@
 #include "src/meta_protocol_proxy/filters/router/router_impl.h"
 
 #include "envoy/upstream/thread_local_cluster.h"
+#include "envoy/tracing/trace_reason.h"
 
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
+#include "src/meta_protocol_proxy/tracing/tracer_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -63,6 +65,10 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   upstream_request_ =
       std::make_unique<UpstreamRequest>(*this, conn_pool_data, request_metadata_, request_mutation);
   auto filter_status = upstream_request_->start();
+  // only trace request if there's a tracing config
+  if (decoder_filter_callbacks_->tracingConfig()) {
+    traceRequest();
+  }
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
   // enabled.
@@ -140,6 +146,11 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
     upstream_request_->onResponseComplete();
     cleanUpstreamRequest();
+    if (active_span_) {
+      Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+          *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+          *decoder_filter_callbacks_->tracingConfig());
+    }
     return;
   case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
@@ -197,15 +208,18 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 // ---- Upstream::LoadBalancerContextBase ----
 
-/*
 void Router::traceRequest() {
-  const Tracing::Decision tracing_decision =
-      Tracing::MetaProtocolTracerUtility::shouldTraceRequest(filter_manager_.streamInfo());
+  // const Tracing::Decision tracing_decision =
+  //     Tracing::MetaProtocolTracerUtility::shouldTraceRequest(filter_manager_.streamInfo());
+  const Envoy::Tracing::Decision tracing_decision =
+      Envoy::Tracing::Decision{Envoy::Tracing::Reason::Sampling, true};
 
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
-      *this, *request_headers_, filter_manager_.streamInfo(), tracing_decision);
+      *decoder_filter_callbacks_->tracingConfig(), *request_metadata_,
+      decoder_filter_callbacks_->streamInfo(), tracing_decision);
 }
- */
+
+void Router::resetStream() { decoder_filter_callbacks_->resetStream(); }
 
 void Router::cleanUpstreamRequest() {
   ENVOY_LOG(debug, "meta protocol router: clean upstream request");

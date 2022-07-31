@@ -91,7 +91,7 @@ public:
   std::string applicationProtocol() override { return application_protocol_; };
   absl::optional<std::chrono::milliseconds> idleTimeout() override { return idle_timeout_; };
   Tracing::MetaProtocolTracerSharedPtr tracer() override { return tracer_; };
-  Tracing::TracingConfig& tracingConfig() override { return *tracing_config_; };
+  Tracing::TracingConfig* tracingConfig() override { return tracing_config_.get(); };
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
