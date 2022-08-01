@@ -42,14 +42,15 @@ message MetaProtocolProxy {
   // The codec which encodes and decodes the application protocol.
   Codec codec = 5;
 
-  // for idle downstream timer.
-  google.protobuf.Duration idle_timeout = 6;
 
   // A list of individual Layer-7 filters that make up the filter chain for requests made to
   // the meta protocol proxy. Order matters as the filters are processed sequentially as
   // request events happen. If no meta_protocol_filters are specified, a default router filter
   // (`aeraki.meta_protocol.filters.router`) is used.
-  repeated MetaProtocolFilter meta_protocol_filters = 7;
+  repeated MetaProtocolFilter meta_protocol_filters = 6;
+
+  // for idle downstream timer.
+  google.protobuf.Duration idle_timeout = 11;
 }
 
 message Rds {
