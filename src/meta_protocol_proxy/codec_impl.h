@@ -87,6 +87,17 @@ public:
   };
   Http::RequestHeaderMap& getHeaders() const { return *headers_; }
 
+  // Tracing::TraceContext
+  absl::string_view protocol() const override { return "protocol"; };
+  absl::string_view authority() const override { return "org.apache.dubbo.samples.basic.api.demoservice/sayHello"; };
+  absl::string_view path() const override { return "test path"; };
+  absl::string_view method() const override { return "testmethod"; };
+  void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override{};
+  absl::optional<absl::string_view> getByKey(absl::string_view) const override{return absl::optional<absl::string_view>{};};
+  void setByKey(absl::string_view, absl::string_view) override{};
+  void setByReferenceKey(absl::string_view, absl::string_view) override{};
+  void setByReference(absl::string_view, absl::string_view) override{};
+
 private:
   PropertiesImplPtr properties_;
   Buffer::OwnedImpl origin_message_;

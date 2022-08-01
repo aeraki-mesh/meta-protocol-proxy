@@ -4,6 +4,8 @@ admin:
     socket_address:
       address: 127.0.0.1
       port_value: 8080
+node:
+  cluster: dubbo-sample-consumer.metaprotocol
 tracing:
   http:
     name: envoy.tracers.zipkin
