@@ -140,11 +140,8 @@ static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::Stream
 void MetaProtocolTracerUtility::finalizeDownstreamSpan(
     Envoy::Tracing::Span& span, const Metadata& metadata, const StreamInfo::StreamInfo& stream_info,
     const Envoy::Tracing::Config& tracing_config) {
-  std::cout << "xxxxx 1\n";
   const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
-  std::cout << "xxxxx 2\n";
   auto& request_headers = metadataImpl->getHeaders();
-  std::cout << "xxxxx 3\n";
   // Pre response data.
 
   if (request_headers.RequestId()) {
@@ -189,11 +186,8 @@ void MetaProtocolTracerUtility::finalizeDownstreamSpan(
   span.setTag(Tracing::Tags::get().RequestSize, std::to_string(stream_info.bytesReceived()));
   span.setTag(Tracing::Tags::get().ResponseSize, std::to_string(stream_info.bytesSent()));
   */
-  std::cout << "xxxxx 4\n";
   setCommonTags(span, stream_info, tracing_config);
-  std::cout << "xxxxx 5\n";
   span.finishSpan();
-  std::cout << "xxxxx 6\n";
 }
 
 void MetaProtocolTracerUtility::finalizeUpstreamSpan(Envoy::Tracing::Span& span,
@@ -220,18 +214,13 @@ void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
                                               const Envoy::Tracing::Config& tracing_config) {
 
   span.setTag(Tracing::Tags::get().Component, Tracing::Tags::get().Proxy);
-  std::cout << "xxxxx 5.1\n";
   if (nullptr != stream_info.upstreamHost()) {
-    std::cout << "xxxxx 5.2\n";
     span.setTag(Tracing::Tags::get().UpstreamCluster, stream_info.upstreamHost()->cluster().name());
-    std::cout << "xxxxx 5.3\n";
     span.setTag(Tracing::Tags::get().UpstreamClusterName,
                 stream_info.upstreamHost()->cluster().observabilityName());
   }
-  std::cout << "xxxxx 5.4\n";
   // Post response data.
   span.setTag(Tracing::Tags::get().HttpStatusCode, buildResponseCode(stream_info));
-  std::cout << "xxxxx 5.5\n";
   span.setTag(Tracing::Tags::get().ResponseFlags,
               StreamInfo::ResponseFlagUtils::toShortString(stream_info));
 
@@ -241,17 +230,14 @@ void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
   } else if (response_headers && response_headers->GrpcStatus() != nullptr) {
     addGrpcResponseTags(span, *response_headers);
   }*/
-  std::cout << "xxxxx 5.6\n";
   if (tracing_config.verbose()) {
     // todo add log to tracing
     // annotateVerbose(span, stream_info);
   }
-  std::cout << "xxxxx 5.7\n";
 
   if (!stream_info.responseCode() || Http::CodeUtility::is5xx(stream_info.responseCode().value())) {
-   // span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
+    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
   }
-  std::cout << "xxxxx 5.8\n";
 }
 
 Envoy::Tracing::CustomTagConstSharedPtr
@@ -284,9 +270,11 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
     span_name.append(" ");
     // todo span_name.append(std::string(request_headers.getHostValue()));
   }
-  
+
+  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
+  auto& headers = metadataImpl->getHeaders();
   Envoy::Tracing::SpanPtr active_span =
-      driver_->startSpan(config, metadata, span_name, stream_info.startTime(), tracing_decision);
+      driver_->startSpan(config, headers, span_name, stream_info.startTime(), tracing_decision);
 
   // Set tags related to the local environment
   if (active_span) {

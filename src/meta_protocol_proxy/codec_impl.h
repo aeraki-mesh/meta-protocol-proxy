@@ -73,6 +73,8 @@ public:
   size_t getHeaderSize() const override { return header_size_; };
   void setBodySize(size_t bodySize) override { body_size_ = bodySize; };
   size_t getBodySize() const override { return body_size_; };
+  void setOperationName(std::string operation_name) override { operation_name_ = operation_name; };
+  std::string getOperationName() const override { return operation_name_; };
   MetadataSharedPtr clone() const override {
     auto copy = std::make_shared<MetadataImpl>();
     copy->originMessage().add(origin_message_);
@@ -88,12 +90,15 @@ public:
   Http::RequestHeaderMap& getHeaders() const { return *headers_; }
 
   // Tracing::TraceContext
-  absl::string_view protocol() const override { return "protocol"; };
-  absl::string_view authority() const override { return "org.apache.dubbo.samples.basic.api.demoservice/sayHello"; };
-  absl::string_view path() const override { return "test path"; };
-  absl::string_view method() const override { return "testmethod"; };
+  absl::string_view protocol() const override { return "meta-protocol"; };
+  absl::string_view authority() const override { return operation_name_; };
+  absl::string_view path() const override { return ""; };   // not applicable for MetaProtocol
+  absl::string_view method() const override { return ""; }; // not applicable for MetaProtocol
   void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override{};
-  absl::optional<absl::string_view> getByKey(absl::string_view) const override{return absl::optional<absl::string_view>{};};
+  absl::optional<absl::string_view> getByKey(absl::string_view) const override {
+
+    return absl::optional<absl::string_view>{};
+  };
   void setByKey(absl::string_view, absl::string_view) override{};
   void setByReferenceKey(absl::string_view, absl::string_view) override{};
   void setByReference(absl::string_view, absl::string_view) override{};
@@ -107,6 +112,7 @@ private:
   uint64_t stream_id_{0};
   size_t header_size_{0};
   size_t body_size_{0};
+  std::string operation_name_;
   // Reuse the HeaderMatcher API and related tools provided by Envoy to match the route
   std::unique_ptr<Http::RequestHeaderMap> headers_;
 };

@@ -22,7 +22,8 @@ public:
   virtual ~RequestMirrorPolicy() = default;
 
   /**
-   * @return const std::string& the upstream cluster that should be used for the mirrored request.
+   * @return const absl:stringview& the upstream cluster that should be used for the mirrored
+   * request.
    */
   virtual const std::string& clusterName() const PURE;
 

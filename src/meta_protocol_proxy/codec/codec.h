@@ -102,6 +102,10 @@ public:
   virtual size_t getHeaderSize() const PURE;
   virtual void setBodySize(size_t bodySize) PURE;
   virtual size_t getBodySize() const PURE;
+  // OperationName is used as the name as the generated tracing span for this request. For rpc-like
+  // protocols, we suggest using service/method as OperationName.
+  virtual void setOperationName(std::string) PURE;
+  virtual std::string getOperationName() const PURE;
   virtual std::shared_ptr<Metadata> clone() const PURE;
 };
 using MetadataSharedPtr = std::shared_ptr<Metadata>;

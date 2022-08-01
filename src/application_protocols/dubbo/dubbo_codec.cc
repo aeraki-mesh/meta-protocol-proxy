@@ -112,6 +112,7 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata,
 
     metadata.putString("interface", invo->serviceName());
     metadata.putString("method", invo->methodName());
+    metadata.setOperationName(invo->serviceName() + "/" + invo->methodName());
     for (const auto& pair : invo->attachment().attachment()) {
       const auto key = pair.first->toString();
       const auto value = pair.second->toString();
