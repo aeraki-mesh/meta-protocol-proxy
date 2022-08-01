@@ -16,6 +16,7 @@
 #include "src/meta_protocol_proxy/stats.h"
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/stream.h"
+#include "envoy/event/timer.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -90,6 +91,13 @@ private:
   void dispatch();
   void resetAllMessages(bool local_reset);
 
+  //This function is to deal with idle downstream's connection timeout. 
+  void onIdleTimeout();
+  //Reset the timer.
+  void resetIdleTimer();
+  //Disable the timer
+  void disableIdleTimer();
+
   Buffer::OwnedImpl request_buffer_;
   std::list<ActiveMessagePtr> active_message_list_;
   std::map<uint64_t, StreamPtr> active_stream_map_;
@@ -102,6 +110,8 @@ private:
   Codec& codec_;
   RequestDecoderPtr decoder_;
   Network::ReadFilterCallbacks* read_callbacks_{};
+  //timer for idle timeout
+  Event::TimerPtr idle_timer_;
 };
 
 } // namespace MetaProtocolProxy
