@@ -63,6 +63,13 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
       route_config_provider_manager_(route_config_provider_manager) {
   ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl constructor ***********");
+  //check idle_timer config
+  if (config.has_idle_timeout()) {
+    const uint64_t timeout = DurationUtil::durationToMilliseconds(config.idle_timeout());
+    ENVOY_LOG(debug,"debug for idle_timeout-{}",timeout);
+    idle_timeout_ = std::chrono::milliseconds(timeout);
+  }
+
   switch (config.route_specifier_case()) {
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRds:
     route_config_provider_ = route_config_provider_manager_.createRdsRouteConfigProvider(
