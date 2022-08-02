@@ -162,6 +162,11 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // so there is no need to call callbacks_->resetStream() to notify
     // the upper layer to release the stream.
     upstream_request_->releaseUpStreamConnection(true);
+    if (active_span_) {
+      Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+          *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+          *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+    }
     return;
   case UpstreamResponseStatus::MoreData:
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
@@ -173,6 +178,11 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
           ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
       upstream_request_->onResponseComplete();
       cleanUpstreamRequest();
+      if (active_span_) {
+        Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+            *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+            *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+      }
       return;
       // todo we also need to clean the stream
     }
@@ -185,11 +195,13 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 void Router::onEvent(Network::ConnectionEvent event) {
   ASSERT(upstream_request_);
 
-  //  if (upstream_request_->stream_reset_ && event == Network::ConnectionEvent::LocalClose) {
-  //    ENVOY_LOG(debug, "meta protocol upstream request: the stream reset");
-  //    return;
-  //  }
   upstream_request_->onUpstreamConnectionEvent(event);
+  if (active_span_) {
+    Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
+        *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+        *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+  }
+
 }
 // ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 
