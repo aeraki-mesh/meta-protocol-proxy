@@ -58,6 +58,11 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
+  // only trace request if there's a tracing config
+  if (decoder_filter_callbacks_->tracingConfig()) {
+    traceRequest(request_metadata, request_mutation);
+  }
+
   // Save the clone for request mirroring
   auto metadata_clone = request_metadata_->clone();
 
@@ -65,10 +70,6 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   upstream_request_ =
       std::make_unique<UpstreamRequest>(*this, conn_pool_data, request_metadata_, request_mutation);
   auto filter_status = upstream_request_->start();
-  // only trace request if there's a tracing config
-  if (decoder_filter_callbacks_->tracingConfig()) {
-    traceRequest(request_metadata, request_mutation);
-  }
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
   // enabled.

@@ -36,14 +36,19 @@ static std::string buildResponseCode(const StreamInfo::StreamInfo& info) {
   return info.responseCode() ? std::to_string(info.responseCode().value()) : "0";
 }
 
-/*
-static absl::string_view valueOrDefault(const Http::HeaderEntry* header,
-                                        const char* default_value) {
-  return header ? header->value().getStringView() : default_value;
-}*/
-
 const std::string MetaProtocolTracerUtility::IngressOperation = "ingress";
 const std::string MetaProtocolTracerUtility::EgressOperation = "egress";
+
+const std::string tracing_headers[10] = {"x-request-id"
+                                         "x-b3-traceid"
+                                         "x-b3-spanid"
+                                         "x-b3-parentspanid"
+                                         "x-b3-sampled"
+                                         "x-b3-flags"
+                                         "x-ot-span-context"
+                                         "x-cloud-trace-context"
+                                         "traceparent"
+                                         "grpc-trace-bin"};
 
 const std::string&
 MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName operation_name) {
@@ -77,25 +82,7 @@ MetaProtocolTracerUtility::shouldTraceRequest(const StreamInfo::StreamInfo& stre
   NOT_REACHED_GCOVR_EXCL_LINE;
 }
 
-/*
-static void addTagIfNotNull(Envoy::Tracing::Span& span, const std::string& tag,
-                            const Http::HeaderEntry* entry) {
-  if (entry != nullptr) {
-    span.setTag(tag, entry->value().getStringView());
-  }
-}
-
-template <class T> static void addGrpcResponseTags(Envoy::Tracing::Span& span, const T& headers) {
-  addTagIfNotNull(span, Tracing::Tags::get().GrpcStatusCode, headers.GrpcStatus());
-  addTagIfNotNull(span, Tracing::Tags::get().GrpcMessage, headers.GrpcMessage());
-  // Set error tag when status is not OK.
-  absl::optional<Grpc::Status::GrpcStatus> grpc_status_code = Grpc::Common::getGrpcStatus(headers);
-  if (grpc_status_code && grpc_status_code.value() != Grpc::Status::WellKnownGrpcStatus::Ok) {
-    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
-  }
-}
- */
-
+// TODO add log to tracing
 /*
 static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::StreamInfo& stream_info) {
   const auto start_time = stream_info.startTime();
@@ -268,13 +255,24 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
 
   if (config.operationName() == Envoy::Tracing::OperationName::Egress) {
     span_name.append(" ");
-    // todo span_name.append(std::string(request_headers.getHostValue()));
+    span_name.append(metadata.getOperationName());
   }
 
   Envoy::Tracing::SpanPtr active_span =
       driver_->startSpan(config, metadata, span_name, stream_info.startTime(), tracing_decision);
 
-  // Set tags related to the local environment
+  // inject tracing context to metadata
+  active_span->injectContext(metadata);
+  // set tracing context related header to mutation so these headers can be sent to the application.
+  // the application is responsible to pass these headers to upstream requests.
+  for (int i = 0; i < 10; i++) {
+    auto val = metadata.getString(tracing_headers[i]);
+    if (val != "") {
+      mutation[tracing_headers[i]] = val;
+    }
+  }
+
+  // Set tags
   if (active_span) {
     active_span->setTag(Tracing::Tags::get().NodeId, local_info_.nodeName());
     active_span->setTag(Tracing::Tags::get().Zone, local_info_.zoneName());
@@ -282,9 +280,6 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
       active_span->setTag(key, val);
       return true;
     });
-    for (const auto& [key, val] : mutation) {
-      active_span->setTag(key, val);
-    }
   }
 
   return active_span;
