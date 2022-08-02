@@ -236,7 +236,7 @@ void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
   }
 
   if (!stream_info.responseCode() || Http::CodeUtility::is5xx(stream_info.responseCode().value())) {
-    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
+    //@todo span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
   }
 }
 
@@ -271,10 +271,8 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
     // todo span_name.append(std::string(request_headers.getHostValue()));
   }
 
-  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
-  auto& headers = metadataImpl->getHeaders();
   Envoy::Tracing::SpanPtr active_span =
-      driver_->startSpan(config, headers, span_name, stream_info.startTime(), tracing_decision);
+      driver_->startSpan(config, metadata, span_name, stream_info.startTime(), tracing_decision);
 
   // Set tags related to the local environment
   if (active_span) {

@@ -39,23 +39,44 @@ private:
 
 class MetadataImpl : public Metadata {
 public:
-  MetadataImpl() {
-    headers_ = Http::RequestHeaderMapImpl::create();
-    properties_ = std::make_unique<PropertiesImpl>();
-  };
+  MetadataImpl() { headers_ = Http::RequestHeaderMapImpl::create(); };
   ~MetadataImpl() = default;
 
-  void put(std::string key, std::any value) override { properties_->put(key, value); };
-  AnyOptConstRef get(std::string key) const override { return properties_->get(key); };
+  void put(std::string key, std::any value) override { properties_.insert({key, value}); };
+  AnyOptConstRef get(std::string key) const override {
+    auto it = properties_.find(key);
+    if (it != properties_.end()) {
+      return OptRef<const std::any>(it->second);
+    }
+    return OptRef<const std::any>();
+  };
   void putString(std::string key, std::string value) override {
     this->put(key, value);
     auto lowcase_key = Http::LowerCaseString(key);
     headers_->remove(lowcase_key);
     headers_->addCopy(lowcase_key, value);
   };
-  std::string getString(std::string key) const override { return properties_->getString(key); };
-  bool getBool(std::string key) const override { return properties_->getBool(key); };
-  uint32_t getUint32(std::string key) const override { return properties_->getUint32(key); };
+  std::string getString(std::string key) const override {
+    auto value = this->get(key);
+    if (value.has_value()) {
+      return std::any_cast<std::string>(value.ref());
+    }
+    return "";
+  };
+  bool getBool(std::string key) const override {
+    auto value = this->get(key);
+    if (value.has_value()) {
+      return std::any_cast<bool>(value.ref());
+    }
+    return false;
+  };
+  uint32_t getUint32(std::string key) const override {
+    auto value = this->get(key);
+    if (value.has_value()) {
+      return std::any_cast<uint32_t>(value.ref());
+    }
+    return 0;
+  };
 
   Buffer::Instance& originMessage() override { return origin_message_; };
   void setMessageType(MessageType messageType) override { message_type_ = messageType; };
@@ -84,7 +105,10 @@ public:
     copy->setHeaderSize(getHeaderSize());
     copy->setRequestId(getRequestId());
     copy->setStreamId(getStreamId());
-    copy->properties_ = properties_->clone();
+
+    for (const auto& [key, value] : properties_) {
+      copy->put(key, value);
+    }
     return copy;
   };
   Http::RequestHeaderMap& getHeaders() const { return *headers_; }
@@ -96,15 +120,21 @@ public:
   absl::string_view method() const override { return ""; }; // not applicable for MetaProtocol
   void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override{};
   absl::optional<absl::string_view> getByKey(absl::string_view) const override {
-
     return absl::optional<absl::string_view>{};
   };
-  void setByKey(absl::string_view, absl::string_view) override{};
-  void setByReferenceKey(absl::string_view, absl::string_view) override{};
-  void setByReference(absl::string_view, absl::string_view) override{};
+  void setByKey(absl::string_view key, absl::string_view val) override {
+    putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
+  };
+  void setByReferenceKey(absl::string_view key, absl::string_view val) override {
+    putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
+  };
+  void setByReference(absl::string_view key, absl::string_view val) override {
+    putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
+  };
 
 private:
-  PropertiesImplPtr properties_;
+private:
+  std::map<std::string, std::any> properties_;
   Buffer::OwnedImpl origin_message_;
   MessageType message_type_{MessageType::Request};
   ResponseStatus response_status_{ResponseStatus::Ok};
