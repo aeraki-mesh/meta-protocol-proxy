@@ -278,6 +278,10 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
   if (active_span) {
     active_span->setTag(Tracing::Tags::get().NodeId, local_info_.nodeName());
     active_span->setTag(Tracing::Tags::get().Zone, local_info_.zoneName());
+    metadata.forEach([&active_span](absl::string_view key, absl::string_view val) {
+      active_span->setTag(key, val);
+      return true;
+    });
   }
 
   return active_span;
