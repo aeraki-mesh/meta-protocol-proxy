@@ -81,7 +81,7 @@ public:
   virtual uint32_t getUint32(std::string key) const PURE;
 };
 
-class Metadata : public Properties, public Envoy::Tracing::TraceContext {
+class Metadata : public Envoy::Tracing::TraceContext {
 public:
   inline static const std::string HEADER_REAL_SERVER_ADDRESS =
       "x-meta-protocol-real-server-address";

@@ -42,35 +42,35 @@ public:
   MetadataImpl() { headers_ = Http::RequestHeaderMapImpl::create(); };
   ~MetadataImpl() = default;
 
-  void put(std::string key, std::any value) override { properties_.insert({key, value}); };
-  AnyOptConstRef get(std::string key) const override {
+  void put(std::string key, std::any value) { properties_.insert({key, value}); };
+  AnyOptConstRef get(std::string key) const {
     auto it = properties_.find(key);
     if (it != properties_.end()) {
       return OptRef<const std::any>(it->second);
     }
     return OptRef<const std::any>();
   };
-  void putString(std::string key, std::string value) override {
+  void putString(std::string key, std::string value) {
     this->put(key, value);
     auto lowcase_key = Http::LowerCaseString(key);
     headers_->remove(lowcase_key);
     headers_->addCopy(lowcase_key, value);
   };
-  std::string getString(std::string key) const override {
+  std::string getString(std::string key) const {
     auto value = this->get(key);
     if (value.has_value()) {
       return std::any_cast<std::string>(value.ref());
     }
     return "";
   };
-  bool getBool(std::string key) const override {
+  bool getBool(std::string key) const {
     auto value = this->get(key);
     if (value.has_value()) {
       return std::any_cast<bool>(value.ref());
     }
     return false;
   };
-  uint32_t getUint32(std::string key) const override {
+  uint32_t getUint32(std::string key) const {
     auto value = this->get(key);
     if (value.has_value()) {
       return std::any_cast<uint32_t>(value.ref());
