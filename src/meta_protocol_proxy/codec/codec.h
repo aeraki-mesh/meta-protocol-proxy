@@ -32,54 +32,6 @@ enum class ResponseStatus {
 };
 
 using AnyOptConstRef = OptRef<const std::any>;
-class Properties {
-public:
-  virtual ~Properties() = default;
-
-  /**
-   * Put a any type key:value pair in the metadata.
-   * Please note that the key:value pair put by this function will not be used for routing.
-   * Use putString function instead if the decoded key:value pair is intended for routing.
-   * @param key
-   * @param value
-   */
-  virtual void put(std::string key, std::any value) PURE;
-
-  /**
-   * Get the value by key from the metadata.
-   * @param key
-   * @return
-   */
-  virtual AnyOptConstRef get(std::string key) const PURE;
-
-  /**
-   * Put a string key:value pair in the metadata, the stored value will be used for routing.
-   * @param key
-   * @param value
-   */
-  virtual void putString(std::string key, std::string value) PURE;
-
-  /**
-   * Get a string value from the metadata.
-   * @param key
-   * @return
-   */
-  virtual std::string getString(std::string key) const PURE;
-
-  /**
-   * Get a bool value from the metadata.
-   * @param key
-   * @return
-   */
-  virtual bool getBool(std::string key) const PURE;
-
-  /**
-   * Get a uint32 value from the metadata.
-   * @param key
-   * @return
-   */
-  virtual uint32_t getUint32(std::string key) const PURE;
-};
 
 class Metadata : public Envoy::Tracing::TraceContext {
 public:
