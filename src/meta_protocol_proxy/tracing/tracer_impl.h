@@ -45,10 +45,8 @@ public:
    * Then finishes the span.
    */
   static void finalizeDownstreamSpan(Envoy::Tracing::Span& span, const Metadata& metadata,
-                                     // const Http::ResponseHeaderMap* response_headers,
-                                     // const Http::ResponseTrailerMap* response_trailers,
                                      const StreamInfo::StreamInfo& stream_info,
-                                     const Envoy::Tracing::Config& tracing_config);
+                                     const Envoy::Tracing::Config& tracing_config, ResponseStatus);
 
   /**
    * Adds information obtained from the upstream request headers as tags to the active span.

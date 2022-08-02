@@ -32,23 +32,17 @@ namespace MetaProtocolProxy {
 namespace Tracing {
 
 // TODO(perf): Avoid string creations/copies in this entire file.
-static std::string buildResponseCode(const StreamInfo::StreamInfo& info) {
-  return info.responseCode() ? std::to_string(info.responseCode().value()) : "0";
-}
+// static std::string buildResponseCode(const StreamInfo::StreamInfo& info) {
+//  return info.responseCode() ? std::to_string(info.responseCode().value()) : "0";
+//}
 
 const std::string MetaProtocolTracerUtility::IngressOperation = "ingress";
 const std::string MetaProtocolTracerUtility::EgressOperation = "egress";
 
-const std::string tracing_headers[10] = {"x-request-id"
-                                         "x-b3-traceid"
-                                         "x-b3-spanid"
-                                         "x-b3-parentspanid"
-                                         "x-b3-sampled"
-                                         "x-b3-flags"
-                                         "x-ot-span-context"
-                                         "x-cloud-trace-context"
-                                         "traceparent"
-                                         "grpc-trace-bin"};
+const std::string tracing_headers[10] = {
+    "x-request-id", "x-b3-traceid",  "x-b3-spanid",       "x-b3-parentspanid",
+    "x-b3-sampled", "x-b3-flags",    "x-ot-span-context", "x-cloud-trace-context",
+    "traceparent",  "grpc-trace-bin"};
 
 const std::string&
 MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName operation_name) {
@@ -124,9 +118,11 @@ static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::Stream
 }
 */
 
-void MetaProtocolTracerUtility::finalizeDownstreamSpan(
-    Envoy::Tracing::Span& span, const Metadata& metadata, const StreamInfo::StreamInfo& stream_info,
-    const Envoy::Tracing::Config& tracing_config) {
+void MetaProtocolTracerUtility::finalizeDownstreamSpan(Envoy::Tracing::Span& span,
+                                                       const Metadata& metadata,
+                                                       const StreamInfo::StreamInfo& stream_info,
+                                                       const Envoy::Tracing::Config& tracing_config,
+                                                       ResponseStatus responseStatus) {
   const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
   auto& request_headers = metadataImpl->getHeaders();
   // Pre response data.
@@ -174,6 +170,9 @@ void MetaProtocolTracerUtility::finalizeDownstreamSpan(
   span.setTag(Tracing::Tags::get().ResponseSize, std::to_string(stream_info.bytesSent()));
   */
   setCommonTags(span, stream_info, tracing_config);
+  if (responseStatus == ResponseStatus::Error) {
+    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
+  }
   span.finishSpan();
 }
 
@@ -195,8 +194,7 @@ void MetaProtocolTracerUtility::finalizeUpstreamSpan(Envoy::Tracing::Span& span,
 }
 
 void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
-                                              // const Http::ResponseHeaderMap* response_headers,
-                                              // const Http::ResponseTrailerMap* response_trailers,
+
                                               const StreamInfo::StreamInfo& stream_info,
                                               const Envoy::Tracing::Config& tracing_config) {
 
@@ -207,9 +205,9 @@ void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
                 stream_info.upstreamHost()->cluster().observabilityName());
   }
   // Post response data.
-  span.setTag(Tracing::Tags::get().HttpStatusCode, buildResponseCode(stream_info));
-  span.setTag(Tracing::Tags::get().ResponseFlags,
-              StreamInfo::ResponseFlagUtils::toShortString(stream_info));
+  // span.setTag(Tracing::Tags::get().HttpStatusCode, buildResponseCode(stream_info));
+  // span.setTag(Tracing::Tags::get().ResponseFlags,
+  //           StreamInfo::ResponseFlagUtils::toShortString(stream_info));
 
   // GRPC data.
   /*if (response_trailers && response_trailers->GrpcStatus() != nullptr) {
@@ -222,9 +220,10 @@ void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
     // annotateVerbose(span, stream_info);
   }
 
-  if (!stream_info.responseCode() || Http::CodeUtility::is5xx(stream_info.responseCode().value())) {
-    //@todo span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
-  }
+  // if (!stream_info.responseCode() ||
+  // Http::CodeUtility::is5xx(stream_info.responseCode().value())) {
+  //@todo span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
+  //}
 }
 
 Envoy::Tracing::CustomTagConstSharedPtr
@@ -277,7 +276,8 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
     active_span->setTag(Tracing::Tags::get().NodeId, local_info_.nodeName());
     active_span->setTag(Tracing::Tags::get().Zone, local_info_.zoneName());
     metadata.forEach([&active_span](absl::string_view key, absl::string_view val) {
-      active_span->setTag(key, val);
+      std::string tag_key = "metadata: " + std::string(key.data(), key.size());
+      active_span->setTag(tag_key, val);
       return true;
     });
   }

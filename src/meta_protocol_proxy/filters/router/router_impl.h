@@ -79,6 +79,7 @@ private:
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
   MetadataSharedPtr request_metadata_;
+  MetadataSharedPtr response_metadata_;
 
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;

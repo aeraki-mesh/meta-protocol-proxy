@@ -102,6 +102,7 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
   if (upstream_request_ == nullptr) {
     return FilterStatus::ContinueIteration;
   }
+  response_metadata_ = metadata;
 
   ENVOY_STREAM_LOG(trace, "meta protocol router: response status: {}", *encoder_filter_callbacks_,
                    metadata->getResponseStatus());
@@ -148,9 +149,10 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     upstream_request_->onResponseComplete();
     cleanUpstreamRequest();
     if (active_span_) {
+      assert(response_metadata_);
       Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
           *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
-          *decoder_filter_callbacks_->tracingConfig());
+          *decoder_filter_callbacks_->tracingConfig(), request_metadata_->getResponseStatus());
     }
     return;
   case UpstreamResponseStatus::Reset:
