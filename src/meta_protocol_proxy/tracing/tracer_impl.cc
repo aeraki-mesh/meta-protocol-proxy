@@ -262,7 +262,7 @@ MetaProtocolTracerImpl::MetaProtocolTracerImpl(Envoy::Tracing::DriverSharedPtr d
 
 Envoy::Tracing::SpanPtr
 MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata& metadata,
-                                  const StreamInfo::StreamInfo& stream_info,
+                                  Mutation& mutation, const StreamInfo::StreamInfo& stream_info,
                                   const Envoy::Tracing::Decision tracing_decision) {
   std::string span_name = MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName());
 
@@ -282,6 +282,9 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
       active_span->setTag(key, val);
       return true;
     });
+    for (const auto& [key, val] : mutation) {
+      active_span->setTag(key, val);
+    }
   }
 
   return active_span;

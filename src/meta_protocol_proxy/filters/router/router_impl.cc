@@ -67,7 +67,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   auto filter_status = upstream_request_->start();
   // only trace request if there's a tracing config
   if (decoder_filter_callbacks_->tracingConfig()) {
-    traceRequest();
+    traceRequest(request_metadata, request_mutation);
   }
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
@@ -208,14 +208,14 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 // ---- Upstream::LoadBalancerContextBase ----
 
-void Router::traceRequest() {
+void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation) {
   // const Tracing::Decision tracing_decision =
   //     Tracing::MetaProtocolTracerUtility::shouldTraceRequest(filter_manager_.streamInfo());
   const Envoy::Tracing::Decision tracing_decision =
       Envoy::Tracing::Decision{Envoy::Tracing::Reason::Sampling, true};
 
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
-      *decoder_filter_callbacks_->tracingConfig(), *request_metadata_,
+      *decoder_filter_callbacks_->tracingConfig(), *request_metadata, *request_mutation,
       decoder_filter_callbacks_->streamInfo(), tracing_decision);
 }
 

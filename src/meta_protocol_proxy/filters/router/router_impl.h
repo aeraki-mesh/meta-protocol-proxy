@@ -69,7 +69,7 @@ public:
 private:
   void cleanUpstreamRequest();
   bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
-  void traceRequest();
+  void traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation);
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};

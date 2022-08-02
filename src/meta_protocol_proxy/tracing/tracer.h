@@ -23,7 +23,7 @@ public:
   virtual ~MetaProtocolTracer() = default;
 
   virtual Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config,
-                                            Metadata& metadata,
+                                            Metadata& metadata, Mutation& mutation,
                                             const StreamInfo::StreamInfo& stream_info,
                                             const Envoy::Tracing::Decision tracing_decision) PURE;
 };
