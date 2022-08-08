@@ -57,6 +57,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   // put real server ip in the response
   metadata_->putString(Metadata::HEADER_REAL_SERVER_ADDRESS,
                        request_metadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
+
   // TODO support response mutation
   codec_.encode(*metadata_, Mutation{}, metadata->originMessage());
   downstream_connection_.write(metadata->originMessage(), false);
@@ -214,6 +215,7 @@ ActiveMessage::ActiveMessage(ConnectionManager& connection_manager)
                    connection_manager.connection().connectionInfoProviderSharedPtr()),
       pending_stream_decoded_(false), local_response_sent_(false) {
   connection_manager.stats().request_active_.inc();
+  
 }
 
 ActiveMessage::~ActiveMessage() {
@@ -267,11 +269,42 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
   return std::next(filter->entry());
 }
 
+#define MARKET_VS_FLAG "1"
+#define MARKET_VS_FLAG_COMPRESS "3"
+#define MARKET_VZ_FLAG "4"
+#define MARKET_VZ_FLAG_COMPRESS "6"
+#define MARKET_US_FLAG "5"
+#define MARKET_US_FLAG_COMPRESS "7"
+#define MARKET_UK_FLAG "8"
+#define MARKET_UK_FLAG_COMPRESS "10"
+#define MARKET_VK_FLAG "9"
+#define MARKET_VK_FLAG_COMPRESS "11"
+#define MARKET_DEFAULT_FLAG "99"
+
+void ActiveMessage::IncMarketStats(MetadataSharedPtr metadata){
+    std::string market_flag = metadata->getString("market");
+
+    if ( MARKET_VS_FLAG == market_flag || MARKET_VS_FLAG_COMPRESS == market_flag){
+      connection_manager_.stats().route_vs_.inc();
+    }else if( MARKET_VZ_FLAG == market_flag || MARKET_VZ_FLAG_COMPRESS == market_flag){
+      connection_manager_.stats().route_vz_.inc();
+    }else if( MARKET_US_FLAG == market_flag || MARKET_US_FLAG_COMPRESS == market_flag){
+      connection_manager_.stats().route_us_.inc();
+    }else if( MARKET_UK_FLAG == market_flag || MARKET_UK_FLAG_COMPRESS == market_flag){
+      connection_manager_.stats().route_uk_.inc();
+    }else if( MARKET_VK_FLAG == market_flag || MARKET_VK_FLAG_COMPRESS == market_flag){
+      connection_manager_.stats().route_uk_.inc();
+    }else{
+      connection_manager_.stats().route_default_.inc();
+    }   
+}
+
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   connection_manager_.stats().request_decoding_success_.inc();
   bool needApplyFilters = false;
   switch (metadata->getMessageType()) {
   case MessageType::Request:
+    IncMarketStats(metadata);
     needApplyFilters = true;
     break;
   case MessageType::Stream_Init:

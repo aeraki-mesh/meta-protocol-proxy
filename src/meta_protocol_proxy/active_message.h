@@ -18,6 +18,7 @@
 
 #include "absl/types/optional.h"
 
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
@@ -198,6 +199,7 @@ public:
 private:
   void addDecoderFilterWorker(DecoderFilterSharedPtr filter, bool dual_filter);
   void addEncoderFilterWorker(EncoderFilterSharedPtr, bool dual_filter);
+  void IncMarketStats(MetadataSharedPtr metadata);
 
   ConnectionManager& connection_manager_;
 
@@ -226,6 +228,7 @@ private:
 };
 
 using ActiveMessagePtr = std::unique_ptr<ActiveMessage>;
+
 
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters

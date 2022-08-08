@@ -35,8 +35,13 @@ namespace MetaProtocolProxy {
   COUNTER(response_success)                                                                        \
   GAUGE(request_active, Accumulate)                                                                \
   HISTOGRAM(request_time_ms, Milliseconds)                                                         \
-  COUNTER(idle_timeout)                                                                            
-
+  COUNTER(idle_timeout)                                                                            \
+  COUNTER(route_vs)                                                                                \
+  COUNTER(route_vz)                                                                                \
+  COUNTER(route_us)                                                                                \
+  COUNTER(route_uk)                                                                                \
+  COUNTER(route_vk)                                                                                \
+  COUNTER(route_default)  
 /**
  * Struct definition for all meta protocol  proxy stats. @see stats_macros.h
  */
