@@ -24,6 +24,7 @@ ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& ra
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: read {} bytes", data.length());
+
   request_buffer_.move(data);
   dispatch();
 
@@ -58,9 +59,11 @@ void ConnectionManager::initializeReadFilterCallbacks(Network::ReadFilterCallbac
 
 void ConnectionManager::onEvent(Network::ConnectionEvent event) {
   if (event == Network::ConnectionEvent::LocalClose) {
+    ENVOY_LOG(debug, "meta protocol: LocalClose");
     disableIdleTimer();
     resetAllMessages(true);
   } else if (event == Network::ConnectionEvent::RemoteClose) {
+    ENVOY_LOG(debug, "meta protocol: RemoteClose");
     disableIdleTimer();
     resetAllMessages(false);
   }
@@ -229,6 +232,7 @@ void ConnectionManager::disableIdleTimer() {
     idle_timer_.reset();
   }
 }
+
 
 } // namespace  MetaProtocolProxy
 } // namespace NetworkFilters
