@@ -40,12 +40,6 @@ Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end
 }
 
 Network::FilterStatus ConnectionManager::onNewConnection() {
-  //init idle timer.
-  if(config_.idleTimeout()){
-    idle_timer_ = read_callbacks_->connection().dispatcher().createTimer(
-        [this]() { this->onIdleTimeout(); });  
-    resetIdleTimer();           
-  }
   return Network::FilterStatus::Continue;
 }
 
@@ -58,10 +52,8 @@ void ConnectionManager::initializeReadFilterCallbacks(Network::ReadFilterCallbac
 
 void ConnectionManager::onEvent(Network::ConnectionEvent event) {
   if (event == Network::ConnectionEvent::LocalClose) {
-    disableIdleTimer();
     resetAllMessages(true);
   } else if (event == Network::ConnectionEvent::RemoteClose) {
-    disableIdleTimer();
     resetAllMessages(false);
   }
 }
@@ -105,8 +97,7 @@ void ConnectionManager::dispatch() {
     ENVOY_LOG(debug, "meta protocol: it's empty data");
     return;
   }
-  //when data is not empty,it will enable timer again.
-  resetIdleTimer();
+
   try {
     bool underflow = false;
     // decoder return underflow in th following two cases:
@@ -205,28 +196,6 @@ void ConnectionManager::resetAllMessages(bool local_reset) {
     }
 
     active_message_list_.front()->onReset();
-  }
-}
-
-void ConnectionManager::onIdleTimeout() {
-  ENVOY_CONN_LOG(debug, "meta protocol:Session timed out", read_callbacks_->connection());
-  stats_.idle_timeout_.inc();
-  resetAllMessages(true);
-  clearStream();
-  read_callbacks_->connection().close(Network::ConnectionCloseType::NoFlush);
-}
-
-void ConnectionManager::resetIdleTimer() {
-  if (idle_timer_ != nullptr) {
-    ASSERT(config_.idleTimeout());
-    idle_timer_->enableTimer(config_.idleTimeout().value());
-  }
-}
-
-void ConnectionManager::disableIdleTimer() {
-  if (idle_timer_ != nullptr) {
-    idle_timer_->disableTimer();
-    idle_timer_.reset();
   }
 }
 

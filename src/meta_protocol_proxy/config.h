@@ -82,7 +82,7 @@ public:
   Route::Config& routerConfig() override { return *this; }
   Codec& createCodec() override;
   std::string applicationProtocol() override { return application_protocol_; };
-  absl::optional<std::chrono::milliseconds> idleTimeout() override { return idle_timeout_;};
+
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
 
@@ -96,7 +96,6 @@ private:
   Route::RouteConfigProviderSharedPtr route_config_provider_;
   Route::RouteConfigProviderManager& route_config_provider_manager_;
   std::map<std::string, CodecPtr> codec_map_;
-  absl::optional<std::chrono::milliseconds> idle_timeout_;
 };
 
 } // namespace MetaProtocolProxy
