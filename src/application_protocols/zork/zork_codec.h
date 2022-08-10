@@ -62,8 +62,8 @@ private:
   ZorkHeader zork_header_request_;
   ZorkHeader zork_header_response_;
   MetaProtocolProxy::MessageType messageType_;
-  std::unique_ptr<Buffer::OwnedImpl> origin_msg_request_;
-  std::unique_ptr<Buffer::OwnedImpl> origin_msg_response_;
+  Buffer::OwnedImpl origin_msg_request_;
+  Buffer::OwnedImpl origin_msg_response_;
 };
 
 } // namespace Zork
