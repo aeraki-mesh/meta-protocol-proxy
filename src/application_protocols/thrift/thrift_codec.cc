@@ -83,7 +83,7 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& data,
   }
 
   toMetadata(*metadata_, metadata);
-  ENVOY_LOG(debug, "thrift: origin message length {}  ", metadata.getOriginMessage().length());
+  ENVOY_LOG(debug, "thrift: origin message length {}  ", metadata.originMessage().length());
 
   frame_ended_ = true;
   metadata_.reset();
@@ -201,8 +201,7 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
     NOT_REACHED_GCOVR_EXCL_LINE;
   }
 
-  transport_->encodeFrame(metadata.getOriginMessage(), msgMetadata,
-                          state_machine_->originalMessage());
+  transport_->encodeFrame(metadata.originMessage(), msgMetadata, state_machine_->originalMessage());
 }
 
 void ThriftCodec::toMsgMetadata(const Metadata& metadata,

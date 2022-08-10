@@ -15,7 +15,8 @@ namespace Brpc {
 
 MetaProtocolProxy::DecodeStatus BrpcCodec::decode(Buffer::Instance& buffer,
                                                   MetaProtocolProxy::Metadata& metadata) {
-  ENVOY_LOG(debug, "Brpc decoder: {} bytes available, msg type: {}", buffer.length(), metadata.getMessageType());
+  ENVOY_LOG(debug, "Brpc decoder: {} bytes available, msg type: {}", buffer.length(),
+            metadata.getMessageType());
   messageType_ = metadata.getMessageType();
   ASSERT(messageType_ == MetaProtocolProxy::MessageType::Request ||
          messageType_ == MetaProtocolProxy::MessageType::Response);
@@ -35,7 +36,7 @@ MetaProtocolProxy::DecodeStatus BrpcCodec::decode(Buffer::Instance& buffer,
 }
 
 void BrpcCodec::encode(const MetaProtocolProxy::Metadata& metadata,
-                      const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
+                       const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
   // TODO we don't need to implement encode for now.
   // This method only need to be implemented if we want to modify the respose message
   (void)metadata;
@@ -46,7 +47,8 @@ void BrpcCodec::encode(const MetaProtocolProxy::Metadata& metadata,
 void BrpcCodec::onError(const MetaProtocolProxy::Metadata& /*metadata*/,
                         const MetaProtocolProxy::Error& /*error*/, Buffer::Instance& /*buffer*/) {
   // BrpcHeader response;
-  // // Make sure to set the request id if the application protocol has one, otherwise MetaProtocol framework will 
+  // // Make sure to set the request id if the application protocol has one, otherwise MetaProtocol
+  // framework will
   // // complaint that the id in the error response is not equal to the one in the request
   // response.set_pack_flow(metadata.getRequestId());
   // response.set_pack_len(BrpcHeader::HEADER_SIZE);
@@ -62,8 +64,7 @@ void BrpcCodec::onError(const MetaProtocolProxy::Metadata& /*metadata*/,
 }
 
 BrpcDecodeStatus BrpcCodec::handleState(Buffer::Instance& buffer) {
-  switch (decode_status)
-  {
+  switch (decode_status) {
   case BrpcDecodeStatus::DecodeHeader:
     return decodeHeader(buffer);
   case BrpcDecodeStatus::DecodePayload:
@@ -82,15 +83,15 @@ BrpcDecodeStatus BrpcCodec::decodeHeader(Buffer::Instance& buffer) {
     return BrpcDecodeStatus::WaitForData;
   }
 
-  if(!brpc_header_.decode(buffer)) {
+  if (!brpc_header_.decode(buffer)) {
     throw EnvoyException(fmt::format("brpc header invalid"));
   }
-  
+
   return BrpcDecodeStatus::DecodePayload;
 }
 
 BrpcDecodeStatus BrpcCodec::decodeBody(Buffer::Instance& buffer) {
-  // Wait for more data if the buffer is not a complete message	
+  // Wait for more data if the buffer is not a complete message
   if (buffer.length() < BrpcHeader::HEADER_SIZE + brpc_header_.get_body_len()) {
     return BrpcDecodeStatus::WaitForData;
   }
@@ -111,7 +112,7 @@ BrpcDecodeStatus BrpcCodec::decodeBody(Buffer::Instance& buffer) {
 void BrpcCodec::toMetadata(MetaProtocolProxy::Metadata& metadata) {
   // metadata.setRequestId(brpc_header_.get_pack_flow());
   // metadata.putString("cmd", std::to_string(brpc_header_.get_req_cmd()));
-  metadata.setOriginMessage(*origin_msg_);
+  metadata.originMessage().move(*origin_msg_);
 }
 
 } // namespace Brpc

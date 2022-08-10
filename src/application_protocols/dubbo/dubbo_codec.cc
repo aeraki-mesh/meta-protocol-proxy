@@ -171,7 +171,7 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata, Context& context
   DubboCodec::toMetadata(msgMetadata, metadata);
   metadata.setHeaderSize(context.headerSize());
   metadata.setBodySize(context.bodySize());
-  metadata.setOriginMessage(context.originMessage());
+  metadata.originMessage().move(context.originMessage());
 }
 
 void DubboCodec::toMsgMetadata(const MetaProtocolProxy::Metadata& metadata,

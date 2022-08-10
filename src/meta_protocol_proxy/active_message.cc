@@ -58,8 +58,8 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   metadata_->putString(Metadata::HEADER_REAL_SERVER_ADDRESS,
                        request_metadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
   // TODO support response mutation
-  codec_.encode(*metadata_, Mutation{}, metadata->getOriginMessage());
-  downstream_connection_.write(metadata->getOriginMessage(), false);
+  codec_.encode(*metadata_, Mutation{}, metadata->originMessage());
+  downstream_connection_.write(metadata->originMessage(), false);
   ENVOY_LOG(debug,
             "meta protocol {} response: the upstream response message has been forwarded to the "
             "downstream",
@@ -144,7 +144,7 @@ void ActiveMessageDecoderFilter::continueDecoding() {
   ENVOY_LOG(debug, "meta protocol: continueDecoding, id is {}",
             activeMessage_.metadata()->getRequestId());
   auto state = ActiveMessage::FilterIterationStartState::AlwaysStartFromNext;
-  if (0 != activeMessage_.metadata()->getOriginMessage().length()) {
+  if (0 != activeMessage_.metadata()->originMessage().length()) {
     state = ActiveMessage::FilterIterationStartState::CanStartFromCurrent;
     ENVOY_LOG(warn, "The original message data is not consumed, triggering the decoder filter from "
                     "the current location");
@@ -192,7 +192,7 @@ ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
 void ActiveMessageEncoderFilter::continueEncoding() {
   ASSERT(activeMessage_.metadata());
   auto state = ActiveMessage::FilterIterationStartState::AlwaysStartFromNext;
-  if (0 != activeMessage_.metadata()->getOriginMessage().length()) {
+  if (0 != activeMessage_.metadata()->originMessage().length()) {
     state = ActiveMessage::FilterIterationStartState::CanStartFromCurrent;
     ENVOY_LOG(warn, "The original message data is not consumed, triggering the encoder filter from "
                     "the current location");
@@ -286,7 +286,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
                 "stream id: {}",
                 metadata->getStreamId());
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
-      existingStream.send2upstream(metadata->getOriginMessage());
+      existingStream.send2upstream(metadata->originMessage());
     } else {
       ENVOY_LOG(error,
                 "meta protocol request: can't find an existing stream for stream data message, "
@@ -301,7 +301,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
       Stream& existingStream = connection_manager_.getActiveStream(metadata->getStreamId());
       // order matters, close stream before calling send2upstream
       existingStream.closeClientStream();
-      existingStream.send2upstream(metadata->getOriginMessage());
+      existingStream.send2upstream(metadata->originMessage());
     } else {
       ENVOY_LOG(error,
                 "meta protocol request: can't find an existing stream for stream close message, "
@@ -317,7 +317,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
       // order matters, close stream before calling send2upstream
       existingStream.closeClientStream();
       existingStream.closeServerStream();
-      existingStream.send2upstream(metadata->getOriginMessage());
+      existingStream.send2upstream(metadata->originMessage());
     } else {
       ENVOY_LOG(error,
                 "meta protocol request: can't find an existing stream for stream close message, "
