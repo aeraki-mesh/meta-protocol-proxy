@@ -57,10 +57,7 @@ public:
   bool getBool(std::string key) const override { return properties_->getBool(key); };
   uint32_t getUint32(std::string key) const override { return properties_->getUint32(key); };
 
-  void setOriginMessage(Buffer::Instance& originMessage) override {
-    origin_message_ = originMessage;
-  };
-  Buffer::Instance& getOriginMessage() override { return origin_message_; };
+  Buffer::Instance& originMessage() override { return origin_message_; };
   void setMessageType(MessageType messageType) override { message_type_ = messageType; };
   MessageType getMessageType() const override { return message_type_; };
   void setResponseStatus(ResponseStatus responseStatus) override {
@@ -78,9 +75,7 @@ public:
   size_t getBodySize() const override { return body_size_; };
   MetadataSharedPtr clone() const override {
     auto copy = std::make_shared<MetadataImpl>();
-    Buffer::OwnedImpl originalMessage;
-    originalMessage.add(origin_message_);
-    copy->setOriginMessage(originalMessage);
+    copy->originMessage().add(origin_message_);
     copy->setMessageType(getMessageType());
     copy->setResponseStatus(getResponseStatus());
     copy->setBodySize(getBodySize());

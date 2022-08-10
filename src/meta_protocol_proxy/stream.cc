@@ -34,7 +34,7 @@ void Stream::send2downstream(Buffer::Instance& data, bool end_stream) {
       ENVOY_LOG(debug, "meta protocol: response wait for data {}", stream_id_);
       return;
     }
-    downstream_conn_.write(metadata->getOriginMessage(), end_stream);
+    downstream_conn_.write(metadata->originMessage(), end_stream);
     if (metadata->getMessageType() == MessageType::Stream_Close_One_Way) {
       ENVOY_LOG(debug, "meta protocol: close server side stream {}", stream_id_);
       closeServerStream();

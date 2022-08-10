@@ -87,8 +87,7 @@ public:
 
   virtual ~Metadata() = default;
 
-  virtual void setOriginMessage(Buffer::Instance&) PURE;
-  virtual Buffer::Instance& getOriginMessage() PURE;
+  virtual Buffer::Instance& originMessage() PURE;
   virtual void setMessageType(MessageType messageType) PURE;
   virtual MessageType getMessageType() const PURE;
   virtual void setResponseStatus(ResponseStatus responseStatus) PURE;

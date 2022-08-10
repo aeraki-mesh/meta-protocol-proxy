@@ -16,8 +16,7 @@ UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& po
     : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
       request_complete_(false), response_started_(false), response_complete_(false),
       stream_reset_(false) {
-  upstream_request_buffer_.move(metadata->getOriginMessage(),
-                                metadata->getOriginMessage().length());
+  upstream_request_buffer_.move(metadata->originMessage(), metadata->originMessage().length());
 }
 
 FilterStatus UpstreamRequest::start() {

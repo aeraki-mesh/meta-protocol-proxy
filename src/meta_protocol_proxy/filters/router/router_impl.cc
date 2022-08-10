@@ -74,7 +74,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
         // We can reuse the same metadata for each request because its original message will be
         // drained in the request
         ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",
-                  metadata_clone->getOriginMessage().length());
+                  metadata_clone->originMessage().length());
         shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), request_mutation,
                               decoder_filter_callbacks_->codec());
       }
