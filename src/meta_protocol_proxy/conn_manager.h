@@ -35,6 +35,7 @@ public:
   virtual Codec& createCodec() PURE;
   virtual Route::Config& routerConfig() PURE;
   virtual std::string applicationProtocol() PURE;
+  virtual absl::optional<std::chrono::milliseconds> idleTimeout() PURE;
   /**
    * @return Route::RouteConfigProvider* the configuration provider used to acquire a route
    *         config for each request flow. Pointer ownership is _not_ transferred to the caller of
