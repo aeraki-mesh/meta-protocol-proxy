@@ -50,9 +50,7 @@ uint32_t MetadataImpl::getUint32(std::string key) const {
 
 MetadataSharedPtr MetadataImpl::clone() const {
   auto copy = std::make_shared<MetadataImpl>();
-  Buffer::OwnedImpl originalMessage;
-  originalMessage.add(origin_message_);
-  copy->setOriginMessage(originalMessage);
+  copy->originMessage().add(origin_message_);
   copy->setMessageType(getMessageType());
   copy->setResponseStatus(getResponseStatus());
   copy->setBodySize(getBodySize());
