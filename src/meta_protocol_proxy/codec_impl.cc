@@ -75,8 +75,13 @@ void MetadataImpl::forEach(Envoy::Tracing::TraceContext::IterateCallback callbac
   }
 };
 
-absl::optional<absl::string_view> MetadataImpl::getByKey(absl::string_view) const {
-  return absl::optional<absl::string_view>{};
+absl::optional<absl::string_view> MetadataImpl::getByKey(absl::string_view key) const {
+  // TODO use string_view instead of string
+  auto val = getString(std::string{key.data(), key.length()});
+  if (val != "") {
+    return absl::string_view{val};
+  }
+  return {};
 };
 void MetadataImpl::setByKey(absl::string_view key, absl::string_view val) {
   putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));

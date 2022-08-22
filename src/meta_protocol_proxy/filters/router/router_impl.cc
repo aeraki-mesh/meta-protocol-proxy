@@ -153,6 +153,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
           *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
           *decoder_filter_callbacks_->tracingConfig(), request_metadata_->getResponseStatus());
+      ENVOY_LOG(debug, "meta protocol router: finish tracing span");
     }
     return;
   case UpstreamResponseStatus::Reset:
@@ -166,6 +167,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
           *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
           *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+      ENVOY_LOG(debug, "meta protocol router: finish tracing span");
     }
     return;
   case UpstreamResponseStatus::MoreData:
@@ -182,6 +184,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
         Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
             *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
             *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+        ENVOY_LOG(debug, "meta protocol router: finish tracing span");
       }
       return;
       // todo we also need to clean the stream
@@ -200,8 +203,8 @@ void Router::onEvent(Network::ConnectionEvent event) {
     Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
         *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
         *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
+    ENVOY_LOG(debug, "meta protocol router: finish tracing span");
   }
-
 }
 // ---- Tcp::ConnectionPool::UpstreamCallbacks ----
 
@@ -229,6 +232,7 @@ void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr 
   const Envoy::Tracing::Decision tracing_decision =
       Envoy::Tracing::Decision{Envoy::Tracing::Reason::Sampling, true};
 
+  ENVOY_LOG(debug, "meta protocol router: start tracing span");
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
       *decoder_filter_callbacks_->tracingConfig(), *request_metadata, *request_mutation,
       decoder_filter_callbacks_->streamInfo(), tracing_decision);
