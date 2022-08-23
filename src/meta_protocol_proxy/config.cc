@@ -63,10 +63,10 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
       route_config_provider_manager_(route_config_provider_manager) {
   ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl constructor ***********");
-  //check idle_timer config
+  // check idle_timer config
   if (config.has_idle_timeout()) {
     const uint64_t timeout = DurationUtil::durationToMilliseconds(config.idle_timeout());
-    ENVOY_LOG(debug,"debug for idle_timeout-{}",timeout);
+    ENVOY_LOG(debug, "debug for idle_timeout-{}", timeout);
     idle_timeout_ = std::chrono::milliseconds(timeout);
   }
 
@@ -115,22 +115,13 @@ Route::RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata,
   // return route_matcher_->route(metadata, random_value);
 }
 
-Codec& ConfigImpl::createCodec() {
+CodecPtr ConfigImpl::createCodec() {
   auto& factory = Envoy::Config::Utility::getAndCheckFactoryByName<NamedCodecConfigFactory>(
       codecConfig_.name());
   ProtobufTypes::MessagePtr message = factory.createEmptyConfigProto();
   Envoy::Config::Utility::translateOpaqueConfig(codecConfig_.config(),
                                                 context_.messageValidationVisitor(), *message);
-  auto key = message->SerializeAsString();
-  auto result = codec_map_.find(key);
-  if (result != codec_map_.end()) {
-    return *result->second;
-  }
-  ENVOY_LOG(trace, "meta protocol: create codec {}", codecConfig_.name());
-  codec_map_.insert({key, factory.createCodec(*message)});
-  // We use reference at all other places because the life span of unique_ptr codec in this map is
-  // always longer than everywhere else
-  return *codec_map_.find(key)->second;
+  return factory.createCodec(*message);
 }
 
 void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {

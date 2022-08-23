@@ -14,11 +14,12 @@ namespace MetaProtocolProxy {
 // class ActiveResponseDecoder
 ActiveResponseDecoder::ActiveResponseDecoder(ActiveMessage& parent, MetaProtocolProxyStats& stats,
                                              Network::Connection& connection,
-                                             std::string applicationProtocol, Codec& codec,
+                                             std::string applicationProtocol, CodecPtr&& codec,
                                              Metadata& requestMetadata)
     : parent_(parent), stats_(stats), downstream_connection_(connection),
-      application_protocol_(applicationProtocol), codec_(codec), request_metadata_(requestMetadata),
-      decoder_(std::make_unique<ResponseDecoder>(codec_, *this)), complete_(false),
+      application_protocol_(applicationProtocol), codec_(std::move(codec)),
+      request_metadata_(requestMetadata),
+      decoder_(std::make_unique<ResponseDecoder>(*codec_, *this)), complete_(false),
       response_status_(UpstreamResponseStatus::MoreData) {}
 
 UpstreamResponseStatus ActiveResponseDecoder::onData(Buffer::Instance& data) {
@@ -58,7 +59,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   metadata_->putString(Metadata::HEADER_REAL_SERVER_ADDRESS,
                        request_metadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
   // TODO support response mutation
-  codec_.encode(*metadata_, Mutation{}, metadata->originMessage());
+  codec_->encode(*metadata_, Mutation{}, metadata->originMessage());
   downstream_connection_.write(metadata->originMessage(), false);
   ENVOY_LOG(debug,
             "meta protocol {} response: the upstream response message has been forwarded to the "
@@ -176,7 +177,7 @@ void ActiveMessageDecoderFilter::resetDownstreamConnection() {
   activeMessage_.resetDownstreamConnection();
 }
 
-Codec& ActiveMessageDecoderFilter::codec() { return activeMessage_.codec(); }
+CodecPtr ActiveMessageDecoderFilter::createCodec() { return activeMessage_.createCodec(); }
 
 void ActiveMessageDecoderFilter::setUpstreamConnection(
     Tcp::ConnectionPool::ConnectionDataPtr conn) {
@@ -483,12 +484,12 @@ void ActiveMessage::startUpstreamResponse(Metadata& requestMetadata) {
 
   ASSERT(response_decoder_ == nullptr);
 
-  Codec& codec = connection_manager_.config().createCodec();
+  CodecPtr codec = connection_manager_.config().createCodec();
 
   // Create a response message decoder.
   response_decoder_ = std::make_unique<ActiveResponseDecoder>(
       *this, connection_manager_.stats(), connection_manager_.connection(),
-      connection_manager_.config().applicationProtocol(), codec, requestMetadata);
+      connection_manager_.config().applicationProtocol(), std::move(codec), requestMetadata);
 }
 
 UpstreamResponseStatus ActiveMessage::upstreamData(Buffer::Instance& buffer) {
@@ -533,7 +534,7 @@ void ActiveMessage::resetDownstreamConnection() {
   connection_manager_.connection().close(Network::ConnectionCloseType::NoFlush);
 }
 
-Codec& ActiveMessage::codec() { return connection_manager_.config().createCodec(); }
+CodecPtr ActiveMessage::createCodec() { return connection_manager_.config().createCodec(); }
 
 void ActiveMessage::resetStream() { connection_manager_.deferredDeleteMessage(*this); }
 

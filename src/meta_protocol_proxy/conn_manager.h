@@ -32,7 +32,7 @@ public:
 
   virtual FilterChainFactory& filterFactory() PURE;
   virtual MetaProtocolProxyStats& stats() PURE;
-  virtual Codec& createCodec() PURE;
+  virtual CodecPtr createCodec() PURE;
   virtual Route::Config& routerConfig() PURE;
   virtual std::string applicationProtocol() PURE;
   virtual absl::optional<std::chrono::milliseconds> idleTimeout() PURE;
@@ -92,11 +92,11 @@ private:
   void dispatch();
   void resetAllMessages(bool local_reset);
 
-  //This function is to deal with idle downstream's connection timeout. 
+  // This function is to deal with idle downstream's connection timeout.
   void onIdleTimeout();
-  //Reset the timer.
+  // Reset the timer.
   void resetIdleTimer();
-  //Disable the timer
+  // Disable the timer
   void disableIdleTimer();
 
   Buffer::OwnedImpl request_buffer_;
@@ -108,10 +108,10 @@ private:
   MetaProtocolProxyStats& stats_;
   Random::RandomGenerator& random_generator_;
 
-  Codec& codec_;
+  CodecPtr codec_;
   RequestDecoderPtr decoder_;
   Network::ReadFilterCallbacks* read_callbacks_{};
-  //timer for idle timeout
+  // timer for idle timeout
   Event::TimerPtr idle_timer_;
 };
 

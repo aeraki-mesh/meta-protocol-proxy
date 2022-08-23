@@ -62,19 +62,20 @@ void UpstreamRequest::releaseUpStreamConnection(bool close) {
   }
 
   // we already got an upstream connection from the pool
-  if (conn_data_) {
-    ASSERT(!conn_pool_handle_);
-
+  // The event triggered by close will also release this connection so clear conn_data_ before
+  // closing.
+  // upstream connection is released back to the pool for re-use when it's containing
+  // ConnectionData is destroyed
+  // important: two threads(dispatcher thread and the upstream conn thread) are operating on the
+  // class variable conn_data_?
+  // Move conn_data_ to local variable because it may be released by the upstream response, which
+  // will cause segment fault
+  auto conn_data = std::move(conn_data_);
+  ENVOY_LOG(debug, "meta protocol upstream request: release upstream connection");
+  if (close && conn_data != nullptr) {
     // we shouldn't close the upstream connection unless explicitly asked at some exceptional cases
-    if (close) {
-      conn_data_->connection().close(Network::ConnectionCloseType::NoFlush);
-      ENVOY_LOG(warn, "meta protocol upstream request: close upstream connection");
-    }
-
-    // upstream connection is released back to the pool for re-use when it's containing
-    // ConnectionData is destroyed
-    conn_data_.reset();
-    ENVOY_LOG(debug, "meta protocol upstream request: release upstream connection");
+    conn_data->connection().close(Network::ConnectionCloseType::NoFlush);
+    ENVOY_LOG(warn, "meta protocol upstream request: close upstream connection");
   }
 }
 
@@ -83,8 +84,8 @@ void UpstreamRequest::encodeData(Buffer::Instance& data) {
   ASSERT(!conn_pool_handle_);
 
   ENVOY_LOG(trace, "proxying {} bytes", data.length());
-  Codec& codec = parent_.codec();
-  codec.encode(*metadata_, *mutation_, data);
+  auto codec = parent_.createCodec();
+  codec->encode(*metadata_, *mutation_, data);
   conn_data_->connection().write(data, false);
 }
 

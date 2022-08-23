@@ -20,7 +20,7 @@ ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& ra
                                      TimeSource& time_system)
     : config_(config), time_system_(time_system), stats_(config_.stats()),
       random_generator_(random_generator), codec_(config.createCodec()),
-      decoder_(std::make_unique<RequestDecoder>(codec_, *this)) {}
+      decoder_(std::make_unique<RequestDecoder>(*codec_, *this)) {}
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: read {} bytes", data.length());
@@ -40,11 +40,11 @@ Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end
 }
 
 Network::FilterStatus ConnectionManager::onNewConnection() {
-  //init idle timer.
-  if(config_.idleTimeout()){
-    idle_timer_ = read_callbacks_->connection().dispatcher().createTimer(
-        [this]() { this->onIdleTimeout(); });  
-    resetIdleTimer();           
+  // init idle timer.
+  if (config_.idleTimeout()) {
+    idle_timer_ =
+        read_callbacks_->connection().dispatcher().createTimer([this]() { this->onIdleTimeout(); });
+    resetIdleTimer();
   }
   return Network::FilterStatus::Continue;
 }
@@ -96,7 +96,7 @@ void ConnectionManager::onHeartbeat(MetadataSharedPtr metadata) {
   HeartbeatResponse heartbeat;
   Buffer::OwnedImpl response_buffer;
 
-  heartbeat.encode(*metadata, codec_, response_buffer);
+  heartbeat.encode(*metadata, *codec_, response_buffer);
   read_callbacks_->connection().write(response_buffer, false);
 }
 
@@ -105,14 +105,15 @@ void ConnectionManager::dispatch() {
     ENVOY_LOG(debug, "meta protocol: it's empty data");
     return;
   }
-  //when data is not empty,it will enable timer again.
+  // when data is not empty,it will enable timer again.
   resetIdleTimer();
   try {
     bool underflow = false;
     // decoder return underflow in th following two cases:
-    // 1. decoder needs more data to complete the decoding of the current message, in this case, the buffer contains
-    // part of the incomplete message.
-    // 2. all the messages in the buffer have been processed, in this case, the buffer is already empty.
+    // 1. decoder needs more data to complete the decoding of the current message, in this case, the
+    // buffer contains part of the incomplete message.
+    // 2. all the messages in the buffer have been processed, in this case, the buffer is already
+    // empty.
     while (!underflow) {
       decoder_->onData(request_buffer_, underflow);
     }
@@ -135,7 +136,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
 
   try {
     Buffer::OwnedImpl buffer;
-    result = response.encode(metadata, codec_, buffer);
+    result = response.encode(metadata, *codec_, buffer);
 
     read_callbacks_->connection().write(buffer, end_stream);
   } catch (const EnvoyException& ex) {
@@ -163,7 +164,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
 
 Stream& ConnectionManager::newActiveStream(uint64_t stream_id) {
   ENVOY_CONN_LOG(debug, "meta protocol: create an active stream: {}", connection(), stream_id);
-  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection(), *this, codec_));
+  StreamPtr new_stream(std::make_unique<Stream>(stream_id, connection(), *this, *codec_));
   active_stream_map_[stream_id] = std::move(new_stream);
   return *active_stream_map_.find(stream_id)->second;
 }

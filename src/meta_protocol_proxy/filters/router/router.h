@@ -30,12 +30,12 @@ public:
 
   virtual void continueDecoding() PURE;
   virtual void sendLocalReply(const DirectResponse& response, bool end_stream) PURE;
-  virtual Codec& codec() PURE;
+  virtual CodecPtr createCodec() PURE;
   virtual void resetStream() PURE;
   virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
 
 protected:
-   struct PrepareUpstreamRequestResult {
+  struct PrepareUpstreamRequestResult {
     absl::optional<AppException> exception;
     absl::optional<Upstream::TcpPoolData> conn_pool_data;
   };
@@ -117,7 +117,7 @@ public:
    * Starts the shadow request by requesting an upstream connection.
    */
   virtual void submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
-                      MutationSharedPtr mutation, Codec& codec) PURE;
+                      MutationSharedPtr mutation, CodecFactory& codec_factory) PURE;
 };
 
 } // namespace Router

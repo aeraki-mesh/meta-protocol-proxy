@@ -12,9 +12,9 @@ namespace MetaProtocolProxy {
 namespace Router {
 
 void ShadowWriterImpl::submit(const std::string& cluster_name, MetadataSharedPtr request_metadata,
-                              MutationSharedPtr request_mutation, Codec& codec) {
+                              MutationSharedPtr request_mutation, CodecFactory& codec_factory) {
   auto shadow_router = std::make_unique<ShadowRouterImpl>(*this, cluster_name, request_metadata,
-                                                          request_mutation, codec);
+                                                          request_mutation, codec_factory);
   ENVOY_LOG(debug, "meta protocol shadow router: send request to mirror host: {}", cluster_name);
   const bool created = shadow_router->createUpstreamRequest();
   if (!created) {
@@ -29,10 +29,10 @@ void ShadowWriterImpl::submit(const std::string& cluster_name, MetadataSharedPtr
 
 ShadowRouterImpl::ShadowRouterImpl(ShadowWriterImpl& parent, const std::string& cluster_name,
                                    MetadataSharedPtr metadata, MutationSharedPtr mutation,
-                                   Codec& codec)
+                                   CodecFactory& codec_factory)
     : RequestOwner(parent.clusterManager()), parent_(parent), cluster_name_(cluster_name),
-      metadata_(metadata), mutation_(mutation), codec_(codec),
-      decoder_(NullResponseDecoder(codec)) {}
+      metadata_(metadata), mutation_(mutation), codec_(codec_factory.createCodec()),
+      decoder_(NullResponseDecoder(codec_factory.createCodec())) {}
 
 bool ShadowRouterImpl::createUpstreamRequest() {
   auto prepare_result = prepareUpstreamRequest(cluster_name_, metadata_, this);

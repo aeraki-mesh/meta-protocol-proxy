@@ -76,7 +76,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
         ENVOY_LOG(debug, "meta protocol router: mirror request size:{}",
                   metadata_clone->originMessage().length());
         shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), request_mutation,
-                              decoder_filter_callbacks_->codec());
+                              *decoder_filter_callbacks_);
       }
     }
   }
