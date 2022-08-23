@@ -54,6 +54,20 @@ public:
 using DirectResponsePtr = std::unique_ptr<DirectResponse>;
 
 /**
+ * CodecFactory creates codec.
+ */
+class CodecFactory {
+public:
+  virtual ~CodecFactory() = default;
+  
+  /**
+   * Create a codec, which will be used by the router to encode request and response
+   * @return CodecPtr
+   */
+  virtual CodecPtr createCodec() PURE;
+};
+
+/**
  * Decoder filter callbacks add additional callbacks.
  */
 class FilterCallbacksBase {
@@ -99,7 +113,7 @@ public:
 /**
  * Decoder filter callbacks add additional callbacks.
  */
-class DecoderFilterCallbacks : public virtual FilterCallbacksBase {
+class DecoderFilterCallbacks : public virtual FilterCallbacksBase, public virtual CodecFactory {
 public:
   ~DecoderFilterCallbacks() override = default;
 
@@ -136,12 +150,6 @@ public:
    * Reset the downstream connection.
    */
   virtual void resetDownstreamConnection() PURE;
-
-  /**
-   * Get the codec, which will be used by the router to encode request and response
-   * @return CodecPtr
-   */
-  virtual Codec& codec() PURE;
 
   /**
    * Set the selected upstream connection, used by router.
