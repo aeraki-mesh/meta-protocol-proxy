@@ -80,8 +80,9 @@ public:
 
   /**
    * Indicates that the message is a heartbeat.
+   * @return whether to continue waiting for response
    */
-  virtual void onHeartbeat(MetadataSharedPtr) PURE;
+  virtual bool onHeartbeat(MetadataSharedPtr) PURE;
 };
 
 class RequestDecoderCallbacks : public DecoderCallbacksBase {};

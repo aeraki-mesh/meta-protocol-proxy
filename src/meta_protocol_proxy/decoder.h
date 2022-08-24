@@ -63,7 +63,13 @@ public:
   public:
     virtual ~Delegate() = default;
     virtual ActiveStream* newStream(MetadataSharedPtr metadata, MutationSharedPtr mutation) PURE;
-    virtual void onHeartbeat(MetadataSharedPtr metadata) PURE;
+
+    /**
+     * Handle heartbeat message
+     * @param metadata
+     * @return whether to continue waiting for response
+     */
+    virtual bool onHeartbeat(MetadataSharedPtr metadata) PURE;
   };
 
   DecoderStateMachine(Codec& codec, MessageType messageType, Delegate& delegate)
@@ -145,7 +151,7 @@ public:
     return stream_.get();
   }
 
-  void onHeartbeat(MetadataSharedPtr metadata) override { callbacks_.onHeartbeat(metadata); }
+  bool onHeartbeat(MetadataSharedPtr metadata) override { return callbacks_.onHeartbeat(metadata); }
 
 private:
   T& callbacks_;

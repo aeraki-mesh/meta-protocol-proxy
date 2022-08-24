@@ -85,12 +85,11 @@ MessageHandler& ConnectionManager::newMessageHandler() {
   return **active_message_list_.begin();
 }
 
-void ConnectionManager::onHeartbeat(MetadataSharedPtr metadata) {
+bool ConnectionManager::onHeartbeat(MetadataSharedPtr metadata) {
   stats_.request_event_.inc();
-
   if (read_callbacks_->connection().state() != Network::Connection::State::Open) {
     ENVOY_LOG(warn, "meta protocol: downstream connection is closed or closing");
-    return;
+    return false;
   }
 
   HeartbeatResponse heartbeat;
@@ -98,6 +97,7 @@ void ConnectionManager::onHeartbeat(MetadataSharedPtr metadata) {
 
   heartbeat.encode(*metadata, *codec_, response_buffer);
   read_callbacks_->connection().write(response_buffer, false);
+  return false;
 }
 
 void ConnectionManager::dispatch() {
