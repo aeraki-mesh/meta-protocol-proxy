@@ -61,7 +61,8 @@ public:
 
   // ResponseDecoderCallbacks
   MessageHandler& newMessageHandler() override { return *this; }
-  void onHeartbeat(MetadataSharedPtr) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
+  bool onHeartbeat(MetadataSharedPtr) override { return true; } // Ignore the heartBeat from
+                                                                // upstream
 
 private:
   CodecPtr codec_;

@@ -16,7 +16,8 @@ void Router::onDestroy() {
   // close the upstream connection if the upstream request has not been completed because there may
   // be more data coming later on the connection after destroying the router
   if (!upstreamRequestFinished()) {
-    upstream_request_->releaseUpStreamConnection(true);
+    upstream_request_->releaseUpStreamConnection(
+        false); // todo: should be true, but we get segment fault in rare case
   }
   cleanUpstreamRequest();
 }

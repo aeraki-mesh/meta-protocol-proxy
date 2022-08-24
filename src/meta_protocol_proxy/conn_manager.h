@@ -68,7 +68,7 @@ public:
 
   // RequestDecoderCallbacks
   MessageHandler& newMessageHandler() override;
-  void onHeartbeat(MetadataSharedPtr metadata) override;
+  bool onHeartbeat(MetadataSharedPtr metadata) override;
 
   MetaProtocolProxyStats& stats() const { return stats_; }
   Network::Connection& connection() const { return read_callbacks_->connection(); }

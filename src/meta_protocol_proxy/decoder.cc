@@ -16,7 +16,11 @@ ProtocolState DecoderStateMachine::onDecodeStream(Buffer::Instance& buffer) {
 
   if (metadata->getMessageType() == MessageType::Heartbeat) {
     ENVOY_LOG(debug, "meta protocol decoder: this is a heartbeat message");
-    delegate_.onHeartbeat(metadata);
+    bool waitForResponse = delegate_.onHeartbeat(metadata);
+    if (waitForResponse) {
+      // We should continue waiting for the response if it's a heartbeat message from the upstream
+      return ProtocolState::WaitForData;
+    }
     return ProtocolState::Done;
   }
 

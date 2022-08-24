@@ -42,7 +42,7 @@ public:
 
   // ResponseDecoderCallbacks
   MessageHandler& newMessageHandler() override { return *this; }
-  void onHeartbeat(MetadataSharedPtr) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
+  bool onHeartbeat(MetadataSharedPtr) override { return true; } // ignore the heartbeat in response
 
   uint64_t requestId() const { return metadata_ ? metadata_->getRequestId() : 0; }
 
