@@ -53,6 +53,7 @@ x86
 ```bash
 cd /home/ubuntu \
   && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz \
+  && mkdir clang+llvm-10.0.0-linux-gnu \
   && tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1 \
   && rm clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
 ```
@@ -61,6 +62,7 @@ arm
 ```bash
 cd /home/ubuntu \
   && wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz \
+  && mkdir clang+llvm-10.0.0-linux-gnu \
   && tar -xvf clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1 \
   && rm clang+llvm-10.0.0-aarch64-linux-gnu.tar.xz
 ```
