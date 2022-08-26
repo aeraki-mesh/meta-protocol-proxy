@@ -33,6 +33,7 @@ std::string MetadataImpl::getString(std::string key) const {
   }
   return "";
 };
+
 bool MetadataImpl::getBool(std::string key) const {
   auto value = this->get(key);
   if (value.has_value()) {
@@ -77,13 +78,22 @@ void MetadataImpl::forEach(Envoy::Tracing::TraceContext::IterateCallback callbac
 
 absl::optional<absl::string_view> MetadataImpl::getByKey(absl::string_view key) const {
   // TODO use string_view instead of string
-  auto val = getString(std::string{key.data(), key.length()});
+  auto val = getStringPointer(std::string{key.data(), key.length()});
   std::cout << "XXXXX tracer get key: " << key << " value: " << val << "\n";
-  if (val != "") {
-    return absl::string_view{val};
+  if (*val != "") {
+    return absl::string_view{*val};
   }
   return {};
 };
+
+std::string* MetadataImpl::getStringPointer(std::string key) const {
+  auto value = this->get(key);
+  if (value.has_value()) {
+    return (std::string*)value.ptr();
+  }
+  return nullptr;
+};
+
 void MetadataImpl::setByKey(absl::string_view key, absl::string_view val) {
   putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
 };
