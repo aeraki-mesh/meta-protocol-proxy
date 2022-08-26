@@ -257,6 +257,10 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
     span_name.append(metadata.getOperationName());
   }
 
+  for (int i = 0; i < 10; i++) {
+    auto val = metadata.getString(tracing_headers[i]);
+    std::cout << "XXXXX meta key: " << tracing_headers[i] << " value: " << val << "\n";
+  }
   Envoy::Tracing::SpanPtr active_span =
       driver_->startSpan(config, metadata, span_name, stream_info.startTime(), tracing_decision);
 
