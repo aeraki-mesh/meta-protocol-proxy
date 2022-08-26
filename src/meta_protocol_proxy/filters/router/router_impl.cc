@@ -60,10 +60,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   // only trace request if there's a tracing config
   if (decoder_filter_callbacks_->tracingConfig()) {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing", *decoder_filter_callbacks_);
     traceRequest(request_metadata, request_mutation);
-  } else {
-    ENVOY_STREAM_LOG(debug, "meta protocol router: no tracing config", *decoder_filter_callbacks_);
   }
 
   // Save the clone for request mirroring

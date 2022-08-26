@@ -99,7 +99,7 @@ public:
   }
 };
 
-class MetaProtocolTracerImpl : public MetaProtocolTracer {
+class MetaProtocolTracerImpl : public MetaProtocolTracer, Logger::Loggable<Logger::Id::filter> {
 public:
   MetaProtocolTracerImpl(Envoy::Tracing::DriverSharedPtr driver,
                          const LocalInfo::LocalInfo& local_info);
