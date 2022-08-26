@@ -70,7 +70,7 @@ void UpstreamRequest::releaseUpStreamConnection(bool close) {
   // class variable conn_data_?
   // Move conn_data_ to local variable because it may be released by the upstream response, which
   // will cause segment fault
-  auto conn_data = std::move(conn_data_);
+  Tcp::ConnectionPool::ConnectionDataPtr conn_data = std::move(conn_data_);
   ENVOY_LOG(debug, "meta protocol upstream request: release upstream connection");
   if (close && conn_data != nullptr) {
     // we shouldn't close the upstream connection unless explicitly asked at some exceptional cases

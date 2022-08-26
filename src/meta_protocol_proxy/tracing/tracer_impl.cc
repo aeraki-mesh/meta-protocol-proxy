@@ -256,6 +256,11 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
     span_name.append(" ");
     span_name.append(metadata.getOperationName());
   }
+  if (config.operationName() == Envoy::Tracing::OperationName::Ingress ){
+    std::cout << "XXXXX ingress\n";
+  }else if (config.operationName() == Envoy::Tracing::OperationName::Egress ){
+    std::cout << "XXXXX egress\n";
+  }
 
   for (int i = 0; i < 10; i++) {
     auto val = metadata.getString(tracing_headers[i]);
