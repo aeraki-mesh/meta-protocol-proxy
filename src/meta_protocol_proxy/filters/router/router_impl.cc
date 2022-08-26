@@ -60,7 +60,10 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   // only trace request if there's a tracing config
   if (decoder_filter_callbacks_->tracingConfig()) {
+    ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing", *decoder_filter_callbacks_);
     traceRequest(request_metadata, request_mutation);
+  } else {
+    ENVOY_STREAM_LOG(debug, "meta protocol router: no tracing config", *decoder_filter_callbacks_);
   }
 
   // Save the clone for request mirroring
@@ -153,7 +156,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
           *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
           *decoder_filter_callbacks_->tracingConfig(), request_metadata_->getResponseStatus());
-      ENVOY_LOG(debug, "meta protocol router: finish tracing span");
+      ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                       *decoder_filter_callbacks_);
     }
     return;
   case UpstreamResponseStatus::Reset:
@@ -167,7 +171,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
           *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
           *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
-      ENVOY_LOG(debug, "meta protocol router: finish tracing span");
+      ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                       *decoder_filter_callbacks_);
     }
     return;
   case UpstreamResponseStatus::MoreData:
@@ -232,7 +237,7 @@ void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr 
   const Envoy::Tracing::Decision tracing_decision =
       Envoy::Tracing::Decision{Envoy::Tracing::Reason::Sampling, true};
 
-  ENVOY_LOG(debug, "meta protocol router: start tracing span");
+  ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing span", *decoder_filter_callbacks_);
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
       *decoder_filter_callbacks_->tracingConfig(), *request_metadata, *request_mutation,
       decoder_filter_callbacks_->streamInfo(), tracing_decision);
