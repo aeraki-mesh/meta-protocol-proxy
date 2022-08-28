@@ -1,28 +1,77 @@
 ---
 name: build-metaprotocol
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
-env:
-  META_PROTOCOL_PROXY_REPO: meta-protocol-proxy
+concurrency: ci-${{ github.ref }}
+
 jobs:
   BuildMetaProtocolBinary:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
       fail-fast: true
-    name: BuildMetaProtocol
+      matrix:
+        protocal: [dubbo]
+    name: Build MetaProtocolProxy
+    env:
+      LOG_DIR: /tmp/test_logs
+      LOG_PATH: /tmp/test_logs/${{ matrix.protocal }}.log
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-
+      - name: install dependency
+        run: |
+          sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+          sudo chmod +x /usr/local/bin/bazel
+          sudo apt-get install autoconf automake cmake curl libtool make ninja-build patch python3-pip unzip virtualenv libc++-10-dev -y
+          mkdir -p ~/clang+llvm-10.0.0-linux-gnu
+          cd ~
+          echo `pwd`
+          wget https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+          tar -xvf clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz -C clang+llvm-10.0.0-linux-gnu --strip-components 1
+          rm clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+          cd -
+          echo `pwd`
+          ./bazel/setup_clang.sh ~/clang+llvm-10.0.0-linux-gnu
       - name: Build
         run: |
-         export WORKDIR=`pwd`
-         echo $WORKDIR
-         git config --global --add safe.directory "$GITHUB_WORKSPACE"
-         git config --global --add safe.directory $WORKDIR
-         docker run -t --name meta-protocol-proxy-build -v $WORKDIR:/meta-protocol-proxy -w/meta-protocol-proxy  aeraki/meta-protocol-proxy-build:2022-0429-0  sh -c "git config --global --add safe.directory /meta-protocol-proxy && make build"
+          export WORKDIR=`pwd`
+          echo $WORKDIR
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory $WORKDIR
+          echo "hello world"
+          make build
+#          docker run -t --name meta-protocol-proxy-build -v $WORKDIR:/meta-protocol-proxy -w/meta-protocol-proxy  aeraki/meta-protocol-proxy-build:2022-0429-0  sh -c "git config --global --add safe.directory /meta-protocol-proxy && make build"
+      - name: setup hosts
+        env: 
+          DNS_NAME_FOR_DUBBO: 127.0.0.1 org.apache.dubbo.samples.basic.api.demoservice
+        if: ${{ matrix.protocal == 'dubbo' }}
+        run: |
+          if [ `grep -c "$DNS_NAME_FOR_DUBBO" /etc/hosts` -eq 0 ];then
+            sudo echo "$DNS_NAME_FOR_DUBBO" | sudo tee -a /etc/hosts
+            cat /etc/hosts
+          fi
+      - name: run test
+        shell: bash -x -eo pipefail {0}
+        run: |
+          mkdir $LOG_DIR
+          bash ${GITHUB_WORKSPACE}/test/${{ matrix.protocal }}/test.sh > $LOG_PATH 2>&1 &
+          echo $! > $LOG_DIR/cmd.pid
+          sleep 60
+      - name: check result
+        env: 
+          EXPECT_LOG: Hello Aeraki, response from
+        shell: bash -x -eo pipefail {0}
+        run: |
+          grep "$EXPECT_LOG" $LOG_PATH
+          lines=`grep -c "$EXPECT_LOG" $LOG_PATH`
+          echo "find right text lines: $lines"
+          [ $lines -gt 0 ] && echo "assert ${{ matrix.protocal }} pass!!!"
+      - name: debug with ssh
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 20
