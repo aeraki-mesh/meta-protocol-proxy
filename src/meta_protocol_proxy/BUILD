@@ -26,6 +26,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/tracing:tracer_manager_lib",
         "//src/meta_protocol_proxy/tracing:tracer_config_lib",
         "//src/meta_protocol_proxy/tracing:tracer_lib",
+        "//src/meta_protocol_proxy/request_id:request_id_lib",
         "@envoy//envoy/registry",
         "@envoy//envoy/stats:stats_interface",
         "@envoy//envoy/stats:stats_macros",
