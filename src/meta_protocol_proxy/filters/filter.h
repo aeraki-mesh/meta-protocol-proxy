@@ -10,6 +10,7 @@
 #include "src/meta_protocol_proxy/codec/codec.h"
 
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
+#include "src/meta_protocol_proxy/request_id/config.h"
 #include "src/meta_protocol_proxy/route/route.h"
 #include "src/meta_protocol_proxy/tracing/tracer.h"
 
@@ -170,6 +171,12 @@ public:
    * @return null pointer if tracing is not enabled
    */
   virtual Tracing::TracingConfig* tracingConfig() PURE;
+
+  /**
+   *  Get the Request ID Extension, which is used by the router to generate x-request-id
+   * @return
+   */
+  virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
 };
 
 /**

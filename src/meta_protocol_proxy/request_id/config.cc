@@ -8,26 +8,18 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
-std::string UUIDRequestIDExtension::getXRequestID(const Metadata& metadata) const {
-  return metadata.getString(X_REQUEST_ID);
-}
-void UUIDRequestIDExtension::setXRequestID(std::string x_request_id,
-                                                  Metadata& metadata) const {
-  metadata.putString(X_REQUEST_ID, x_request_id);
-}
-
 void UUIDRequestIDExtension::set(Metadata& request_metadata, bool force) {
-  if (!force && getXRequestID(request_metadata) != "") {
+  if (!force && request_metadata.getString(X_REQUEST_ID) != "") {
     return;
   }
 
   std::string uuid = random_.uuid();
   ASSERT(!uuid.empty());
-  setXRequestID(uuid, request_metadata);
+  request_metadata.putString(X_REQUEST_ID, uuid);
 }
 
 absl::optional<uint64_t> UUIDRequestIDExtension::toInteger(const Metadata& request_metadata) const {
-  std::string uuid = getXRequestID(request_metadata);
+  std::string uuid = request_metadata.getString(X_REQUEST_ID);
   if (uuid == "") {
     return absl::nullopt;
   }
@@ -45,7 +37,7 @@ absl::optional<uint64_t> UUIDRequestIDExtension::toInteger(const Metadata& reque
 }
 
 Tracing::Reason UUIDRequestIDExtension::getTraceReason(const Metadata& request_metadata) {
-  std::string uuid = getXRequestID(request_metadata);
+  std::string uuid = request_metadata.getString(X_REQUEST_ID);
   if (uuid == "") {
     return Tracing::Reason::NotTraceable;
   }
@@ -67,7 +59,7 @@ Tracing::Reason UUIDRequestIDExtension::getTraceReason(const Metadata& request_m
 }
 
 void UUIDRequestIDExtension::setTraceReason(Metadata& request_metadata, Tracing::Reason reason) {
-  std::string uuid = getXRequestID(request_metadata);
+  std::string uuid = request_metadata.getString(X_REQUEST_ID);
   if (!pack_trace_reason_ || uuid == "") {
     return;
   }
@@ -92,7 +84,7 @@ void UUIDRequestIDExtension::setTraceReason(Metadata& request_metadata, Tracing:
   default:
     break;
   }
-  setXRequestID(uuid, request_metadata);
+  request_metadata.putString(X_REQUEST_ID, uuid);
 }
 
 } // namespace MetaProtocolProxy

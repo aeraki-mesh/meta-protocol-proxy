@@ -192,6 +192,10 @@ Tracing::TracingConfig* ActiveMessageDecoderFilter::tracingConfig() {
   return activeMessage_.tracingConfig();
 }
 
+RequestIDExtensionSharedPtr ActiveMessageDecoderFilter::requestIDExtension() {
+  return activeMessage_.requestIDExtension();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,

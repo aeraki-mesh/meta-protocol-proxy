@@ -57,14 +57,14 @@ public:
    * @param request_metadata supplies the incoming request metadata for retrieving the request ID.
    * @return trace reason of the request based on the given headers.
    */
-  virtual Tracing::Reason getTraceReason(const Metadata& request_metadata) PURE;
+  virtual Envoy::Tracing::Reason getTraceReason(const Metadata& request_metadata) PURE;
 
   /**
    * Set the tracing status of a request.
    * @param request_metadata supplies the incoming request metadata for setting the trace reason.
    * @param status the trace reason that should be set for this request.
    */
-  virtual void setTraceReason(Metadata& request_metadata, Tracing::Reason reason) PURE;
+  virtual void setTraceReason(Metadata& request_metadata, Envoy::Tracing::Reason reason) PURE;
 
   /**
    * Get whether to use request_id based sampling policy or not.

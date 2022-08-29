@@ -92,6 +92,7 @@ public:
   absl::optional<std::chrono::milliseconds> idleTimeout() override { return idle_timeout_; };
   Tracing::MetaProtocolTracerSharedPtr tracer() override { return tracer_; };
   Tracing::TracingConfig* tracingConfig() override { return tracing_config_.get(); };
+  RequestIDExtensionSharedPtr requestIDExtension() override { return request_id_extension_; };
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
@@ -115,6 +116,7 @@ private:
   MetaProtocolProxy::Tracing::MetaProtocolTracerSharedPtr tracer_{
       std::make_shared<MetaProtocolProxy::Tracing::NullTracer>()};
   Tracing::TracingConfigPtr tracing_config_;
+  RequestIDExtensionSharedPtr request_id_extension_;
 };
 
 } // namespace MetaProtocolProxy

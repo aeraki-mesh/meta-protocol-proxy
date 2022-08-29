@@ -19,6 +19,7 @@
 #include "src/meta_protocol_proxy/route/rds.h"
 #include "src/meta_protocol_proxy/stream.h"
 #include "src/meta_protocol_proxy/tracing/tracer.h"
+#include "src/meta_protocol_proxy/request_id/config.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -46,6 +47,7 @@ public:
   virtual Route::RouteConfigProvider* routeConfigProvider() PURE;
   virtual Tracing::MetaProtocolTracerSharedPtr tracer() PURE;
   virtual Tracing::TracingConfig* tracingConfig() PURE;
+  virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
 };
 
 // class ActiveMessagePtr;
@@ -90,7 +92,8 @@ public:
   void clearStream() { active_stream_map_.clear(); }
 
   Tracing::MetaProtocolTracerSharedPtr tracer() { return config_.tracer(); };
-  Tracing::TracingConfig* tracingConfig() { return config_.tracingConfig(); }
+  Tracing::TracingConfig* tracingConfig() { return config_.tracingConfig(); };
+  RequestIDExtensionSharedPtr requestIDExtension() { return config_.requestIDExtension(); };
 
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }

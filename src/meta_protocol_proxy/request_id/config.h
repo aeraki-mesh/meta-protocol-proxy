@@ -24,13 +24,11 @@ public:
   // Http::RequestIDExtension
   void set(Metadata& request_metadata, bool force) override;
   absl::optional<uint64_t> toInteger(const Metadata& request_metadata) const override;
-  Tracing::Reason getTraceReason(const Metadata& request_metadata) override;
-  void setTraceReason(Metadata& request_metadata, Tracing::Reason status) override;
+  Envoy::Tracing::Reason getTraceReason(const Metadata& request_metadata) override;
+  void setTraceReason(Metadata& request_metadata, Envoy::Tracing::Reason status) override;
   bool useRequestIdForTraceSampling() const override { return use_request_id_for_trace_sampling_; }
 
 private:
-  std::string getXRequestID(const Metadata& metadata) const;
-  void setXRequestID(std::string x_request_id, Metadata& metadata) const;
   Envoy::Random::RandomGenerator& random_;
   const bool pack_trace_reason_ = true;
   const bool use_request_id_for_trace_sampling_ = true;

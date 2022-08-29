@@ -157,6 +157,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
         tracing_operation_name, client_sampling, random_sampling, overall_sampling,
         tracing_config.verbose(), max_tag_length);
   }
+  request_id_extension_ = std::make_shared<UUIDRequestIDExtension>(context.api().randomGenerator());
 }
 
 /**
