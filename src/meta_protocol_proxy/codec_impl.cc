@@ -80,16 +80,16 @@ absl::optional<absl::string_view> MetadataImpl::getByKey(absl::string_view key) 
   // TODO use string_view instead of string
   auto val = getStringPointer(std::string{key.data(), key.length()});
   std::cout << "XXXXX tracer get key: " << key << " value: " << val << "\n";
-  if (*val != "") {
+  if (val && *val != "") {
     return absl::string_view{*val};
   }
   return {};
 };
 
-std::string* MetadataImpl::getStringPointer(std::string key) const {
+const std::string* MetadataImpl::getStringPointer(std::string key) const {
   auto value = this->get(key);
   if (value.has_value()) {
-    return (std::string*)value.ptr();
+    return std::any_cast<std::string>(value.ptr());
   }
   return nullptr;
 };
@@ -107,3 +107,4 @@ void MetadataImpl::setByReference(absl::string_view key, absl::string_view val) 
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

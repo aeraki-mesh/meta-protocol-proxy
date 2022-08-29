@@ -63,8 +63,7 @@ public:
   void setByReference(absl::string_view key, absl::string_view val) override;
 
 private:
-private:
-  std::string* getStringPointer(std::string key) const;
+  const std::string* getStringPointer(std::string key) const;
   std::map<std::string, std::any> properties_;
   Buffer::OwnedImpl origin_message_;
   MessageType message_type_{MessageType::Request};
