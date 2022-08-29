@@ -187,6 +187,7 @@ public:
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
   Tracing::MetaProtocolTracerSharedPtr tracer() override;
   Tracing::TracingConfig* tracingConfig() override;
+  RequestIDExtensionSharedPtr requestIDExtension() override;
 
   void createFilterChain();
   FilterStatus applyDecoderFilters(ActiveMessageDecoderFilter* filter,

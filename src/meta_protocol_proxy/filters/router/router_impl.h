@@ -12,7 +12,6 @@
 #include "src/meta_protocol_proxy/filters/router/router.h"
 #include "src/meta_protocol_proxy/filters/router/upstream_request.h"
 #include "src/meta_protocol_proxy/route/route.h"
-#include "src/meta_protocol_proxy/request_id/config.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -27,8 +26,7 @@ class Router : public Tcp::ConnectionPool::UpstreamCallbacks,
 public:
   Router(Upstream::ClusterManager& cluster_manager, Runtime::Loader& runtime,
          ShadowWriter& shadow_writer)
-      : RequestOwner(cluster_manager), runtime_(runtime), shadow_writer_(shadow_writer),
-        request_id_extension_(UUIDRequestIDExtension::defaultInstance(runtime.)) {}
+      : RequestOwner(cluster_manager), runtime_(runtime), shadow_writer_(shadow_writer) {}
   ~Router() override { ENVOY_LOG(trace, "********** Router destructed ***********"); };
 
   // DecoderFilter
@@ -87,7 +85,6 @@ private:
   ShadowWriter& shadow_writer_;
 
   Envoy::Tracing::SpanPtr active_span_;
-  RequestIDExtensionSharedPtr request_id_extension_;
 };
 
 } // namespace Router

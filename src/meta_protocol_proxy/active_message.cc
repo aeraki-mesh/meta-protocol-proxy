@@ -391,6 +391,10 @@ Tracing::TracingConfig* ActiveMessage::tracingConfig() {
   return connection_manager_.tracingConfig();
 }
 
+RequestIDExtensionSharedPtr ActiveMessage::requestIDExtension() {
+  return connection_manager_.requestIDExtension();
+}
+
 void ActiveMessage::maybeDeferredDeleteMessage() {
   pending_stream_decoded_ = false;
   connection_manager_.stats().request_.inc();
