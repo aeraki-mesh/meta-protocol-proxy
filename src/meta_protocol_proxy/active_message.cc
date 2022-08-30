@@ -56,8 +56,8 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   }
 
   // put real server ip in the response
-  metadata_->putString(Metadata::HEADER_REAL_SERVER_ADDRESS,
-                       request_metadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
+  metadata_->putString(ReservedHeaders::RealServerAddress,
+                       request_metadata_.getString(ReservedHeaders::RealServerAddress));
   // TODO support response mutation
   codec_->encode(*metadata_, Mutation{}, metadata->originMessage());
   downstream_connection_.write(metadata->originMessage(), false);

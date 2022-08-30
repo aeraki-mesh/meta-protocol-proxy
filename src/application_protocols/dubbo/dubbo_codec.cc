@@ -55,7 +55,7 @@ void DubboCodec::complete() {
 void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
                         const MetaProtocolProxy::Mutation& mutation, Buffer::Instance& buffer) {
   ENVOY_LOG(debug, "dubbo: codec server real address: {} ",
-            metadata.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
+            metadata.getString(ReservedHeaders::RealServerAddress));
 
   switch (metadata.getMessageType()) {
   case MetaProtocolProxy::MessageType::Heartbeat: {
