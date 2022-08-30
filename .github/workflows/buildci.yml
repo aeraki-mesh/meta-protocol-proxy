@@ -7,7 +7,8 @@ env:
   META_PROTOCOL_PROXY_REPO: meta-protocol-proxy
 jobs:
   BuildMetaProtocolBinary:
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 300
     strategy:
       fail-fast: true
