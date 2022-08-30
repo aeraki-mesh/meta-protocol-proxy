@@ -13,8 +13,6 @@ namespace MetaProtocolProxy {
 // configured.
 class UUIDRequestIDExtension : public RequestIDExtension {
 public:
-  inline static const std::string X_REQUEST_ID = "x-request-id";
-
   UUIDRequestIDExtension(Random::RandomGenerator& random) : random_(random) {}
 
   static RequestIDExtensionSharedPtr defaultInstance(Random::RandomGenerator& random) {
@@ -24,7 +22,8 @@ public:
   bool packTraceReason() { return pack_trace_reason_; }
 
   // Http::RequestIDExtension
-  void set(Metadata& request_metadata, bool force) override;
+  bool set(Metadata& request_metadata, bool force) override;
+  std::string get(Metadata& request_metadata) override;
   absl::optional<uint64_t> toInteger(const Metadata& request_metadata) const override;
   Envoy::Tracing::Reason getTraceReason(const Metadata& request_metadata) override;
   void setTraceReason(Metadata& request_metadata, Envoy::Tracing::Reason status) override;

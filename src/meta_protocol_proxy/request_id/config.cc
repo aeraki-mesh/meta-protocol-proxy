@@ -3,23 +3,30 @@
 #include "source/common/common/random_generator.h"
 #include "source/common/common/utility.h"
 
+#include "src/meta_protocol_proxy/codec/codec.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
-void UUIDRequestIDExtension::set(Metadata& request_metadata, bool force) {
-  if (!force && request_metadata.getString(X_REQUEST_ID) != "") {
-    return;
+bool UUIDRequestIDExtension::set(Metadata& request_metadata, bool force) {
+  if (!force && request_metadata.getString(ReservedHeaders::RequestUUID) != "") {
+    return false;
   }
 
   std::string uuid = random_.uuid();
   ASSERT(!uuid.empty());
-  request_metadata.putString(X_REQUEST_ID, uuid);
+  request_metadata.putString(ReservedHeaders::RequestUUID, uuid);
+  return true;
+}
+
+std::string UUIDRequestIDExtension::get(Metadata& request_metadata) {
+  return request_metadata.getString(ReservedHeaders::RequestUUID);
 }
 
 absl::optional<uint64_t> UUIDRequestIDExtension::toInteger(const Metadata& request_metadata) const {
-  std::string uuid = request_metadata.getString(X_REQUEST_ID);
+  std::string uuid = request_metadata.getString(ReservedHeaders::RequestUUID);
   if (uuid == "") {
     return absl::nullopt;
   }
@@ -37,7 +44,7 @@ absl::optional<uint64_t> UUIDRequestIDExtension::toInteger(const Metadata& reque
 }
 
 Tracing::Reason UUIDRequestIDExtension::getTraceReason(const Metadata& request_metadata) {
-  std::string uuid = request_metadata.getString(X_REQUEST_ID);
+  std::string uuid = request_metadata.getString(ReservedHeaders::RequestUUID);
   if (uuid == "") {
     return Tracing::Reason::NotTraceable;
   }
@@ -59,7 +66,7 @@ Tracing::Reason UUIDRequestIDExtension::getTraceReason(const Metadata& request_m
 }
 
 void UUIDRequestIDExtension::setTraceReason(Metadata& request_metadata, Tracing::Reason reason) {
-  std::string uuid = request_metadata.getString(X_REQUEST_ID);
+  std::string uuid = request_metadata.getString(ReservedHeaders::RequestUUID);
   if (!pack_trace_reason_ || uuid == "") {
     return;
   }
@@ -84,7 +91,7 @@ void UUIDRequestIDExtension::setTraceReason(Metadata& request_metadata, Tracing:
   default:
     break;
   }
-  request_metadata.putString(X_REQUEST_ID, uuid);
+  request_metadata.putString(ReservedHeaders::RequestUUID, uuid);
 }
 
 } // namespace MetaProtocolProxy

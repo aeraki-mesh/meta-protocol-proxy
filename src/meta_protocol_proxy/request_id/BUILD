@@ -25,5 +25,6 @@ envoy_cc_library(
     ],
     deps = [
         ":request_id_interface",
+        "//src/meta_protocol_proxy/codec:codec_interface",
     ],
 )

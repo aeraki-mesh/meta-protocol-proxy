@@ -204,9 +204,9 @@ public:
   const Envoy::Tracing::CustomTagMap* customTags() const override { return custom_tags_.get(); };
   bool verbose() const override { return verbose_; };
   uint32_t maxPathTagLength() const override { return max_tag_length_; };
-  envoy::type::v3::FractionalPercent clientSampling() override { return client_sampling_; };
-  envoy::type::v3::FractionalPercent randomSampling() override { return random_sampling_; };
-  envoy::type::v3::FractionalPercent overallSampling() override { return overall_sampling_; };
+  envoy::type::v3::FractionalPercent& clientSampling() override { return client_sampling_; };
+  envoy::type::v3::FractionalPercent& randomSampling() override { return random_sampling_; };
+  envoy::type::v3::FractionalPercent& overallSampling() override { return overall_sampling_; };
 
 private:
   Envoy::Tracing::OperationName operation_name_;

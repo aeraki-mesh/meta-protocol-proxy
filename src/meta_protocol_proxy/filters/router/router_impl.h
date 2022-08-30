@@ -70,6 +70,7 @@ private:
   bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
   void setXRequestID(MetadataSharedPtr& request_metadata, MutationSharedPtr& request_mutation);
   void traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation);
+  Envoy::Tracing::Reason mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata);
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};

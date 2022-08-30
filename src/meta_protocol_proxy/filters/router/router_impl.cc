@@ -231,18 +231,72 @@ const Network::Connection* Router::downstreamConnection() const {
 
 void Router::setXRequestID(MetadataSharedPtr& request_metadata,
                            MutationSharedPtr& request_mutation) {
+  auto rid_extension = decoder_filter_callbacks_->requestIDExtension();
   // set x-request-id to metadata, so it can be used to record tracing sampling decision
-  decoder_filter_callbacks_->requestIDExtension()->set(*request_metadata, false);
+  // RequestIDExtension only sets x-request-id if it doesn't exist in the Metadata
+  bool modified = rid_extension->set(*request_metadata, false);
   // add x-request-id to mutation, so it can be passed through to upstream requests
-  (*request_mutation)[UUIDRequestIDExtension::X_REQUEST_ID] =
-      request_metadata->getString(UUIDRequestIDExtension::X_REQUEST_ID);
+  if (modified) {
+    (*request_mutation)[ReservedHeaders::RequestUUID] = rid_extension->get(*request_metadata);
+  }
+}
+
+Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata) {
+  auto rid_extension = decoder_filter_callbacks_->requestIDExtension();
+  Envoy::Tracing::Reason final_reason = Envoy::Tracing::Reason::NotTraceable;
+  if (!rid_extension->useRequestIdForTraceSampling()) {
+    return Envoy::Tracing::Reason::Sampling;
+  }
+
+  const auto rid_to_integer = rid_extension->toInteger(*request_metadata);
+  // Skip if request-id is corrupted, or non-existent
+  if (!rid_to_integer.has_value()) {
+    ENVOY_LOG(warn, "meta protocol router: corrupted x-request-id");
+    return final_reason;
+  }
+  const uint64_t result = rid_to_integer.value() % 10000;
+
+  // Do not apply tracing transformations if this request chain has already been traced.
+  final_reason = rid_extension->getTraceReason(*request_metadata);
+  if (Envoy::Tracing::Reason::NotTraceable == final_reason) {
+    // std::string uuid = rid_extension->get(*request_metadata);
+    auto client_sampling = decoder_filter_callbacks_->tracingConfig()->clientSampling();
+    auto random_sampling = decoder_filter_callbacks_->tracingConfig()->randomSampling();
+    auto overall_sampling = decoder_filter_callbacks_->tracingConfig()->overallSampling();
+
+    bool hasClientTraceId = request_metadata->getString(ReservedHeaders::ClientTraceId) != "";
+    bool envoyForceTrace = request_metadata->getString(ReservedHeaders::EnvoyForceTrace) != "";
+    if (hasClientTraceId &&
+        runtime_.snapshot().featureEnabled("tracing.client_enabled", client_sampling)) {
+      final_reason = Envoy::Tracing::Reason::ClientForced;
+      rid_extension->setTraceReason(*request_metadata, final_reason);
+    } else if (envoyForceTrace) {
+      final_reason = Envoy::Tracing::Reason::ServiceForced;
+      rid_extension->setTraceReason(*request_metadata, final_reason);
+    } else if (runtime_.snapshot().featureEnabled("tracing.random_sampling", random_sampling,
+                                                  result)) {
+      final_reason = Envoy::Tracing::Reason::Sampling;
+      rid_extension->setTraceReason(*request_metadata, final_reason);
+    }
+
+    if (final_reason != Envoy::Tracing::Reason::NotTraceable &&
+        !runtime_.snapshot().featureEnabled("tracing.global_enabled", overall_sampling, result)) {
+      final_reason = Envoy::Tracing::Reason::NotTraceable;
+      rid_extension->setTraceReason(*request_metadata, final_reason);
+    }
+  }
+
+  return final_reason;
 }
 
 void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation) {
-  // const Tracing::Decision tracing_decision =
-  //     Tracing::MetaProtocolTracerUtility::shouldTraceRequest(filter_manager_.streamInfo());
+  Envoy::Tracing::Reason reason = mutateTracingRequestMetadata(request_metadata);
+  if (reason == Envoy::Tracing::Reason::NotTraceable ||
+      reason == Envoy::Tracing::Reason::HealthCheck) {
+    return;
+  }
   const Envoy::Tracing::Decision tracing_decision =
-      Envoy::Tracing::Decision{Envoy::Tracing::Reason::Sampling, true};
+      Envoy::Tracing::Decision{reason, true};
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing span", *decoder_filter_callbacks_);
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(

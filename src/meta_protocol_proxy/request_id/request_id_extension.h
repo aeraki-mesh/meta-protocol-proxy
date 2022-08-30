@@ -41,8 +41,16 @@ public:
    * if any.
    * @param request_metadata supplies the incoming request metadata for setting a request ID.
    * @param force specifies if a new request ID should be forcefully set if one is already present.
+   * @return true: the request ID in the request Metadata is modified
    */
-  virtual void set(Metadata& request_metadata, bool force) PURE;
+  virtual bool set(Metadata& request_metadata, bool force) PURE;
+
+  /**
+   * Get the request ID from the request Metadata
+   * @param request_metadata
+   * @return request ID or "" if x-request-id header is not set
+   */
+  virtual std::string get(Metadata& request_metadata) PURE;
 
   /**
    * Preserve request ID in response headers if any is set in the request metadata.
