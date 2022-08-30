@@ -13,6 +13,8 @@ namespace MetaProtocolProxy {
 // configured.
 class UUIDRequestIDExtension : public RequestIDExtension {
 public:
+  inline static const std::string X_REQUEST_ID = "x-request-id";
+
   UUIDRequestIDExtension(Random::RandomGenerator& random) : random_(random) {}
 
   static RequestIDExtensionSharedPtr defaultInstance(Random::RandomGenerator& random) {
@@ -50,8 +52,6 @@ private:
 
   // Initial value for freshly generated uuid4.
   static const char NO_TRACE = '4';
-
-  const std::string X_REQUEST_ID = "x-request-id";
 };
 
 } // namespace MetaProtocolProxy

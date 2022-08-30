@@ -58,6 +58,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
+  setXRequestID(request_metadata, request_mutation);
   // only trace request if there's a tracing config
   if (decoder_filter_callbacks_->tracingConfig()) {
     traceRequest(request_metadata, request_mutation);
@@ -227,6 +228,15 @@ const Network::Connection* Router::downstreamConnection() const {
   return decoder_filter_callbacks_ != nullptr ? decoder_filter_callbacks_->connection() : nullptr;
 }
 // ---- Upstream::LoadBalancerContextBase ----
+
+void Router::setXRequestID(MetadataSharedPtr& request_metadata,
+                           MutationSharedPtr& request_mutation) {
+  // set x-request-id to metadata, so it can be used to record tracing sampling decision
+  decoder_filter_callbacks_->requestIDExtension()->set(*request_metadata, false);
+  // add x-request-id to mutation, so it can be passed through to upstream requests
+  (*request_mutation)[UUIDRequestIDExtension::X_REQUEST_ID] =
+      request_metadata->getString(UUIDRequestIDExtension::X_REQUEST_ID);
+}
 
 void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation) {
   // const Tracing::Decision tracing_decision =
