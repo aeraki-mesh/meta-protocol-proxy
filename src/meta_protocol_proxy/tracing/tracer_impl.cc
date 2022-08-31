@@ -183,6 +183,7 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
                                   Mutation& mutation, const StreamInfo::StreamInfo& stream_info,
                                   const std::string& cluster_name,
                                   const Envoy::Tracing::Decision tracing_decision) {
+
   std::string span_name = MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName());
 
   if (config.operationName() == Envoy::Tracing::OperationName::Egress) {
