@@ -108,6 +108,7 @@ public:
   // Tracing::MetaProtocolTracer
   Envoy::Tracing::SpanPtr startSpan(const Envoy::Tracing::Config& config, Metadata& metadata,
                                     Mutation& mutation, const StreamInfo::StreamInfo& stream_info,
+                                    const std::string& cluster_name,
                                     const Envoy::Tracing::Decision tracing_decision) override;
 
   Envoy::Tracing::DriverSharedPtr driverForTest() const { return driver_; }
