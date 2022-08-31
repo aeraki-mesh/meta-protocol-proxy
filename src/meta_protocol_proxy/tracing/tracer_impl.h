@@ -44,19 +44,19 @@ public:
    * Adds information obtained from the downstream request headers as tags to the active span.
    * Then finishes the span.
    */
-  static void finalizeDownstreamSpan(Envoy::Tracing::Span& span, const Metadata& metadata,
-                                     const StreamInfo::StreamInfo& stream_info,
-                                     const Envoy::Tracing::Config& tracing_config, ResponseStatus);
+  static void finalizeSpanWithResponse(Envoy::Tracing::Span& span,
+                                       const Metadata& response_metadata,
+                                       const StreamInfo::StreamInfo& stream_info,
+                                       const Envoy::Tracing::Config& tracing_config);
 
   /**
    * Adds information obtained from the upstream request headers as tags to the active span.
    * Then finishes the span.
    */
-  static void finalizeUpstreamSpan(Envoy::Tracing::Span& span,
-                                   // const Http::ResponseHeaderMap* response_headers,
-                                   // const Http::ResponseTrailerMap* response_trailers,
-                                   const StreamInfo::StreamInfo& stream_info,
-                                   const Envoy::Tracing::Config& tracing_config);
+  static void finalizeSpanWithoutResponse(Envoy::Tracing::Span& span,
+                                          const StreamInfo::StreamInfo& stream_info,
+                                          const Envoy::Tracing::Config& tracing_config,
+                                          ResponseStatus response_status);
 
   /**
    * Create a custom tag according to the configuration.

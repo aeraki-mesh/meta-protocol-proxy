@@ -62,6 +62,9 @@ public:
   const std::string Canceled = "canceled";
   const std::string Proxy = "proxy";
   const std::string True = "true";
+
+  // MetaProtocol Tag values.
+  const std::string RequestID = "request_id";
 };
 
 using Tags = ConstSingleton<TracingTagValues>;

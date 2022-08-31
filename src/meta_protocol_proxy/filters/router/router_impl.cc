@@ -62,7 +62,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   is_first_span_ = setXRequestID(request_metadata, request_mutation);
   // only trace request if there's a tracing config
   if (decoder_filter_callbacks_->tracingConfig()) {
-    traceRequest(request_metadata, request_mutation);
+    traceRequest(request_metadata, request_mutation, cluster_name);
   }
 
   // Save the clone for request mirroring
@@ -76,15 +76,16 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
   // enabled.
   const auto& policies = route_entry_->requestMirrorPolicies();
-  ENVOY_STREAM_LOG(debug, "meta protocol router: requestMirrorPolicies size:{}", *decoder_filter_callbacks_, policies.size() );
+  ENVOY_STREAM_LOG(debug, "meta protocol router: requestMirrorPolicies size:{}",
+                   *decoder_filter_callbacks_, policies.size());
 
   if (!policies.empty()) {
     for (const auto& policy : policies) {
       if (policy->shouldShadow(runtime_, rand())) { // todo replace with rand generator of conn mgr
         // We can reuse the same metadata for each request because its original message will be
         // drained in the request
-        ENVOY_STREAM_LOG(debug, "meta protocol router: mirror request size:{}", *decoder_filter_callbacks_,
-                  metadata_clone->originMessage().length());
+        ENVOY_STREAM_LOG(debug, "meta protocol router: mirror request size:{}",
+                         *decoder_filter_callbacks_, metadata_clone->originMessage().length());
         shadow_writer_.submit(policy->clusterName(), metadata_clone->clone(), request_mutation,
                               *decoder_filter_callbacks_);
       }
@@ -152,9 +153,9 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     cleanUpstreamRequest();
     if (active_span_) {
       assert(response_metadata_);
-      Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
-          *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
-          *decoder_filter_callbacks_->tracingConfig(), request_metadata_->getResponseStatus());
+      Tracing::MetaProtocolTracerUtility::finalizeSpanWithResponse(
+          *active_span_, *response_metadata_, decoder_filter_callbacks_->streamInfo(),
+          *decoder_filter_callbacks_->tracingConfig());
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
     }
@@ -167,8 +168,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // the upper layer to release the stream.
     upstream_request_->releaseUpStreamConnection(true);
     if (active_span_) {
-      Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
-          *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+      Tracing::MetaProtocolTracerUtility::finalizeSpanWithoutResponse(
+          *active_span_, decoder_filter_callbacks_->streamInfo(),
           *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
@@ -185,10 +186,11 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       upstream_request_->onResponseComplete();
       cleanUpstreamRequest();
       if (active_span_) {
-        Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
-            *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+        Tracing::MetaProtocolTracerUtility::finalizeSpanWithoutResponse(
+            *active_span_, decoder_filter_callbacks_->streamInfo(),
             *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
-        ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span", *decoder_filter_callbacks_);
+        ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                         *decoder_filter_callbacks_);
       }
       return;
       // todo we also need to clean the stream
@@ -207,7 +209,8 @@ void Router::onEvent(Network::ConnectionEvent event) {
     Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
         *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
         *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
-    ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span", *decoder_filter_callbacks_);
+    ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                     *decoder_filter_callbacks_);
   }
 }
 // ---- Tcp::ConnectionPool::UpstreamCallbacks ----
@@ -217,7 +220,8 @@ absl::optional<uint64_t> Router::computeHashKey() {
   if (auto* hash_policy = route_entry_->hashPolicy(); hash_policy != nullptr) {
     auto hash = hash_policy->generateHash(*request_metadata_);
     if (hash.has_value()) {
-      ENVOY_STREAM_LOG(debug, "meta protocol router: computeHashKey: {}",*decoder_filter_callbacks_, hash.value());
+      ENVOY_STREAM_LOG(debug, "meta protocol router: computeHashKey: {}",
+                       *decoder_filter_callbacks_, hash.value());
     }
     return hash;
   }
@@ -253,7 +257,8 @@ Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& r
   const auto rid_to_integer = rid_extension->toInteger(*request_metadata);
   // Skip if request-id is corrupted, or non-existent
   if (!rid_to_integer.has_value()) {
-    ENVOY_STREAM_LOG(warn, "meta protocol router: corrupted x-request-id", *decoder_filter_callbacks_);
+    ENVOY_STREAM_LOG(warn, "meta protocol router: corrupted x-request-id",
+                     *decoder_filter_callbacks_);
     return final_reason;
   }
   const uint64_t result = rid_to_integer.value() % 10000;
@@ -261,7 +266,7 @@ Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& r
   // We only need to make tracing decision on the first span. The following spans just follow the
   // tracing decision.
   final_reason = rid_extension->getTraceReason(*request_metadata);
-  if (is_first_span_){
+  if (is_first_span_) {
     // std::string uuid = rid_extension->get(*request_metadata);
     auto client_sampling = decoder_filter_callbacks_->tracingConfig()->clientSampling();
     auto random_sampling = decoder_filter_callbacks_->tracingConfig()->randomSampling();
@@ -271,16 +276,19 @@ Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& r
     bool envoyForceTrace = request_metadata->getString(ReservedHeaders::EnvoyForceTrace) != "";
     if (hasClientTraceId &&
         runtime_.snapshot().featureEnabled("tracing.client_enabled", client_sampling)) {
-      ENVOY_STREAM_LOG(debug, "meta protocol router: trace reason: client forced", *decoder_filter_callbacks_);
+      ENVOY_STREAM_LOG(debug, "meta protocol router: trace reason: client forced",
+                       *decoder_filter_callbacks_);
       final_reason = Envoy::Tracing::Reason::ClientForced;
       rid_extension->setTraceReason(*request_metadata, final_reason);
     } else if (envoyForceTrace) {
-      ENVOY_STREAM_LOG(debug, "meta protocol router: trace reason: service forced", *decoder_filter_callbacks_);
+      ENVOY_STREAM_LOG(debug, "meta protocol router: trace reason: service forced",
+                       *decoder_filter_callbacks_);
       final_reason = Envoy::Tracing::Reason::ServiceForced;
       rid_extension->setTraceReason(*request_metadata, final_reason);
     } else if (runtime_.snapshot().featureEnabled("tracing.random_sampling", random_sampling,
                                                   result)) {
-      ENVOY_STREAM_LOG(debug, "meta protocol router: trace reason: random sampling", *decoder_filter_callbacks_);
+      ENVOY_STREAM_LOG(debug, "meta protocol router: trace reason: random sampling",
+                       *decoder_filter_callbacks_);
       final_reason = Envoy::Tracing::Reason::Sampling;
       rid_extension->setTraceReason(*request_metadata, final_reason);
     }
@@ -295,7 +303,8 @@ Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& r
   return final_reason;
 }
 
-void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation) {
+void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation,
+                          const std::string& cluster_name) {
   Envoy::Tracing::Reason reason = mutateTracingRequestMetadata(request_metadata);
   if (reason == Envoy::Tracing::Reason::NotTraceable ||
       reason == Envoy::Tracing::Reason::HealthCheck) {
@@ -306,13 +315,14 @@ void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr 
   ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing span", *decoder_filter_callbacks_);
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
       *decoder_filter_callbacks_->tracingConfig(), *request_metadata, *request_mutation,
-      decoder_filter_callbacks_->streamInfo(), tracing_decision);
+      decoder_filter_callbacks_->streamInfo(), cluster_name, tracing_decision);
 }
 
 void Router::resetStream() { decoder_filter_callbacks_->resetStream(); }
 
 void Router::cleanUpstreamRequest() {
-  ENVOY_STREAM_LOG(debug, "meta protocol router: clean upstream request", *decoder_filter_callbacks_);
+  ENVOY_STREAM_LOG(debug, "meta protocol router: clean upstream request",
+                   *decoder_filter_callbacks_);
   if (upstream_request_) {
     upstream_request_.reset();
   }

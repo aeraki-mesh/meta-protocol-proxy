@@ -31,11 +31,6 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Tracing {
 
-// TODO(perf): Avoid string creations/copies in this entire file.
-// static std::string buildResponseCode(const StreamInfo::StreamInfo& info) {
-//  return info.responseCode() ? std::to_string(info.responseCode().value()) : "0";
-//}
-
 const std::string MetaProtocolTracerUtility::IngressOperation = "ingress";
 const std::string MetaProtocolTracerUtility::EgressOperation = "egress";
 
@@ -76,8 +71,6 @@ MetaProtocolTracerUtility::shouldTraceRequest(const StreamInfo::StreamInfo& stre
   NOT_REACHED_GCOVR_EXCL_LINE;
 }
 
-// TODO add log to tracing
-/*
 static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::StreamInfo& stream_info) {
   const auto start_time = stream_info.startTime();
   if (stream_info.lastDownstreamRxByteReceived()) {
@@ -116,34 +109,34 @@ static void annotateVerbose(Envoy::Tracing::Span& span, const StreamInfo::Stream
              Tracing::Logs::get().LastDownstreamTxByteSent);
   }
 }
-*/
 
-void MetaProtocolTracerUtility::finalizeDownstreamSpan(Envoy::Tracing::Span& span,
-                                                       const Metadata& metadata,
-                                                       const StreamInfo::StreamInfo& stream_info,
-                                                       const Envoy::Tracing::Config& tracing_config,
-                                                       ResponseStatus responseStatus) {
-  const MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&metadata);
-  auto& request_headers = metadataImpl->getHeaders();
-  // Pre response data.
-
-  if (request_headers.RequestId()) {
-    span.setTag(Tracing::Tags::get().GuidXRequestId, request_headers.getRequestIdValue());
+void MetaProtocolTracerUtility::finalizeSpanWithResponse(
+    Envoy::Tracing::Span& span, const Metadata& response_metadata,
+    const StreamInfo::StreamInfo& stream_info, const Envoy::Tracing::Config& tracing_config) {
+  setCommonTags(span, stream_info, tracing_config);
+  span.setTag(Tracing::Tags::get().ResponseSize,
+              std::to_string(response_metadata.getHeaderSize() + response_metadata.getBodySize()));
+  if (response_metadata.getResponseStatus() == ResponseStatus::Error) {
+    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
   }
+  span.finishSpan();
+}
 
-  /*
-  span.setTag(
-      Tracing::Tags::get().HttpUrl,
-      Http::Utility::buildOriginalUri(*request_headers, tracing_config.maxPathTagLength()));
-  span.setTag(Tracing::Tags::get().HttpMethod, request_headers->getMethodValue());
-  span.setTag(Tracing::Tags::get().DownstreamCluster,
-              valueOrDefault(request_headers->EnvoyDownstreamServiceCluster(), "-"));
-  span.setTag(Tracing::Tags::get().UserAgent, valueOrDefault(request_headers->UserAgent(), "-"));
-  span.setTag(
-      Tracing::Tags::get().HttpProtocol,
-      Formatter::SubstitutionFormatUtils::protocolToStringOrDefault(stream_info.protocol()));
-      */
+void MetaProtocolTracerUtility::finalizeSpanWithoutResponse(
+    Envoy::Tracing::Span& span, const StreamInfo::StreamInfo& stream_info,
+    const Envoy::Tracing::Config& tracing_config, ResponseStatus response_status) {
 
+  setCommonTags(span, stream_info, tracing_config);
+
+  if (response_status == ResponseStatus::Error) {
+    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
+  }
+  span.finishSpan();
+}
+
+void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
+                                              const StreamInfo::StreamInfo& stream_info,
+                                              const Envoy::Tracing::Config& tracing_config) {
   const auto& remote_address = stream_info.downstreamAddressProvider().directRemoteAddress();
 
   if (remote_address->type() == Network::Address::Type::Ip) {
@@ -153,77 +146,16 @@ void MetaProtocolTracerUtility::finalizeDownstreamSpan(Envoy::Tracing::Span& spa
     span.setTag(Tracing::Tags::get().PeerAddress, remote_address->logicalName());
   }
 
-  if (request_headers.ClientTraceId()) {
-    span.setTag(Tracing::Tags::get().GuidXClientTraceId, request_headers.getClientTraceIdValue());
-  }
-
-  /*
-  Envoy::Tracing::CustomTagContext ctx{request_headers, stream_info};
-
-  const Envoy::Tracing::CustomTagMap* custom_tag_map = tracing_config.customTags();
-  if (custom_tag_map) {
-    for (const auto& it : *custom_tag_map) {
-      it.second->apply(span, ctx);
-    }
-  }
-  span.setTag(Tracing::Tags::get().RequestSize, std::to_string(stream_info.bytesReceived()));
-  span.setTag(Tracing::Tags::get().ResponseSize, std::to_string(stream_info.bytesSent()));
-  */
-  setCommonTags(span, stream_info, tracing_config);
-  if (responseStatus == ResponseStatus::Error) {
-    span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
-  }
-  span.finishSpan();
-}
-
-void MetaProtocolTracerUtility::finalizeUpstreamSpan(Envoy::Tracing::Span& span,
-                                                     const StreamInfo::StreamInfo& stream_info,
-                                                     const Envoy::Tracing::Config& tracing_config) {
-  span.setTag(
-      Tracing::Tags::get().HttpProtocol,
-      Formatter::SubstitutionFormatUtils::protocolToStringOrDefault(stream_info.protocol()));
-
-  if (stream_info.upstreamHost()) {
-    span.setTag(Tracing::Tags::get().UpstreamAddress,
-                stream_info.upstreamHost()->address()->asStringView());
-  }
-
-  setCommonTags(span, stream_info, tracing_config);
-
-  span.finishSpan();
-}
-
-void MetaProtocolTracerUtility::setCommonTags(Envoy::Tracing::Span& span,
-
-                                              const StreamInfo::StreamInfo& stream_info,
-                                              const Envoy::Tracing::Config& tracing_config) {
-
   span.setTag(Tracing::Tags::get().Component, Tracing::Tags::get().Proxy);
   if (nullptr != stream_info.upstreamHost()) {
     span.setTag(Tracing::Tags::get().UpstreamCluster, stream_info.upstreamHost()->cluster().name());
     span.setTag(Tracing::Tags::get().UpstreamClusterName,
                 stream_info.upstreamHost()->cluster().observabilityName());
   }
-  // Post response data.
-  // span.setTag(Tracing::Tags::get().HttpStatusCode, buildResponseCode(stream_info));
-  // span.setTag(Tracing::Tags::get().ResponseFlags,
-  //           StreamInfo::ResponseFlagUtils::toShortString(stream_info));
 
-  // GRPC data.
-  /*if (response_trailers && response_trailers->GrpcStatus() != nullptr) {
-    addGrpcResponseTags(span, *response_trailers);
-  } else if (response_headers && response_headers->GrpcStatus() != nullptr) {
-    addGrpcResponseTags(span, *response_headers);
-  }*/
   if (tracing_config.verbose()) {
-    // todo add log to tracing
-    // annotateVerbose(span, stream_info);
+    annotateVerbose(span, stream_info);
   }
-
-  // if (!stream_info.responseCode() ||
-  // Http::CodeUtility::is5xx(stream_info.responseCode().value())) {
-  //@todo span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
-  //}
 }
 
 Envoy::Tracing::CustomTagConstSharedPtr
@@ -247,25 +179,26 @@ MetaProtocolTracerImpl::MetaProtocolTracerImpl(Envoy::Tracing::DriverSharedPtr d
     : driver_(std::move(driver)), local_info_(local_info) {}
 
 Envoy::Tracing::SpanPtr
-MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata& metadata,
+MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata& request_metadata,
                                   Mutation& mutation, const StreamInfo::StreamInfo& stream_info,
+                                  const std::string& cluster_name,
                                   const Envoy::Tracing::Decision tracing_decision) {
   std::string span_name = MetaProtocolTracerUtility::toString(Envoy::Tracing::OperationName());
 
   if (config.operationName() == Envoy::Tracing::OperationName::Egress) {
     span_name.append(" ");
-    span_name.append(metadata.getOperationName());
+    span_name.append(request_metadata.getOperationName());
   }
 
-  Envoy::Tracing::SpanPtr active_span =
-      driver_->startSpan(config, metadata, span_name, stream_info.startTime(), tracing_decision);
+  Envoy::Tracing::SpanPtr active_span = driver_->startSpan(
+      config, request_metadata, span_name, stream_info.startTime(), tracing_decision);
 
   // inject tracing context to metadata
-  active_span->injectContext(metadata);
+  active_span->injectContext(request_metadata);
   // set tracing context related header to mutation so these headers can be sent to the application.
   // the application is responsible to pass these headers to upstream requests.
   for (int i = 0; i < 10; i++) {
-    auto val = metadata.getString(tracing_headers[i]);
+    auto val = request_metadata.getString(tracing_headers[i]);
     if (val != "") {
       mutation[tracing_headers[i]] = val;
     }
@@ -273,9 +206,23 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
 
   // Set tags
   if (active_span) {
+    auto xRequestId = request_metadata.getString(ReservedHeaders::RequestUUID);
+    if (xRequestId != "") {
+      active_span->setTag(Tracing::Tags::get().GuidXRequestId, xRequestId);
+    }
+    auto clientTraceId = request_metadata.getString(ReservedHeaders::ClientTraceId);
+    if (clientTraceId != "") {
+      active_span->setTag(Tracing::Tags::get().GuidXClientTraceId, clientTraceId);
+    }
+    active_span->setTag(Tracing::Tags::get().UpstreamClusterName, cluster_name);
+    active_span->setTag(
+        Tracing::Tags::get().RequestSize,
+        std::to_string(request_metadata.getHeaderSize() + request_metadata.getBodySize()));
+    active_span->setTag(Tracing::Tags::get().RequestID,
+                        std::to_string(request_metadata.getRequestId()));
     active_span->setTag(Tracing::Tags::get().NodeId, local_info_.nodeName());
     active_span->setTag(Tracing::Tags::get().Zone, local_info_.zoneName());
-    metadata.forEach([&active_span](absl::string_view key, absl::string_view val) {
+    request_metadata.forEach([&active_span](absl::string_view key, absl::string_view val) {
       std::string tag_key = "metadata: " + std::string(key.data(), key.size());
       active_span->setTag(tag_key, val);
       return true;
