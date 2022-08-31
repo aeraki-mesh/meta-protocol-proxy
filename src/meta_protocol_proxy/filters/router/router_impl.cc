@@ -206,8 +206,8 @@ void Router::onEvent(Network::ConnectionEvent event) {
 
   upstream_request_->onUpstreamConnectionEvent(event);
   if (active_span_) {
-    Tracing::MetaProtocolTracerUtility::finalizeDownstreamSpan(
-        *active_span_, *request_metadata_, decoder_filter_callbacks_->streamInfo(),
+    Tracing::MetaProtocolTracerUtility::finalizeSpanWithoutResponse(
+        *active_span_, decoder_filter_callbacks_->streamInfo(),
         *decoder_filter_callbacks_->tracingConfig(), ResponseStatus::Error);
     ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                      *decoder_filter_callbacks_);
