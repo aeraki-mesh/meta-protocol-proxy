@@ -68,7 +68,7 @@ public:
 private:
   void cleanUpstreamRequest();
   bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
-  void setXRequestID(MetadataSharedPtr& request_metadata, MutationSharedPtr& request_mutation);
+  bool setXRequestID(MetadataSharedPtr& request_metadata, MutationSharedPtr& request_mutation);
   void traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation);
   Envoy::Tracing::Reason mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata);
 
@@ -87,6 +87,7 @@ private:
   ShadowWriter& shadow_writer_;
 
   Envoy::Tracing::SpanPtr active_span_;
+  bool is_first_span_{false};
 };
 
 } // namespace Router

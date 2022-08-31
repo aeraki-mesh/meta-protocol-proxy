@@ -58,7 +58,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
-  setXRequestID(request_metadata, request_mutation);
+  // if x-request-id is created, then it's the first span in this trace
+  is_first_span_ = setXRequestID(request_metadata, request_mutation);
   // only trace request if there's a tracing config
   if (decoder_filter_callbacks_->tracingConfig()) {
     traceRequest(request_metadata, request_mutation);
@@ -229,7 +230,7 @@ const Network::Connection* Router::downstreamConnection() const {
 }
 // ---- Upstream::LoadBalancerContextBase ----
 
-void Router::setXRequestID(MetadataSharedPtr& request_metadata,
+bool Router::setXRequestID(MetadataSharedPtr& request_metadata,
                            MutationSharedPtr& request_mutation) {
   auto rid_extension = decoder_filter_callbacks_->requestIDExtension();
   // set x-request-id to metadata, so it can be used to record tracing sampling decision
@@ -239,6 +240,7 @@ void Router::setXRequestID(MetadataSharedPtr& request_metadata,
   if (modified) {
     (*request_mutation)[ReservedHeaders::RequestUUID] = rid_extension->get(*request_metadata);
   }
+  return modified;
 }
 
 Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata) {
@@ -256,9 +258,10 @@ Envoy::Tracing::Reason Router::mutateTracingRequestMetadata(MetadataSharedPtr& r
   }
   const uint64_t result = rid_to_integer.value() % 10000;
 
-  // Do not apply tracing transformations if this request chain has already been traced.
+  // We only need to make tracing decision on the first span. The following spans just follow the
+  // tracing decision.
   final_reason = rid_extension->getTraceReason(*request_metadata);
-  if (Envoy::Tracing::Reason::NotTraceable == final_reason) {
+  if (is_first_span_){
     // std::string uuid = rid_extension->get(*request_metadata);
     auto client_sampling = decoder_filter_callbacks_->tracingConfig()->clientSampling();
     auto random_sampling = decoder_filter_callbacks_->tracingConfig()->randomSampling();
@@ -295,8 +298,7 @@ void Router::traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr 
       reason == Envoy::Tracing::Reason::HealthCheck) {
     return;
   }
-  const Envoy::Tracing::Decision tracing_decision =
-      Envoy::Tracing::Decision{reason, true};
+  const Envoy::Tracing::Decision tracing_decision = Envoy::Tracing::Decision{reason, true};
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: start tracing span", *decoder_filter_callbacks_);
   active_span_ = decoder_filter_callbacks_->tracer()->startSpan(
