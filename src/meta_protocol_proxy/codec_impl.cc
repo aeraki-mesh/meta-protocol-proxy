@@ -12,7 +12,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
-void MetadataImpl::put(std::string key, std::any value) { properties_.insert({key, value}); }
+void MetadataImpl::put(std::string key, std::any value) { properties_[key] = value; }
 AnyOptConstRef MetadataImpl::get(std::string key) const {
   auto it = properties_.find(key);
   if (it != properties_.end()) {
