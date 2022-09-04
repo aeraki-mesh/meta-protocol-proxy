@@ -116,6 +116,11 @@ void MetaProtocolTracerUtility::finalizeSpanWithResponse(
   setCommonTags(span, stream_info, tracing_config);
   span.setTag(Tracing::Tags::get().ResponseSize,
               std::to_string(response_metadata.getHeaderSize() + response_metadata.getBodySize()));
+  response_metadata.forEach([&span](absl::string_view key, absl::string_view val) {
+    std::string tag_key = "response metadata: " + std::string(key.data(), key.size());
+    span.setTag(tag_key, val);
+    return true;
+  });
   if (response_metadata.getResponseStatus() == ResponseStatus::Error) {
     span.setTag(Tracing::Tags::get().Error, Tracing::Tags::get().True);
   }
@@ -224,7 +229,7 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
     active_span->setTag(Tracing::Tags::get().NodeId, local_info_.nodeName());
     active_span->setTag(Tracing::Tags::get().Zone, local_info_.zoneName());
     request_metadata.forEach([&active_span](absl::string_view key, absl::string_view val) {
-      std::string tag_key = "metadata: " + std::string(key.data(), key.size());
+      std::string tag_key = "request metadata: " + std::string(key.data(), key.size());
       active_span->setTag(tag_key, val);
       return true;
     });
