@@ -4,6 +4,7 @@
 
 #include "envoy/buffer/buffer.h"
 #include "envoy/tcp/conn_pool.h"
+#include "envoy/tracing/trace_driver.h"
 
 #include "source/common/upstream/load_balancer_impl.h"
 
@@ -56,7 +57,7 @@ public:
     decoder_filter_callbacks_->sendLocalReply(response, end_stream);
   };
   CodecPtr createCodec() override { return decoder_filter_callbacks_->createCodec(); };
-  void resetStream() override { decoder_filter_callbacks_->resetStream(); };
+  void resetStream() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override {
     decoder_filter_callbacks_->setUpstreamConnection(std::move(conn));
   };
@@ -67,6 +68,10 @@ public:
 private:
   void cleanUpstreamRequest();
   bool upstreamRequestFinished() { return upstream_request_ == nullptr; };
+  bool setXRequestID(MetadataSharedPtr& request_metadata, MutationSharedPtr& request_mutation);
+  void traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation,
+                    const std::string& cluster_name);
+  Envoy::Tracing::Reason mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata);
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
@@ -76,10 +81,14 @@ private:
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
   MetadataSharedPtr request_metadata_;
+  MetadataSharedPtr response_metadata_;
 
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;
   ShadowWriter& shadow_writer_;
+
+  Envoy::Tracing::SpanPtr active_span_;
+  bool is_first_span_{false};
 };
 
 } // namespace Router

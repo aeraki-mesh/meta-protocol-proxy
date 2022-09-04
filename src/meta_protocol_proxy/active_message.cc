@@ -56,8 +56,8 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   }
 
   // put real server ip in the response
-  metadata_->putString(Metadata::HEADER_REAL_SERVER_ADDRESS,
-                       request_metadata_.getString(Metadata::HEADER_REAL_SERVER_ADDRESS));
+  metadata_->putString(ReservedHeaders::RealServerAddress,
+                       request_metadata_.getString(ReservedHeaders::RealServerAddress));
   // TODO support response mutation
   codec_->encode(*metadata_, Mutation{}, metadata->originMessage());
   downstream_connection_.write(metadata->originMessage(), false);
@@ -182,6 +182,18 @@ CodecPtr ActiveMessageDecoderFilter::createCodec() { return activeMessage_.creat
 void ActiveMessageDecoderFilter::setUpstreamConnection(
     Tcp::ConnectionPool::ConnectionDataPtr conn) {
   return activeMessage_.setUpstreamConnection(std::move(conn));
+}
+
+Tracing::MetaProtocolTracerSharedPtr ActiveMessageDecoderFilter::tracer() {
+  return activeMessage_.tracer();
+}
+
+Tracing::TracingConfig* ActiveMessageDecoderFilter::tracingConfig() {
+  return activeMessage_.tracingConfig();
+}
+
+RequestIDExtensionSharedPtr ActiveMessageDecoderFilter::requestIDExtension() {
+  return activeMessage_.requestIDExtension();
 }
 
 // class ActiveMessageEncoderFilter
@@ -369,6 +381,18 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
 
 void ActiveMessage::setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) {
   connection_manager_.getActiveStream(metadata_->getStreamId()).setUpstreamConn(std::move(conn));
+}
+
+Tracing::MetaProtocolTracerSharedPtr ActiveMessage::tracer() {
+  return connection_manager_.tracer();
+}
+
+Tracing::TracingConfig* ActiveMessage::tracingConfig() {
+  return connection_manager_.tracingConfig();
+}
+
+RequestIDExtensionSharedPtr ActiveMessage::requestIDExtension() {
+  return connection_manager_.requestIDExtension();
 }
 
 void ActiveMessage::maybeDeferredDeleteMessage() {

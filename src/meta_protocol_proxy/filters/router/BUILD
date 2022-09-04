@@ -88,6 +88,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "//src/meta_protocol_proxy/route:route_interface",
+        "//src/meta_protocol_proxy/tracing:tracer_lib",
         "@envoy//envoy/tcp:conn_pool_interface",
         "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//envoy/upstream:load_balancer_interface",

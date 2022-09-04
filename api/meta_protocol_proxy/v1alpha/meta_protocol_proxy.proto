@@ -3,10 +3,13 @@ syntax = "proto3";
 package aeraki.meta_protocol_proxy.v1alpha;
 
 import "envoy/config/core/v3/config_source.proto";
+import "envoy/config/trace/v3/http_tracer.proto";
+import "envoy/type/v3/percent.proto";
 
 import "api/meta_protocol_proxy/config/route/v1alpha/route.proto";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 import "udpa/annotations/status.proto";
 import "validate/validate.proto";
@@ -50,6 +53,10 @@ message MetaProtocolProxy {
   // (`aeraki.meta_protocol.filters.router`) is used.
   repeated MetaProtocolFilter meta_protocol_filters = 6;
 
+  // Presence of the object defines whether the connection manager emits tracing data to the
+  // configured tracing provider.
+  Tracing tracing = 7;
+
   // for idle downstream timer.
   google.protobuf.Duration idle_timeout = 11;
 }
@@ -81,5 +88,61 @@ message Codec {
 
   // Codec specific configuration which depends on the codec being instantiated.
   google.protobuf.Any config = 2;
+}
+
+message Tracing {
+  enum OperationName {
+    // The HTTP listener is used for ingress/incoming requests.
+    INGRESS = 0;
+
+    // The HTTP listener is used for egress/outgoing requests.
+    EGRESS = 1;
+  }
+
+  reserved 1, 2;
+
+  reserved "operation_name", "request_metadata_for_tags";
+
+  // Target percentage of requests managed by this connection manager that will be force
+  // traced if the x-client-trace-id header is set. This field is a direct analog for the
+  // runtime variable 'tracing.client_sampling' in the Connection Manager.
+  // Default: 100%
+  envoy.type.v3.Percent client_sampling = 3;
+
+  // Target percentage of requests managed by this connection manager that will be randomly
+  // selected for trace generation, if not requested by the client or not forced. This field is
+  // a direct analog for the runtime variable 'tracing.random_sampling' in the Connection Manager.
+  // Default: 100%
+  envoy.type.v3.Percent random_sampling = 4;
+
+  // Target percentage of requests managed by this connection manager that will be traced
+  // after all other sampling checks have been applied (client-directed, force tracing, random
+  // sampling). This field functions as an upper limit on the total configured sampling rate. For
+  // instance, setting client_sampling to 100% but overall_sampling to 1% will result in only 1%
+  // of client requests with the appropriate headers to be force traced. This field is a direct
+  // analog for the runtime variable 'tracing.global_enabled' in the Connection Manager.
+  // Default: 100%
+  envoy.type.v3.Percent overall_sampling = 5;
+
+  // Whether to annotate spans with additional data. If true, spans will include logs for stream
+  // events.
+  bool verbose = 6;
+
+  // Maximum length of the metadata to extract and include in the tracing tag. Used to
+  // truncate lengthy metadata to meet the needs of a tracing backend.
+  // Default: 256
+  google.protobuf.UInt32Value max_tag_length = 7;
+
+  // Configuration for an external tracing provider.
+  // If not specified, no tracing will be performed.
+  //
+  // .. attention::
+  //   Please be aware that *envoy.tracers.opencensus* provider can only be configured once
+  //   in Envoy lifetime.
+  //   Any attempts to reconfigure it or to use different configurations for different HCM filters
+  //   will be rejected.
+  //   Such a constraint is inherent to OpenCensus itself. It cannot be overcome without changes
+  //   on OpenCensus side.
+  envoy.config.trace.v3.Tracing.Http provider = 9;
 }
 

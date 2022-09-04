@@ -10,7 +10,9 @@
 #include "src/meta_protocol_proxy/codec/codec.h"
 
 #include "src/meta_protocol_proxy/decoder_event_handler.h"
+#include "src/meta_protocol_proxy/request_id/config.h"
 #include "src/meta_protocol_proxy/route/route.h"
+#include "src/meta_protocol_proxy/tracing/tracer.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -154,9 +156,27 @@ public:
   /**
    * Set the selected upstream connection, used by router.
    * This method is used to initialize the upstream connection for a streaming RPC
-   * @param conn supplies the upstream's connection
+   * @param conn supplies the upstream connection
    */
   virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
+
+  /**
+   * Get the tracer, used by router to create tracing spans
+   * @return
+   */
+  virtual Tracing::MetaProtocolTracerSharedPtr tracer() PURE;
+
+  /**
+   * Get the Tracing Config of this MetaProtocol Proxy
+   * @return null pointer if tracing is not enabled
+   */
+  virtual Tracing::TracingConfig* tracingConfig() PURE;
+
+  /**
+   *  Get the Request ID Extension, which is used by the router to generate x-request-id
+   * @return
+   */
+  virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
 };
 
 /**

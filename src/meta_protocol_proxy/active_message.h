@@ -105,6 +105,9 @@ public:
   void resetDownstreamConnection() override;
   CodecPtr createCodec() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
+  Tracing::MetaProtocolTracerSharedPtr tracer() override;
+  Tracing::TracingConfig* tracingConfig() override;
+  RequestIDExtensionSharedPtr requestIDExtension() override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
 
@@ -182,6 +185,9 @@ public:
   Event::Dispatcher& dispatcher() override;
   void resetStream() override;
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override;
+  Tracing::MetaProtocolTracerSharedPtr tracer() override;
+  Tracing::TracingConfig* tracingConfig() override;
+  RequestIDExtensionSharedPtr requestIDExtension() override;
 
   void createFilterChain();
   FilterStatus applyDecoderFilters(ActiveMessageDecoderFilter* filter,

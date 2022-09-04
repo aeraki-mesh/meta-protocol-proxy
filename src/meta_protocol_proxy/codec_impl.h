@@ -18,12 +18,10 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
-class PropertiesImpl;
-using PropertiesImplPtr = std::unique_ptr<PropertiesImpl>;
-class PropertiesImpl : public Properties {
+class MetadataImpl : public Metadata {
 public:
-  PropertiesImpl(){};
-  ~PropertiesImpl() override = default;
+  MetadataImpl() { headers_ = Http::RequestHeaderMapImpl::create(); };
+  ~MetadataImpl() = default;
 
   void put(std::string key, std::any value) override;
   AnyOptConstRef get(std::string key) const override;
@@ -31,31 +29,6 @@ public:
   std::string getString(std::string key) const override;
   bool getBool(std::string key) const override;
   uint32_t getUint32(std::string key) const override;
-  PropertiesImplPtr clone() const;
-
-private:
-  std::map<std::string, std::any> map_;
-};
-
-class MetadataImpl : public Metadata {
-public:
-  MetadataImpl() {
-    headers_ = Http::RequestHeaderMapImpl::create();
-    properties_ = std::make_unique<PropertiesImpl>();
-  };
-  ~MetadataImpl() = default;
-
-  void put(std::string key, std::any value) override { properties_->put(key, value); };
-  AnyOptConstRef get(std::string key) const override { return properties_->get(key); };
-  void putString(std::string key, std::string value) override {
-    this->put(key, value);
-    auto lowcase_key = Http::LowerCaseString(key);
-    headers_->remove(lowcase_key);
-    headers_->addCopy(lowcase_key, value);
-  };
-  std::string getString(std::string key) const override { return properties_->getString(key); };
-  bool getBool(std::string key) const override { return properties_->getBool(key); };
-  uint32_t getUint32(std::string key) const override { return properties_->getUint32(key); };
 
   Buffer::Instance& originMessage() override { return origin_message_; };
   void setMessageType(MessageType messageType) override { message_type_ = messageType; };
@@ -73,22 +46,25 @@ public:
   size_t getHeaderSize() const override { return header_size_; };
   void setBodySize(size_t bodySize) override { body_size_ = bodySize; };
   size_t getBodySize() const override { return body_size_; };
-  MetadataSharedPtr clone() const override {
-    auto copy = std::make_shared<MetadataImpl>();
-    copy->originMessage().add(origin_message_);
-    copy->setMessageType(getMessageType());
-    copy->setResponseStatus(getResponseStatus());
-    copy->setBodySize(getBodySize());
-    copy->setHeaderSize(getHeaderSize());
-    copy->setRequestId(getRequestId());
-    copy->setStreamId(getStreamId());
-    copy->properties_ = properties_->clone();
-    return copy;
-  };
-  const Http::HeaderMap& getHeaders() const { return *headers_; }
+  void setOperationName(std::string operation_name) override { operation_name_ = operation_name; };
+  std::string getOperationName() const override { return operation_name_; };
+  MetadataSharedPtr clone() const override;
+  Http::RequestHeaderMap& getHeaders() const { return *headers_; }
+
+  // Tracing::TraceContext
+  absl::string_view protocol() const override { return "meta-protocol"; };
+  absl::string_view authority() const override { return operation_name_; };
+  absl::string_view path() const override { return ""; };   // not applicable for MetaProtocol
+  absl::string_view method() const override { return ""; }; // not applicable for MetaProtocol
+  void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override;
+  absl::optional<absl::string_view> getByKey(absl::string_view) const override;
+  void setByKey(absl::string_view key, absl::string_view val) override;
+  void setByReferenceKey(absl::string_view key, absl::string_view val) override;
+  void setByReference(absl::string_view key, absl::string_view val) override;
 
 private:
-  PropertiesImplPtr properties_;
+  const std::string* getStringPointer(std::string key) const;
+  std::map<std::string, std::any> properties_;
   Buffer::OwnedImpl origin_message_;
   MessageType message_type_{MessageType::Request};
   ResponseStatus response_status_{ResponseStatus::Ok};
@@ -96,8 +72,9 @@ private:
   uint64_t stream_id_{0};
   size_t header_size_{0};
   size_t body_size_{0};
+  std::string operation_name_;
   // Reuse the HeaderMatcher API and related tools provided by Envoy to match the route
-  Http::HeaderMapPtr headers_;
+  std::unique_ptr<Http::RequestHeaderMap> headers_;
 };
 
 } // namespace MetaProtocolProxy
