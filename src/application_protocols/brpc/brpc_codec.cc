@@ -16,7 +16,7 @@ namespace Brpc {
 MetaProtocolProxy::DecodeStatus BrpcCodec::decode(Buffer::Instance& buffer,
                                                   MetaProtocolProxy::Metadata& metadata) {
   ENVOY_LOG(debug, "Brpc decoder: {} bytes available, msg type: {}", buffer.length(),
-            metadata.getMessageType());
+            static_cast<int>(metadata.getMessageType()));
   messageType_ = metadata.getMessageType();
   ASSERT(messageType_ == MetaProtocolProxy::MessageType::Request ||
          messageType_ == MetaProtocolProxy::MessageType::Response);
@@ -70,7 +70,7 @@ BrpcDecodeStatus BrpcCodec::handleState(Buffer::Instance& buffer) {
   case BrpcDecodeStatus::DecodePayload:
     return decodeBody(buffer);
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
   return BrpcDecodeStatus::DecodeDone;
 }

@@ -72,7 +72,7 @@ void ShadowRouterImpl::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   }
 
   UpstreamResponseStatus status = decoder_.decode(data);
-  ENVOY_LOG(debug, "******** meta protocol shadow router: response status {}", status);
+  ENVOY_LOG(debug, "******** meta protocol shadow router: response status {}", static_cast<int>(status));
   switch (status) {
   case UpstreamResponseStatus::Complete:
     ENVOY_LOG(debug, "meta protocol shadow router: response complete");
@@ -88,7 +88,7 @@ void ShadowRouterImpl::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     }
     return;
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
 }
 

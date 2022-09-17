@@ -55,8 +55,8 @@ MetaProtocolProxy::DecodeStatus ThriftCodec::decode(Buffer::Instance& data,
       std::string ex_msg = metadata_->appExceptionMessage();
       // Force new metadata if we get called again.
       metadata_.reset();
-      throw EnvoyException(
-          fmt::format("thrift AppException: type: {}, message: {}", ex_type, ex_msg));
+      throw EnvoyException(fmt::format("thrift AppException: type: {}, message: {}",
+			                                             static_cast<int>(ex_type), ex_msg));
     }
 
     frame_started_ = true;
@@ -127,7 +127,7 @@ void ThriftCodec::encode(const MetaProtocolProxy::Metadata& metadata,
     break;
   }
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reachec");
   }
 }
 
@@ -198,7 +198,7 @@ void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Me
     break;
   }
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reachec");
   }
 
   transport_->encodeFrame(metadata.originMessage(), msgMetadata, state_machine_->originalMessage());
@@ -564,7 +564,7 @@ ProtocolState DecoderStateMachine::handleState(Buffer::Instance& buffer) {
   case ProtocolState::MessageEnd:
     return messageEnd(buffer);
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reachec");
   }
 }
 

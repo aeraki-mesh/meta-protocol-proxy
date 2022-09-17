@@ -94,7 +94,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
         context_.messageValidationVisitor());
     break;
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("invalid route specifier");
   }
 
   // route_matcher_ = std::make_unique<Router::RouteMatcherImpl>(config.route_config(), context);
@@ -131,7 +131,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
       tracing_operation_name = Envoy::Tracing::OperationName::Egress;
       break;
     default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
+      PANIC("invalid direction");
     }
 
     envoy::type::v3::FractionalPercent client_sampling;

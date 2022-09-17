@@ -108,7 +108,7 @@ FilterStatus Router::onMessageEncoded(MetadataSharedPtr metadata, MutationShared
   response_metadata_ = metadata;
 
   ENVOY_STREAM_LOG(trace, "meta protocol router: response status: {}", *encoder_filter_callbacks_,
-                   metadata->getResponseStatus());
+                   static_cast<int>(metadata->getResponseStatus()));
 
   switch (metadata->getResponseStatus()) {
   case ResponseStatus::Ok:
@@ -197,7 +197,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     }
     return;
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
 }
 
