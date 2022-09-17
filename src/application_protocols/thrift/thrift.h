@@ -8,6 +8,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace ThriftProxy {
 
+
 enum class TransportType {
   Framed,
   Header,
@@ -45,9 +46,8 @@ public:
       return UNFRAMED;
     case TransportType::Auto:
       return AUTO;
-    default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
     }
+    PANIC_DUE_TO_CORRUPT_ENUM;
   }
 };
 
@@ -96,9 +96,8 @@ public:
       return TWITTER;
     case ProtocolType::Auto:
       return AUTO;
-    default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
     }
+    PANIC_DUE_TO_CORRUPT_ENUM;
   }
 };
 
@@ -116,6 +115,14 @@ enum class MessageType {
 
   // ATTENTION: MAKE SURE THIS REMAINS EQUAL TO THE LAST MESSAGE TYPE
   LastMessageType = Oneway,
+};
+
+/**
+ * A Reply message is either a success or an error (IDL exception)
+ */
+enum class ReplyType {
+  Success,
+  Error,
 };
 
 /**

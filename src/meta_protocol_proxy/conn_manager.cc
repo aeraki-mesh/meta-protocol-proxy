@@ -158,7 +158,7 @@ void ConnectionManager::sendLocalReply(Metadata& metadata, const DirectResponse&
     stats_.local_response_business_exception_.inc();
     break;
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("invalid response type");
   }
 }
 

@@ -73,7 +73,7 @@ void DubboCodec::encode(const MetaProtocolProxy::Metadata& metadata,
     break;
   }
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
 }
 
@@ -156,7 +156,7 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata,
     metadata.setMessageType(MetaProtocolProxy::MessageType::Heartbeat);
     break;
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
 
   if (msgMetadata.hasResponseStatus()) {
@@ -298,7 +298,7 @@ ProtocolState DecoderStateMachine::handleState(Buffer::Instance& buffer) {
   case ProtocolState::OnDecodeStreamData:
     return onDecodeStreamData(buffer);
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
 }
 

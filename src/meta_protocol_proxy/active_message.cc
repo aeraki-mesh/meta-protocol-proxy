@@ -79,7 +79,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   default:
     stats_.response_error_.inc();
     ENVOY_LOG(error, "meta protocol {} response status: {}", application_protocol_,
-              metadata->getResponseStatus());
+              static_cast<int>(metadata->getResponseStatus()));
     break;
   }
 
@@ -367,7 +367,7 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
       maybeDeferredDeleteMessage();
       break;
     default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
+      PANIC("invalid filter status");
     }
   } else {
     maybeDeferredDeleteMessage();

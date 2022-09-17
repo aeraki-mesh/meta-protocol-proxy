@@ -10,6 +10,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace ThriftProxy {
 
+
 /**
  * Endpoint is an endpoint attribution on an Annotation or BinaryAnnotation.
  */

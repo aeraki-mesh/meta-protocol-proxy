@@ -17,6 +17,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace ThriftProxy {
 
+
 /**
  * Transport represents a Thrift transport. The Thrift transport is nominally a generic,
  * bi-directional byte stream. In Envoy we assume it always represents a network byte stream and

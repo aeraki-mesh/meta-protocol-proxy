@@ -46,7 +46,7 @@ void UpstreamRequest::onUpstreamConnectionEvent(Network::ConnectionEvent event) 
     break;
   default:
     // Connected event is consumed by the connection pool.
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
 }
 
@@ -215,7 +215,7 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
         false);
     break;
   default:
-    NOT_REACHED_GCOVR_EXCL_LINE;
+    PANIC("not reached");
   }
   if (!response_complete_) {
     parent_.resetStream();
