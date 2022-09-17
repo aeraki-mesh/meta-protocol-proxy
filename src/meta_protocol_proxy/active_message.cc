@@ -79,7 +79,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   default:
     stats_.response_error_.inc();
     ENVOY_LOG(error, "meta protocol {} response status: {}", application_protocol_,
-              "metadata->getResponseStatus()");
+              static_cast<int>(metadata->getResponseStatus()));
     break;
   }
 
