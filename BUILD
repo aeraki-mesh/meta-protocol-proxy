@@ -25,6 +25,7 @@ envoy_cc_binary(
         "@io_istio_proxy//src/envoy/tcp/metadata_exchange:config_lib",
         "@io_istio_proxy//src/envoy/tcp/sni_verifier:config_lib",
         "@io_istio_proxy//src/envoy/tcp/tcp_cluster_rewrite:config_lib",
+        "@envoy//contrib/kafka/filters/network/source:kafka_broker_config_lib",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
 )

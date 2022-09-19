@@ -83,6 +83,12 @@ the MetaProtocol Proxy and the codecs of the application protocols.
 
 To build MetaProtocol proxy for production, run ```make release```.
 
+### How to solve "No space left on device error" ?
+
+Bazel generates a lot of small files while building, which often causes running out of inodes.
+
+You can use XFS instead of Ext4 file system to avoid this issue because XFS uses 64-bit structure, which can have 2^64 inodes, much more than Ext4's 32-bit structure.
+
 ## Build MetaProtocol Proxy Using Docker
 now support x86 and arm
 ### Export meta-protocol-proxy repo path
