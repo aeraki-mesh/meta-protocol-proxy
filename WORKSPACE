@@ -21,9 +21,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 
 http_archive(
     name = "io_istio_proxy",
-    strip_prefix = "proxy-1.14.4",
-    sha256 = "af318d80aac6545354b00dc225a0956c85118fa47bf71ce2db5b22c98f0bb5b5",
-    url = "https://github.com/istio/proxy/archive/refs/tags/1.14.4.tar.gz",
+    strip_prefix = "proxy-1.14.5",
+    sha256 = "5f609018554bce88a48e2fcd0c6317ce19d79af031f33389c7916a1b9d91c88a",
+    url = "https://github.com/istio/proxy/archive/refs/tags/1.14.5.tar.gz",
 )
 
 load(
