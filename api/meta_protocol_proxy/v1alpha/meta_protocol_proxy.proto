@@ -59,7 +59,7 @@ message MetaProtocolProxy {
   Tracing tracing = 7;
 
   // Configuration for access logs emitted by the this tcp_proxy.
-  repeated config.accesslog.v3.AccessLog access_log = 6;
+  repeated envoy.config.accesslog.v3.AccessLog access_log = 8;
 
   // for idle downstream timer.
   google.protobuf.Duration idle_timeout = 11;
