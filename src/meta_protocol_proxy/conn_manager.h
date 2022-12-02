@@ -48,6 +48,7 @@ public:
   virtual Tracing::MetaProtocolTracerSharedPtr tracer() PURE;
   virtual Tracing::TracingConfig* tracingConfig() PURE;
   virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
+  virtual const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() const PURE;
 };
 
 // class ActiveMessagePtr;
