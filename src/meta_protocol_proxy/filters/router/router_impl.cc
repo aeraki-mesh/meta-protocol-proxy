@@ -5,6 +5,7 @@
 
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
+#include "src/meta_protocol_proxy/codec_impl.h"
 #include "src/meta_protocol_proxy/tracing/tracer_impl.h"
 
 namespace Envoy {
@@ -158,6 +159,18 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
           *decoder_filter_callbacks_->tracingConfig());
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
+    }
+
+    const MetadataImpl* requestMetadataImpl =
+        static_cast<const MetadataImpl*>(&(*request_metadata_));
+    const auto& requestHeaders = requestMetadataImpl->getHeaders();
+    const MetadataImpl* responseMetadataImpl =
+        static_cast<const MetadataImpl*>(&(*response_metadata_));
+    const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
+
+    for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
+      access_log->log(&requestHeaders, &responseHeaders, nullptr,
+                      decoder_filter_callbacks_->streamInfo());
     }
     return;
   case UpstreamResponseStatus::Reset:
