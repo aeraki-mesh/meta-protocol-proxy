@@ -196,6 +196,10 @@ RequestIDExtensionSharedPtr ActiveMessageDecoderFilter::requestIDExtension() {
   return activeMessage_.requestIDExtension();
 }
 
+const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessageDecoderFilter::accessLogs() {
+  return activeMessage_.accessLogs();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
@@ -393,6 +397,10 @@ Tracing::TracingConfig* ActiveMessage::tracingConfig() {
 
 RequestIDExtensionSharedPtr ActiveMessage::requestIDExtension() {
   return connection_manager_.requestIDExtension();
+}
+
+const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessageDecoderFilter::accessLogs() {
+  return connection_manager_.accessLogs();
 }
 
 void ActiveMessage::maybeDeferredDeleteMessage() {
