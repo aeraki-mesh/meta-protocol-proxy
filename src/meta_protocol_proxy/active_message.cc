@@ -399,7 +399,7 @@ RequestIDExtensionSharedPtr ActiveMessage::requestIDExtension() {
   return connection_manager_.requestIDExtension();
 }
 
-const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessageDecoderFilter::accessLogs() {
+const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessage::accessLogs() {
   return connection_manager_.accessLogs();
 }
 
