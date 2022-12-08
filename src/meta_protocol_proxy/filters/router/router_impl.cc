@@ -147,6 +147,11 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   }
 
   UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
+  const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata_));
+  const auto& requestHeaders = requestMetadataImpl->getHeaders();
+  const MetadataImpl* responseMetadataImpl =
+      static_cast<const MetadataImpl*>(&(*response_metadata_));
+  const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
   switch (status) {
   case UpstreamResponseStatus::Complete:
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
@@ -160,13 +165,6 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
     }
-
-    const MetadataImpl* requestMetadataImpl =
-        static_cast<const MetadataImpl*>(&(*request_metadata_));
-    const auto& requestHeaders = requestMetadataImpl->getHeaders();
-    const MetadataImpl* responseMetadataImpl =
-        static_cast<const MetadataImpl*>(&(*response_metadata_));
-    const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
 
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
       access_log->log(&requestHeaders, &responseHeaders, nullptr,
