@@ -148,16 +148,13 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   }
 
   UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
-  const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata_));
-  const auto& requestHeaders = requestMetadataImpl->getHeaders();
-  const MetadataImpl* responseMetadataImpl =
-      static_cast<const MetadataImpl*>(&(*response_metadata_));
-  const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
   switch (status) {
   case UpstreamResponseStatus::Complete:
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
     upstream_request_->onResponseComplete();
     cleanUpstreamRequest();
+
+    // generate tracing span
     if (active_span_) {
       assert(response_metadata_);
       Tracing::MetaProtocolTracerUtility::finalizeSpanWithResponse(
@@ -167,10 +164,9 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
                        *decoder_filter_callbacks_);
     }
 
-    for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-      access_log->log(&requestHeaders, &responseHeaders, nullptr,
-                      decoder_filter_callbacks_->streamInfo());
-    }
+    // emit access log
+    decoder_filter_callbacks_->streamInfo().setResponseCode(static_cast<int>(ResponseStatus::Ok));
+    emitLogEntry(request_metadata_, response_metadata_, decoder_filter_callbacks_->streamInfo()));
     return;
   case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
@@ -340,6 +336,18 @@ void Router::cleanUpstreamRequest() {
   }
 };
 
+void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
+                          const MetadataSharedPtr& response_metadata,
+                          const StreamInfo::StreamInfo& stream_info){
+  const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata));
+  const auto& requestHeaders = requestMetadataImpl->getHeaders();
+  const MetadataImpl* responseMetadataImpl =
+      static_cast<const MetadataImpl*>(&(*response_metadata));
+  const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
+  for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
+    access_log->log(requestHeaders, responseHeaders, nullptr, stream_info);
+  }
+}
 } // namespace Router
 } // namespace  MetaProtocolProxy
 } // namespace NetworkFilters

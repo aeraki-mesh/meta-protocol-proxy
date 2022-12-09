@@ -72,6 +72,9 @@ private:
   void traceRequest(MetadataSharedPtr request_metadata, MutationSharedPtr request_mutation,
                     const std::string& cluster_name);
   Envoy::Tracing::Reason mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata);
+  void emitLogEntry(const MetadataSharedPtr& request_metadata,
+                    const MetadataSharedPtr& response_metadata,
+                    const StreamInfo::StreamInfo& stream_info);
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
