@@ -43,11 +43,12 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     // emit access log
     decoder_filter_callbacks_->streamInfo().setResponseCode(
         static_cast<int>(ResponseStatus::Error));
+    decoder_filter_callbacks_->streamInfo().setResponseCodeDetails("no_matched_route");
     emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
 
     decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::RouteNotFound,
-                           fmt::format("meta protocol router: no cluster match for request '{}'",
+                           fmt::format("meta protocol router: no matched route for request '{}'",
                                        request_metadata_->getRequestId())}),
         false);
     return FilterStatus::AbortIteration;
@@ -63,6 +64,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     // emit access log
     decoder_filter_callbacks_->streamInfo().setResponseCode(
         static_cast<int>(ResponseStatus::Error));
+    decoder_filter_callbacks_->streamInfo().setResponseCodeDetails(
+        prepare_result.exception.value().error_.message);
     emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
 
     decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
@@ -201,6 +204,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // emit access log
     decoder_filter_callbacks_->streamInfo().setResponseCode(
         static_cast<int>(ResponseStatus::Error));
+    decoder_filter_callbacks_->streamInfo().setResponseCodeDetails("upstream_reset");
     emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::MoreData:
@@ -226,6 +230,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       // emit access log
       decoder_filter_callbacks_->streamInfo().setResponseCode(
           static_cast<int>(ResponseStatus::Error));
+      decoder_filter_callbacks_->streamInfo().setResponseCodeDetails(
+          "upstream_response_incomplete");
       emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
       return;
       // todo we also need to clean the stream
