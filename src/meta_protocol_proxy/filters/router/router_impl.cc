@@ -148,6 +148,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   }
 
   UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
+  auto emptyResponseMetadata = std::make_shared<MetadataImpl>();
   switch (status) {
   case UpstreamResponseStatus::Complete:
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
@@ -167,7 +168,6 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // emit access log
     assert(response_metadata_);
     decoder_filter_callbacks_->streamInfo().setResponseCode(static_cast<int>(ResponseStatus::Ok));
-    decoder_filter_callbacks_->streamInfo().setConnectionTerminationDetails()
     emitLogEntry(request_metadata_, response_metadata_, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::Reset:
@@ -190,7 +190,6 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // emit access log
     decoder_filter_callbacks_->streamInfo().setResponseCode(
         static_cast<int>(ResponseStatus::Error));
-    auto emptyResponseMetadata = std::make_shared<MetadataImpl>();
     emitLogEntry(request_metadata_, emptyResponseMetadata, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::MoreData:
@@ -216,7 +215,6 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       // emit access log
       decoder_filter_callbacks_->streamInfo().setResponseCode(
           static_cast<int>(ResponseStatus::Error));
-      auto emptyResponseMetadata = std::make_shared<MetadataImpl>();
       emitLogEntry(request_metadata_, emptyResponseMetadata, decoder_filter_callbacks_->streamInfo());
       return;
       // todo we also need to clean the stream
