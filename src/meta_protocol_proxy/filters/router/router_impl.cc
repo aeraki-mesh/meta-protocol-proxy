@@ -165,7 +165,9 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     }
 
     // emit access log
+    assert(response_metadata_);
     decoder_filter_callbacks_->streamInfo().setResponseCode(static_cast<int>(ResponseStatus::Ok));
+    decoder_filter_callbacks_->streamInfo().setConnectionTerminationDetails()
     emitLogEntry(request_metadata_, response_metadata_, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::Reset:
@@ -175,6 +177,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // so there is no need to call callbacks_->resetStream() to notify
     // the upper layer to release the stream.
     upstream_request_->releaseUpStreamConnection(true);
+
+    // generate tracing span
     if (active_span_) {
       Tracing::MetaProtocolTracerUtility::finalizeSpanWithoutResponse(
           *active_span_, decoder_filter_callbacks_->streamInfo(),
@@ -182,6 +186,12 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
     }
+
+    // emit access log
+    decoder_filter_callbacks_->streamInfo().setResponseCode(
+        static_cast<int>(ResponseStatus::Error));
+    auto emptyResponseMetadata = std::make_shared<MetadataImpl>();
+    emitLogEntry(request_metadata_, emptyResponseMetadata, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::MoreData:
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
@@ -193,6 +203,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
           ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
       upstream_request_->onResponseComplete();
       cleanUpstreamRequest();
+
+      // generate tracing span
       if (active_span_) {
         Tracing::MetaProtocolTracerUtility::finalizeSpanWithoutResponse(
             *active_span_, decoder_filter_callbacks_->streamInfo(),
@@ -200,6 +212,12 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
         ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                          *decoder_filter_callbacks_);
       }
+
+      // emit access log
+      decoder_filter_callbacks_->streamInfo().setResponseCode(
+          static_cast<int>(ResponseStatus::Error));
+      auto emptyResponseMetadata = std::make_shared<MetadataImpl>();
+      emitLogEntry(request_metadata_, emptyResponseMetadata, decoder_filter_callbacks_->streamInfo());
       return;
       // todo we also need to clean the stream
     }
@@ -338,7 +356,7 @@ void Router::cleanUpstreamRequest() {
 
 void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
                           const MetadataSharedPtr& response_metadata,
-                          const StreamInfo::StreamInfo& stream_info){
+                          const StreamInfo::StreamInfo& stream_info) {
   const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata));
   const auto& requestHeaders = requestMetadataImpl->getHeaders();
   const MetadataImpl* responseMetadataImpl =
