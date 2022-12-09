@@ -41,6 +41,11 @@ public:
   virtual ~RouteEntry() = default;
 
   /**
+   * @return const std::string& the route name.
+   */
+  virtual const std::string& routeName() const PURE;
+
+  /**
    * @return const std::string& the upstream cluster that owns the route.
    */
   virtual const std::string& clusterName() const PURE;

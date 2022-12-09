@@ -48,6 +48,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   }
 
   route_entry_ = route_->routeEntry();
+  decoder_filter_callbacks_->streamInfo().setRouteName(route_entry_->routeName());
   const std::string& cluster_name = route_entry_->clusterName();
 
   auto prepare_result = prepareUpstreamRequest(cluster_name, request_metadata_, this);
@@ -165,6 +166,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
     }
+
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
       access_log->log(&requestHeaders, &responseHeaders, nullptr,
                       decoder_filter_callbacks_->streamInfo());
