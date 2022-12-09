@@ -215,7 +215,7 @@ void DubboCodec::toMsgMetadata(const MetaProtocolProxy::Metadata& metadata,
   ref = metadata.get("ResponseStatus");
   if (ref.has_value()) {
     const auto& res_status = ref.value();
-    msgMetadata.setReyisponseStatus(std::any_cast<ResponseStatus>(res_status));
+    msgMetadata.setResponseStatus(std::any_cast<ResponseStatus>(res_status));
   }
 }
 

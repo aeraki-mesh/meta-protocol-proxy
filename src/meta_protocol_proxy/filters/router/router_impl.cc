@@ -165,7 +165,6 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
                        *decoder_filter_callbacks_);
     }
-    decoder_filter_callbacks_->streamInfo().setDynamicMetadata()
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
       access_log->log(&requestHeaders, &responseHeaders, nullptr,
                       decoder_filter_callbacks_->streamInfo());

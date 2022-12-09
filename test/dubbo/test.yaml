@@ -64,6 +64,15 @@ static_resources:
               - key: foo1
                 value: bar1
           statPrefix: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
+          access_log:
+          - name: envoy.access_loggers.file
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
+              log_format:
+                text_format_source:
+                  inline_string: |
+                    [%START_TIME%] "%REQ(X-REQUEST-ID)% %REQ(X-META-PROTOCOL-APPLICATION-PROTOCOL)% %REQ(INTERFACE)% %REQ(METHOD)% %RESP(X-META-PROTOCOL-RESPONSE-STATUS)% %CONNECTION_TERMINATION_DETAILS% "%UPSTREAM_TRANSPORT_FAILURE_REASON%" %BYTES_RECEIVED% %BYTES_SENT% %DURATION% %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% %UPSTREAM_CLUSTER% %UPSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_REMOTE_ADDRESS% %REQUESTED_SERVER_NAME% %ROUTE_NAME%
+              path: /dev/stdout
 
   clusters:
   - name: outbound|20880||org.apache.dubbo.samples.basic.api.demoservice
