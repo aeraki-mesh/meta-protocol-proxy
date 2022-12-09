@@ -42,7 +42,7 @@ static_resources:
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:
-            - name: default
+            - name: default-route
               match:
                 metadata:
                   - name: interface
@@ -71,7 +71,7 @@ static_resources:
               log_format:
                 text_format_source:
                   inline_string: |
-                    [%START_TIME%] "%REQ(X-REQUEST-ID)% %REQ(X-META-PROTOCOL-APPLICATION-PROTOCOL)% %REQ(INTERFACE)% %REQ(METHOD)% %RESP(X-META-PROTOCOL-RESPONSE-STATUS)% %CONNECTION_TERMINATION_DETAILS% "%UPSTREAM_TRANSPORT_FAILURE_REASON%" %BYTES_RECEIVED% %BYTES_SENT% %DURATION% %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% %UPSTREAM_CLUSTER% %UPSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_REMOTE_ADDRESS% %REQUESTED_SERVER_NAME% %ROUTE_NAME%
+                    [%START_TIME%] "%REQ(X-REQUEST-ID)% %REQ(X-META-PROTOCOL-APPLICATION-PROTOCOL)% %REQ(INTERFACE)% %REQ(METHOD)% %RESPONSE_CODE% %CONNECTION_TERMINATION_DETAILS% "%UPSTREAM_TRANSPORT_FAILURE_REASON%" %BYTES_RECEIVED% %BYTES_SENT% %DURATION% %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% %UPSTREAM_CLUSTER% %UPSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_LOCAL_ADDRESS% %DOWNSTREAM_REMOTE_ADDRESS% %ROUTE_NAME%
               path: /dev/stdout
 
   clusters:

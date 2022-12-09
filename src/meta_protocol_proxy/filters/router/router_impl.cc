@@ -166,7 +166,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 
     // emit access log
     decoder_filter_callbacks_->streamInfo().setResponseCode(static_cast<int>(ResponseStatus::Ok));
-    emitLogEntry(request_metadata_, response_metadata_, decoder_filter_callbacks_->streamInfo()));
+    emitLogEntry(request_metadata_, response_metadata_, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
@@ -345,7 +345,7 @@ void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
       static_cast<const MetadataImpl*>(&(*response_metadata));
   const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
   for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-    access_log->log(requestHeaders, responseHeaders, nullptr, stream_info);
+    access_log->log(&requestHeaders, &responseHeaders, nullptr, stream_info);
   }
 }
 } // namespace Router
