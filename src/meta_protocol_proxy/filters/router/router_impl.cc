@@ -39,6 +39,12 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   if (!route_) {
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'",
                      *decoder_filter_callbacks_, request_metadata_->getRequestId());
+
+    // emit access log
+    decoder_filter_callbacks_->streamInfo().setResponseCode(
+        static_cast<int>(ResponseStatus::Error));
+    emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
+
     decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::RouteNotFound,
                            fmt::format("meta protocol router: no cluster match for request '{}'",
@@ -53,6 +59,12 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   auto prepare_result = prepareUpstreamRequest(cluster_name, request_metadata_, this);
   if (prepare_result.exception.has_value()) {
+
+    // emit access log
+    decoder_filter_callbacks_->streamInfo().setResponseCode(
+        static_cast<int>(ResponseStatus::Error));
+    emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
+
     decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
     return FilterStatus::AbortIteration;
   }
