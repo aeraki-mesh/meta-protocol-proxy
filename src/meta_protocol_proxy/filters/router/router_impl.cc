@@ -148,7 +148,6 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
   }
 
   UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
-  auto emptyResponseMetadata = std::make_shared<MetadataImpl>();
   switch (status) {
   case UpstreamResponseStatus::Complete:
     ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
@@ -190,7 +189,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // emit access log
     decoder_filter_callbacks_->streamInfo().setResponseCode(
         static_cast<int>(ResponseStatus::Error));
-    emitLogEntry(request_metadata_, emptyResponseMetadata, decoder_filter_callbacks_->streamInfo());
+    emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
     return;
   case UpstreamResponseStatus::MoreData:
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
@@ -215,7 +214,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       // emit access log
       decoder_filter_callbacks_->streamInfo().setResponseCode(
           static_cast<int>(ResponseStatus::Error));
-      emitLogEntry(request_metadata_, emptyResponseMetadata, decoder_filter_callbacks_->streamInfo());
+      emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
       return;
       // todo we also need to clean the stream
     }
@@ -357,11 +356,17 @@ void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
                           const StreamInfo::StreamInfo& stream_info) {
   const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata));
   const auto& requestHeaders = requestMetadataImpl->getHeaders();
-  const MetadataImpl* responseMetadataImpl =
-      static_cast<const MetadataImpl*>(&(*response_metadata));
-  const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
-  for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-    access_log->log(&requestHeaders, &responseHeaders, nullptr, stream_info);
+  if (response_metadata) {
+    const MetadataImpl* responseMetadataImpl =
+        static_cast<const MetadataImpl*>(&(*response_metadata));
+    const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
+    for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
+      access_log->log(&requestHeaders, &responseHeaders, nullptr, stream_info);
+    }
+  } else {
+    for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
+      access_log->log(&requestHeaders, nullptr, nullptr, stream_info);
+    }
   }
 }
 } // namespace Router
