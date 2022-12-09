@@ -38,6 +38,7 @@ public:
   MessageType getMessageType() const override { return message_type_; };
   void setResponseStatus(ResponseStatus responseStatus) override {
     response_status_ = responseStatus;
+    putString(ReservedHeaders::ResponseStatus, std::to_string(static_cast<int>(responseStatus)));
   };
   ResponseStatus getResponseStatus() const override { return response_status_; };
   void setRequestId(uint64_t requestId) override { request_id_ = requestId; };
