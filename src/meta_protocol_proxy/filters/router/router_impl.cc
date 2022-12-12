@@ -40,11 +40,9 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'",
                      *decoder_filter_callbacks_, request_metadata_->getRequestId());
 
-    // emit access log
-    decoder_filter_callbacks_->streamInfo().setResponseCode(
-        static_cast<int>(ResponseStatus::Error));
-    decoder_filter_callbacks_->streamInfo().setResponseCodeDetails("no_matched_route");
-    emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
+    // edecoder_filter_callbacks_->streamInfo()mit access log
+    emitLogEntry(request_metadata_, nullptr, 
+                 static_cast<int>(ResponseStatus::Error), "no_matched_route");
 
     decoder_filter_callbacks_->sendLocalReply(
         AppException(Error{ErrorType::RouteNotFound,
@@ -62,11 +60,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   if (prepare_result.exception.has_value()) {
 
     // emit access log
-    decoder_filter_callbacks_->streamInfo().setResponseCode(
-        static_cast<int>(ResponseStatus::Error));
-    decoder_filter_callbacks_->streamInfo().setResponseCodeDetails(
-        prepare_result.exception.value().error_.message);
-    emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
+    emitLogEntry(request_metadata_, nullptr, 
+                 static_cast<int>(ResponseStatus::Error), prepare_result.response_code_detail);
 
     decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
     return FilterStatus::AbortIteration;
@@ -181,8 +176,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 
     // emit access log
     assert(response_metadata_);
-    decoder_filter_callbacks_->streamInfo().setResponseCode(static_cast<int>(ResponseStatus::Ok));
-    emitLogEntry(request_metadata_, response_metadata_, decoder_filter_callbacks_->streamInfo());
+    emitLogEntry(request_metadata_, response_metadata_, 
+                 static_cast<int>(ResponseStatus::Ok), "");
     return;
   case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
@@ -202,10 +197,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     }
 
     // emit access log
-    decoder_filter_callbacks_->streamInfo().setResponseCode(
-        static_cast<int>(ResponseStatus::Error));
-    decoder_filter_callbacks_->streamInfo().setResponseCodeDetails("upstream_reset");
-    emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
+    emitLogEntry(request_metadata_, nullptr, 
+                 static_cast<int>(ResponseStatus::Error), "upstream_reset");
     return;
   case UpstreamResponseStatus::MoreData:
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
@@ -228,11 +221,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       }
 
       // emit access log
-      decoder_filter_callbacks_->streamInfo().setResponseCode(
-          static_cast<int>(ResponseStatus::Error));
-      decoder_filter_callbacks_->streamInfo().setResponseCodeDetails(
-          "upstream_response_incomplete");
-      emitLogEntry(request_metadata_, nullptr, decoder_filter_callbacks_->streamInfo());
+      emitLogEntry(request_metadata_, nullptr, 
+                   static_cast<int>(ResponseStatus::Error), "upstream_response_incomplete");
       return;
       // todo we also need to clean the stream
     }
@@ -371,7 +361,11 @@ void Router::cleanUpstreamRequest() {
 
 void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
                           const MetadataSharedPtr& response_metadata,
-                          const StreamInfo::StreamInfo& stream_info) {
+                          int response_code,
+                          const std::string& response_code_detail) {
+  decoder_filter_callbacks_->streamInfo().setResponseCode(response_code);
+  decoder_filter_callbacks_->streamInfo().setResponseCodeDetails(response_code_detail);
+
   const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata));
   const auto& requestHeaders = requestMetadataImpl->getHeaders();
   if (response_metadata) {
@@ -379,11 +373,11 @@ void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
         static_cast<const MetadataImpl*>(&(*response_metadata));
     const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-      access_log->log(&requestHeaders, &responseHeaders, nullptr, stream_info);
+      access_log->log(&requestHeaders, &responseHeaders, nullptr, decoder_filter_callbacks_->streamInfo());
     }
   } else {
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-      access_log->log(&requestHeaders, nullptr, nullptr, stream_info);
+      access_log->log(&requestHeaders, nullptr, nullptr, decoder_filter_callbacks_->streamInfo());
     }
   }
 }

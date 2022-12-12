@@ -74,7 +74,8 @@ private:
   Envoy::Tracing::Reason mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata);
   void emitLogEntry(const MetadataSharedPtr& request_metadata,
                     const MetadataSharedPtr& response_metadata,
-                    const StreamInfo::StreamInfo& stream_info);
+                    int response_code,
+                    const std::string& response_code_detail);
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
