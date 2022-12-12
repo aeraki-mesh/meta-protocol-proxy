@@ -73,15 +73,14 @@ private:
                     const std::string& cluster_name);
   Envoy::Tracing::Reason mutateTracingRequestMetadata(MetadataSharedPtr& request_metadata);
   void emitLogEntry(const MetadataSharedPtr& request_metadata,
-                    const MetadataSharedPtr& response_metadata,
-                    int response_code,
+                    const MetadataSharedPtr& response_metadata, int response_code,
                     const std::string& response_code_detail);
 
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
   Route::RouteConstSharedPtr route_{};
   const Route::RouteEntry* route_entry_{};
-  Upstream::ClusterInfoConstSharedPtr cluster_;
+  // Upstream::ClusterInfoConstSharedPtr cluster_;
 
   std::unique_ptr<UpstreamRequest> upstream_request_;
   MetadataSharedPtr request_metadata_;

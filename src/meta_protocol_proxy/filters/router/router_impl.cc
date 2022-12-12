@@ -40,7 +40,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     ENVOY_STREAM_LOG(debug, "meta protocol router: no cluster match for request '{}'",
                      *decoder_filter_callbacks_, request_metadata_->getRequestId());
 
-    // edecoder_filter_callbacks_->streamInfo()mit access log
+    // emit access log
     emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
                  "no_matched_route");
 
@@ -66,6 +66,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     return FilterStatus::AbortIteration;
   }
   auto& conn_pool_data = prepare_result.conn_pool_data.value();
+  decoder_filter_callbacks_->streamInfo().setUpstreamClusterInfo(cluster_);
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
 
