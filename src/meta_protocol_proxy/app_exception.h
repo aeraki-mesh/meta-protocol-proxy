@@ -25,7 +25,7 @@ struct AppExceptionBase : public EnvoyException,
     return ResponseType::Exception;
   }
 
-  const Error& error_;
+  const Error error_;
 };
 
 using AppException = AppExceptionBase<>;
