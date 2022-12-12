@@ -362,10 +362,7 @@ void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
                           const std::string& response_code_detail) {
   decoder_filter_callbacks_->streamInfo().setResponseCode(response_code);
   decoder_filter_callbacks_->streamInfo().setResponseCodeDetails(response_code_detail);
-  decoder_filter_callbacks_->streamInfo().addBytesSent(request_metadata->getMessageSize());
-  if (response_metadata) {
-    decoder_filter_callbacks_->streamInfo().addBytesReceived(response_metadata->getMessageSize());
-  }
+
   const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata));
   const auto& requestHeaders = requestMetadataImpl->getHeaders();
   if (response_metadata) {

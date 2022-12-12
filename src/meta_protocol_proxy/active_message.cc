@@ -44,6 +44,8 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
                                              MutationSharedPtr mutation) {
   ASSERT(metadata->getMessageType() == MessageType::Response ||
          metadata->getMessageType() == MessageType::Error);
+  parent_.stream_info_.addBytesReceived(metadata->getMessageSize());
+  parent_.stream_info_.onRequestComplete();
 
   metadata_ = metadata;
   if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::ContinueIteration) {
@@ -286,6 +288,7 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
 
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   connection_manager_.stats().request_decoding_success_.inc();
+  stream_info_.addBytesSent(metadata->getMessageSize());
 
   // application protocol will be used to emit access log
   // Todo This may not be the best place to set application protocol for metadata, we better set it at the decode machine
