@@ -33,6 +33,7 @@ public:
   virtual CodecPtr createCodec() PURE;
   virtual void resetStream() PURE;
   virtual void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) PURE;
+  virtual void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) PURE;
 
 protected:
   struct PrepareUpstreamRequestResult {

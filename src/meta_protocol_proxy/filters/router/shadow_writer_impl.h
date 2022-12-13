@@ -60,9 +60,9 @@ public:
   };
 
   // ResponseDecoderCallbacks
-  MessageHandler& newMessageHandler() override { return *this; }
-  bool onHeartbeat(MetadataSharedPtr) override { return true; } // Ignore the heartBeat from
-                                                                // upstream
+  MessageHandler& newMessageHandler() override { return *this; };
+  // Ignore the heartBeat from the upstream
+  bool onHeartbeat(MetadataSharedPtr) override { return true; };
 
 private:
   CodecPtr codec_;
@@ -108,6 +108,7 @@ public:
     }
   }
   void setUpstreamConnection(Tcp::ConnectionPool::ConnectionDataPtr conn) override { (void)conn; };
+  void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr) override{};
 
   // Tcp::ConnectionPool::UpstreamCallbacks
   void onUpstreamData(Buffer::Instance& data, bool end_stream) override;
