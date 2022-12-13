@@ -177,6 +177,12 @@ public:
    * @return
    */
   virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
+
+  /**
+   * Get the Access Loggers of this MetaProtocol Proxy
+   * @return
+   */
+  virtual const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() PURE;
 };
 
 /**

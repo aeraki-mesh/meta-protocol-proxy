@@ -108,6 +108,7 @@ public:
   Tracing::MetaProtocolTracerSharedPtr tracer() override;
   Tracing::TracingConfig* tracingConfig() override;
   RequestIDExtensionSharedPtr requestIDExtension() override;
+  const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
 
@@ -188,6 +189,7 @@ public:
   Tracing::MetaProtocolTracerSharedPtr tracer() override;
   Tracing::TracingConfig* tracingConfig() override;
   RequestIDExtensionSharedPtr requestIDExtension() override;
+  const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() override;
 
   void createFilterChain();
   FilterStatus applyDecoderFilters(ActiveMessageDecoderFilter* filter,

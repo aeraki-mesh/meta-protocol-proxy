@@ -32,7 +32,7 @@ bool RequestMirrorPolicyImpl::shouldShadow(Runtime::Loader& runtime, uint64_t st
 
 RouteEntryImplBase::RouteEntryImplBase(
     const aeraki::meta_protocol_proxy::config::route::v1alpha::Route& route)
-    : cluster_name_(route.route().cluster()),
+    : route_name_(route.name()), cluster_name_(route.route().cluster()),
       config_headers_(Http::HeaderUtility::buildHeaderDataVector(route.match().metadata())),
       mirror_policies_(buildMirrorPolicies(route.route())) {
   if (route.route().cluster_specifier_case() ==
@@ -74,6 +74,8 @@ std::vector<std::shared_ptr<RequestMirrorPolicy>> RouteEntryImplBase::buildMirro
 
   return policies;
 }
+
+const std::string& RouteEntryImplBase::routeName() const { return route_name_; }
 
 const std::string& RouteEntryImplBase::clusterName() const { return cluster_name_; }
 

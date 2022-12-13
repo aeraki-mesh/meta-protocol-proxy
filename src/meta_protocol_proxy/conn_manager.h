@@ -48,6 +48,7 @@ public:
   virtual Tracing::MetaProtocolTracerSharedPtr tracer() PURE;
   virtual Tracing::TracingConfig* tracingConfig() PURE;
   virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
+  virtual const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() const PURE;
 };
 
 // class ActiveMessagePtr;
@@ -94,6 +95,7 @@ public:
   Tracing::MetaProtocolTracerSharedPtr tracer() { return config_.tracer(); };
   Tracing::TracingConfig* tracingConfig() { return config_.tracingConfig(); };
   RequestIDExtensionSharedPtr requestIDExtension() { return config_.requestIDExtension(); };
+  const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() { return config_.accessLogs(); };
 
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }

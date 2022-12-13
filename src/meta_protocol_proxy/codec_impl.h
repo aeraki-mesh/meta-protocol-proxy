@@ -20,7 +20,10 @@ namespace MetaProtocolProxy {
 
 class MetadataImpl : public Metadata {
 public:
-  MetadataImpl() { headers_ = Http::RequestHeaderMapImpl::create(); };
+  MetadataImpl() {
+    headers_ = Http::RequestHeaderMapImpl::create();
+    response_headers_ = Http::ResponseHeaderMapImpl::create();
+  };
   ~MetadataImpl() = default;
 
   void put(std::string key, std::any value) override;
@@ -50,6 +53,7 @@ public:
   std::string getOperationName() const override { return operation_name_; };
   MetadataSharedPtr clone() const override;
   Http::RequestHeaderMap& getHeaders() const { return *headers_; }
+  Http::ResponseHeaderMap& getResponseHeaders() const { return *response_headers_; }
 
   // Tracing::TraceContext
   absl::string_view protocol() const override { return "meta-protocol"; };
@@ -75,6 +79,7 @@ private:
   std::string operation_name_;
   // Reuse the HeaderMatcher API and related tools provided by Envoy to match the route
   std::unique_ptr<Http::RequestHeaderMap> headers_;
+  std::unique_ptr<Http::ResponseHeaderMap> response_headers_;
 };
 
 } // namespace MetaProtocolProxy

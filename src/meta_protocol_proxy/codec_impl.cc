@@ -25,6 +25,8 @@ void MetadataImpl::putString(std::string key, std::string value) {
   auto lowcase_key = Http::LowerCaseString(key);
   headers_->remove(lowcase_key);
   headers_->addCopy(lowcase_key, value);
+  response_headers_->remove(lowcase_key);
+  response_headers_->addCopy(lowcase_key, value);
 };
 std::string MetadataImpl::getString(std::string key) const {
   auto value = this->get(key);

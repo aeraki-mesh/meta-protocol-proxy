@@ -51,6 +51,7 @@ public:
   ~RouteEntryImplBase() override = default;
 
   // Router::RouteEntry
+  const std::string& routeName() const override;
   const std::string& clusterName() const override;
   const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() const override {
     return metadata_match_criteria_.get();
@@ -80,6 +81,7 @@ private:
     uint64_t clusterWeight() const { return cluster_weight_; }
 
     // Router::RouteEntry
+    const std::string& routeName() const override { return parent_.routeName(); }
     const std::string& clusterName() const override { return cluster_name_; }
     const Envoy::Router::MetadataMatchCriteria* metadataMatchCriteria() const override {
       return metadata_match_criteria_ ? metadata_match_criteria_.get()
@@ -126,6 +128,7 @@ private:
       const aeraki::meta_protocol_proxy::config::route::v1alpha::RouteAction& route);
 
   uint64_t total_cluster_weight_;
+  const std::string route_name_;
   const std::string cluster_name_;
   const std::vector<Http::HeaderUtility::HeaderDataPtr> config_headers_;
   std::vector<WeightedClusterEntrySharedPtr> weighted_clusters_;

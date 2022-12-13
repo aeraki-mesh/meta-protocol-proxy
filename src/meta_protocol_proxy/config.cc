@@ -2,7 +2,10 @@
 
 #include "absl/container/flat_hash_map.h"
 
+#include "envoy/config/accesslog/v3/accesslog.pb.h"
 #include "envoy/registry/registry.h"
+
+#include "source/common/access_log/access_log_impl.h"
 #include "source/common/config/utility.h"
 
 #include "src/meta_protocol_proxy/codec/factory.h"
@@ -158,6 +161,10 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
         tracing_config.verbose(), max_tag_length);
   }
   request_id_extension_ = std::make_shared<UUIDRequestIDExtension>(context.api().randomGenerator());
+
+  for (const envoy::config::accesslog::v3::AccessLog& log_config : config.access_log()) {
+    access_logs_.emplace_back(AccessLog::AccessLogFactory::fromProto(log_config, context));
+  }
 }
 
 /**

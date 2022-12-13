@@ -44,6 +44,8 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
                                              MutationSharedPtr mutation) {
   ASSERT(metadata->getMessageType() == MessageType::Response ||
          metadata->getMessageType() == MessageType::Error);
+  parent_.stream_info_.addBytesReceived(metadata->getMessageSize());
+  parent_.stream_info_.onRequestComplete();
 
   metadata_ = metadata;
   if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::ContinueIteration) {
@@ -196,6 +198,10 @@ RequestIDExtensionSharedPtr ActiveMessageDecoderFilter::requestIDExtension() {
   return activeMessage_.requestIDExtension();
 }
 
+const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessageDecoderFilter::accessLogs() {
+  return activeMessage_.accessLogs();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
@@ -282,6 +288,13 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
 
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   connection_manager_.stats().request_decoding_success_.inc();
+  stream_info_.addBytesSent(metadata->getMessageSize());
+
+  // application protocol will be used to emit access log
+  // Todo This may not be the best place to set application protocol for metadata, we better set it at the decode machine
+  metadata->putString(ReservedHeaders::ApplicationProtocol,
+                      connection_manager_.config().applicationProtocol());
+
   bool needApplyFilters = false;
   switch (metadata->getMessageType()) {
   case MessageType::Request:
@@ -393,6 +406,10 @@ Tracing::TracingConfig* ActiveMessage::tracingConfig() {
 
 RequestIDExtensionSharedPtr ActiveMessage::requestIDExtension() {
   return connection_manager_.requestIDExtension();
+}
+
+const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessage::accessLogs() {
+  return connection_manager_.accessLogs();
 }
 
 void ActiveMessage::maybeDeferredDeleteMessage() {

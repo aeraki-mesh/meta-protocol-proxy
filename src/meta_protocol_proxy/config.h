@@ -1,10 +1,12 @@
 #pragma once
 
+#include <map>
 #include <string>
 
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.h"
 #include "api/meta_protocol_proxy/v1alpha/meta_protocol_proxy.pb.validate.h"
 
+#include "envoy/access_log/access_log.h"
 #include "envoy/tracing/trace_driver.h"
 
 #include "source/extensions/filters/network/common/factory_base.h"
@@ -93,6 +95,9 @@ public:
   Tracing::MetaProtocolTracerSharedPtr tracer() override { return tracer_; };
   Tracing::TracingConfig* tracingConfig() override { return tracing_config_.get(); };
   RequestIDExtensionSharedPtr requestIDExtension() override { return request_id_extension_; };
+  const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() const override {
+    return access_logs_;
+  }
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
@@ -117,6 +122,7 @@ private:
       std::make_shared<MetaProtocolProxy::Tracing::NullTracer>()};
   Tracing::TracingConfigPtr tracing_config_;
   RequestIDExtensionSharedPtr request_id_extension_;
+  std::vector<AccessLog::InstanceSharedPtr> access_logs_;
 };
 
 } // namespace MetaProtocolProxy
