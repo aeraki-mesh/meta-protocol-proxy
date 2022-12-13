@@ -1,2 +1,1 @@
 import %workspace%/proxy.bazelrc
-try-import %workspace%/user.bazelrc
