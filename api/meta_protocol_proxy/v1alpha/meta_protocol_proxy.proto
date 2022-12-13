@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package aeraki.meta_protocol_proxy.v1alpha;
 
+import "envoy/config/accesslog/v3/accesslog.proto";
 import "envoy/config/core/v3/config_source.proto";
 import "envoy/config/trace/v3/http_tracer.proto";
 import "envoy/type/v3/percent.proto";
@@ -56,6 +57,9 @@ message MetaProtocolProxy {
   // Presence of the object defines whether the connection manager emits tracing data to the
   // configured tracing provider.
   Tracing tracing = 7;
+
+  // Configuration for access logs emitted by the this tcp_proxy.
+  repeated envoy.config.accesslog.v3.AccessLog access_log = 8;
 
   // for idle downstream timer.
   google.protobuf.Duration idle_timeout = 11;

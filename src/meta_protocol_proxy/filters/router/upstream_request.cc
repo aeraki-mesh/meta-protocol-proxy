@@ -91,6 +91,7 @@ void UpstreamRequest::encodeData(Buffer::Instance& data) {
 
 void UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
                                     Upstream::HostDescriptionConstSharedPtr host) {
+  parent_.onUpstreamHostSelected(host);
   conn_pool_handle_ = nullptr;
 
   // Mimic an upstream reset.
@@ -118,6 +119,7 @@ void UpstreamRequest::onPoolFailure(ConnectionPool::PoolFailureReason reason, ab
 void UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
                                   Upstream::HostDescriptionConstSharedPtr host) {
   ENVOY_LOG(debug, "meta protocol upstream request: tcp connection is ready");
+  parent_.onUpstreamHostSelected(host);
 
   // Only invoke continueDecoding if we'd previously stopped the filter chain.
   bool continue_decoding = conn_pool_handle_ != nullptr;
