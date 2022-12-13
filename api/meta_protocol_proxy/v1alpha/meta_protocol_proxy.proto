@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package aeraki.meta_protocol_proxy.v1alpha;
+package meta_protocol_proxy.v1alpha;
 
 import "envoy/config/core/v3/config_source.proto";
 import "envoy/config/trace/v3/http_tracer.proto";
@@ -15,9 +15,10 @@ import "udpa/annotations/status.proto";
 import "validate/validate.proto";
 import "google/protobuf/duration.proto";
 
-option java_package = "io.aeraki.meta_protocol_proxy.v1alpha";
+option java_package = "net.aeraki.meta_protocol_proxy.v1alpha";
 option java_outer_classname = "MetaProtocolProxyProto";
 option java_multiple_files = true;
+option go_package = "github.com/aeraki-mesh/meta-protocol-control-plane-api/meta_protocol_proxy/v1alpha;v1alpha";
 option (udpa.annotations.file_status).package_version_status = ACTIVE;
 
 // [#protodoc-title: Meta Protocol proxy]

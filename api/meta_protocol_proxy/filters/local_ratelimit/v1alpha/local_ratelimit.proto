@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package aeraki.meta_protocol_proxy.filters.local_ratelimit.v1alpha;
+package meta_protocol_proxy.filters.local_ratelimit.v1alpha;
 
 import "envoy/config/core/v3/base.proto";
 import "envoy/type/v3/token_bucket.proto";
@@ -11,9 +11,10 @@ import "api/meta_protocol_proxy/config/route/v1alpha/route.proto";
 import "udpa/annotations/status.proto";
 import "validate/validate.proto";
 
-option java_package = "io.aeraki.meta_protocol_proxy.filters.local_ratelimit.v1alpha";
+option java_package = "net.aeraki.meta_protocol_proxy.filters.local_ratelimit.v1alpha";
 option java_outer_classname = "LocalRateLimitProto";
 option java_multiple_files = true;
+option go_package = "github.com/aeraki-mesh/meta-protocol-control-plane-api/meta_protocol_proxy/filters/local_ratelimit/v1alpha;localratelimitv1alpha";
 option (udpa.annotations.file_status).package_version_status = ACTIVE;
 
 // [#protodoc-title: Local rate limit]

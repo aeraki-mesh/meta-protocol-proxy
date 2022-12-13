@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package aeraki.meta_protocol_proxy.admin.v1alpha;
+package meta_protocol_proxy.admin.v1alpha;
 
 import "envoy/admin/v3/config_dump.proto";
 import "envoy/config/bootstrap/v3/bootstrap.proto";
@@ -11,10 +11,10 @@ import "google/protobuf/timestamp.proto";
 import "udpa/annotations/status.proto";
 import "udpa/annotations/versioning.proto";
 
-option java_package = "io.aeraki.meta_protocol_proxy.admin.v3";
+option java_package = "net.aeraki.meta_protocol_proxy.admin.v3";
 option java_outer_classname = "ConfigDumpProto";
 option java_multiple_files = true;
-option go_package = "github.com/aeraki-framework/meta-protocol-control-plane-api/meta_protocol_proxy/admin/v1alpha;adminv1alpha";
+option go_package = "github.com/aeraki-mesh/meta-protocol-control-plane-api/meta_protocol_proxy/admin/v1alpha;adminv1alpha";
 option (udpa.annotations.file_status).package_version_status = ACTIVE;
 
 // [#protodoc-title: ConfigDump]
