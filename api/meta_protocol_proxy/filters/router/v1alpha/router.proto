@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package meta_protocol_proxy.filters.router.v1alpha;
+package aeraki.meta_protocol_proxy.filters.router.v1alpha;
 
 import "udpa/annotations/status.proto";
 
