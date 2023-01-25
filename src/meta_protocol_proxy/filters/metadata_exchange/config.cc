@@ -15,7 +15,7 @@ FilterFactoryCb MetadataExchangeFilterConfig::createFilterFactoryFromProtoTyped(
 
   // cfg is changed
   return [cfg, &context](FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addFilter(std::make_shared<MetadataExchangeFilter>(context.clusterManager(), cfg));
+    callbacks.addFilter(std::make_shared<MetadataExchangeFilter>(cfg, context.localInfo()));
   };
 }
 
