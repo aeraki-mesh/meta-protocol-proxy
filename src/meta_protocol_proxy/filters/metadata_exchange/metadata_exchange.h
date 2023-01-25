@@ -33,6 +33,7 @@ public:
       const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange&,
       const LocalInfo::LocalInfo& local_info& local_info):local_info_(local_info) {}
   ~MetadataExchangeFilter() override = default;
+  void onDestroy() override {};
 
   // DecoderFilter
   void setDecoderFilterCallbacks(DecoderFilterCallbacks& ) override{};
