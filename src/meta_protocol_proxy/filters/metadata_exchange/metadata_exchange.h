@@ -14,7 +14,7 @@
 #include "envoy/network/connection.h"
 #include "source/common/http/header_utility.h"
 
-#include "api/meta_protocol_proxy/filters/metadata_exchange/v1alpha/metadata_exchanged.pb.h"
+#include "api/meta_protocol_proxy/filters/metadata_exchange/v1alpha/metadata_exchange.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "google/protobuf/util/json_util.h"
 
@@ -28,9 +28,8 @@ class MetadataExchangeFilter : public CodecFilter,
                   public Upstream::LoadBalancerContextBase,
                   Logger::Loggable<Logger::Id::filter> {
 public:
-  MetadataExchangeFilter(Envoy::Upstream::ClusterManager& cm,
-            const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange& config)
-      : cluster_manager_(cm) {}
+  MetadataExchangeFilter(Envoy::Upstream::ClusterManager&,
+            const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange&){}
   ~MetadataExchangeFilter() override = default;
 
   void onDestroy() override;
@@ -47,8 +46,6 @@ private:
 
   DecoderFilterCallbacks* callbacks_{};
   EncoderFilterCallbacks* encoder_callbacks_{};
-
-  Upstream::ClusterManager& cluster_manager_;
 };
 
 } // namespace MetadataExchange

@@ -15,8 +15,9 @@ void MetadataExchangeFilter::setDecoderFilterCallbacks(DecoderFilterCallbacks& c
   callbacks_ = &callbacks;
 }
 
-FilterStatus MetadataExchangeFilter::onMessageDecoded(MetadataSharedPtr metadata,
+FilterStatus MetadataExchangeFilter::onMessageDecoded(MetadataSharedPtr,
                                                       MutationSharedPtr) {
+  ENVOY_LOG(info, "xxxxxxxxxx meta protocol: metadata exchange ondecode");	
   return FilterStatus::ContinueIteration;
 }
 
@@ -25,6 +26,8 @@ void MetadataExchangeFilter::setEncoderFilterCallbacks(EncoderFilterCallbacks& c
 }
 
 FilterStatus MetadataExchangeFilter::onMessageEncoded(MetadataSharedPtr, MutationSharedPtr) {
+
+  ENVOY_LOG(info, "xxxxxxxxxxx meta protocol: metadata exchange onencode");	
   return FilterStatus::ContinueIteration;
 }
 

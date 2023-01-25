@@ -23,6 +23,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/filters/router:router_lib",
         "//src/meta_protocol_proxy/filters/global_ratelimit:config",
         "//src/meta_protocol_proxy/filters/local_ratelimit:config",
+        "//src/meta_protocol_proxy/filters/metadata_exchange:config",
         "//src/meta_protocol_proxy/tracing:tracer_manager_lib",
         "//src/meta_protocol_proxy/tracing:tracer_config_lib",
         "//src/meta_protocol_proxy/tracing:tracer_lib",
