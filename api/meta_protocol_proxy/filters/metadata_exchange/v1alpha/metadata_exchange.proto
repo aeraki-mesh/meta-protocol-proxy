@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package aeraki.meta_protocol_proxy.filters.metadata_exchange.v1alpha;
 
+import "udpa/annotations/status.proto";
+
 option java_package = "net.aeraki.meta_protocol_proxy.filters.metadata_exchange.v1alpha";
 option java_outer_classname = "MetadataExchangeProto";
 option java_multiple_files = true;
