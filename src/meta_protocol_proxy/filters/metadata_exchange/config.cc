@@ -12,10 +12,11 @@ namespace MetadataExchange {
 FilterFactoryCb MetadataExchangeFilterConfig::createFilterFactoryFromProtoTyped(
     const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange& cfg,
     const std::string&, Server::Configuration::FactoryContext& context) {
-
-  // cfg is changed
-  return [cfg, &context](FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addFilter(std::make_shared<MetadataExchangeFilter>(cfg, context.localInfo()));
+  context.direction()
+      // cfg is changed
+      return [cfg, &context](FilterChainFactoryCallbacks& callbacks) -> void {
+    callbacks.addFilter(std::make_shared<MetadataExchangeFilter>(
+        cfg, Server::Configuration::FactoryContext & context));
   };
 }
 

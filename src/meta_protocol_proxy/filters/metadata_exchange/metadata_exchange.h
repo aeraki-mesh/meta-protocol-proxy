@@ -4,7 +4,7 @@
 #include <string>
 #include <grpcpp/grpcpp.h>
 
-//Envoy
+// Envoy
 #include "envoy/local_info/local_info.h"
 #include "envoy/stats/scope.h"
 #include "envoy/buffer/buffer.h"
@@ -16,7 +16,7 @@
 #include "source/common/upstream/load_balancer_impl.h"
 #include "source/common/http/header_utility.h"
 
-//istio proxy
+// istio proxy
 #include "extensions/common/proto_util.h"
 
 #include "google/protobuf/util/json_util.h"
@@ -39,15 +39,15 @@ class MetadataExchangeFilter : public CodecFilter,
 public:
   MetadataExchangeFilter(
       const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange&,
-      const LocalInfo::LocalInfo& local_info);
+      const Server::Configuration::FactoryContext& context);
   ~MetadataExchangeFilter() override = default;
-  void onDestroy() override {};
+  void onDestroy() override{};
 
   // DecoderFilter
-  void setDecoderFilterCallbacks(DecoderFilterCallbacks& ) override{};
+  void setDecoderFilterCallbacks(DecoderFilterCallbacks&) override{};
   FilterStatus onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) override;
 
-  void setEncoderFilterCallbacks(EncoderFilterCallbacks& ) override {};
+  void setEncoderFilterCallbacks(EncoderFilterCallbacks&) override{};
   FilterStatus onMessageEncoded(MetadataSharedPtr, MutationSharedPtr) override;
 
 private:
@@ -58,6 +58,8 @@ private:
   std::string metadata_;
   // use node id as metadata id
   std::string metadata_id_;
+  // traffic direction, inbound or outbound
+  envoy::config::core::v3::TrafficDirection traffic_direction_;
 };
 
 } // namespace MetadataExchange
