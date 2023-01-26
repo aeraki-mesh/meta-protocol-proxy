@@ -7,19 +7,10 @@ admin:
 node:
   cluster: dubbo-sample-consumer.metaprotocol
   id: sidecar~10.244.0.14~dubbo-sample-consumer-797c4f7cc4-t678c.meta-dubbo~meta-dubbo.svc.cluster.local
-  locality: {}
   metadata:
     ANNOTATIONS:
       kubectl.kubernetes.io/default-container: dubbo-sample-consumer
       kubectl.kubernetes.io/default-logs-container: dubbo-sample-consumer
-      kubernetes.io/config.seen: "2023-01-25T10:10:50.847802347Z"
-      kubernetes.io/config.source: api
-      prometheus.io/path: /stats/prometheus
-      prometheus.io/port: "15020"
-      prometheus.io/scrape: "true"
-      sidecar.istio.io/bootstrapOverride: aeraki-bootstrap-config
-      sidecar.istio.io/proxyImage: aeraki/meta-protocol-proxy-debug:1.2.2
-      sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-socket","workload-certs","custom-bootstrap-volume","istio-envoy","istio-data","istio-podinfo","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
     APP_CONTAINERS: dubbo-sample-consumer
     CLUSTER_ID: Kubernetes
     INTERCEPTION_MODE: REDIRECT
@@ -60,6 +51,7 @@ static_resources:
       socket_address:
         address: 0.0.0.0
         port_value: 20880
+    traffic_direction: OUTBOUND
     filter_chains:
     - filters:
       - name: aeraki.meta_protocol_proxy

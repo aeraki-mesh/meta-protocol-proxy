@@ -8,6 +8,7 @@
 #include "envoy/local_info/local_info.h"
 #include "envoy/stats/scope.h"
 #include "envoy/buffer/buffer.h"
+#include "envoy/server/factory_context.h"
 #include "source/common/common/logger.h"
 #include "source/common/buffer/buffer_impl.h"
 #include "envoy/network/connection.h"
