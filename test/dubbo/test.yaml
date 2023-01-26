@@ -69,6 +69,7 @@ static_resources:
             name: aeraki.meta_protocol.codec.dubbo
           metaProtocolFilters:
           - name: aeraki.meta_protocol.filters.metadata_exchange
+          - name: aeraki.meta_protocol.filters.stats
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:
