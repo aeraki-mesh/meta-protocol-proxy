@@ -6,6 +6,34 @@ admin:
       port_value: 8080
 node:
   cluster: dubbo-sample-consumer.metaprotocol
+  id: sidecar~10.244.0.14~dubbo-sample-consumer-797c4f7cc4-t678c.meta-dubbo~meta-dubbo.svc.cluster.local
+  metadata:
+    ANNOTATIONS:
+      kubectl.kubernetes.io/default-container: dubbo-sample-consumer
+      kubectl.kubernetes.io/default-logs-container: dubbo-sample-consumer
+    APP_CONTAINERS: dubbo-sample-consumer
+    CLUSTER_ID: Kubernetes
+    INTERCEPTION_MODE: REDIRECT
+    LABELS:
+      app: dubbo-sample-consumer
+      pod-template-hash: 797c4f7cc4
+      security.istio.io/tlsMode: istio
+      service.istio.io/canonical-name: dubbo-sample-consumer
+      service.istio.io/canonical-revision: latest
+    MESH_ID: cluster.local
+    NAME: dubbo-sample-consumer-797c4f7cc4-t678c
+    NAMESPACE: meta-dubbo
+    OWNER: kubernetes://apis/apps/v1/namespaces/meta-dubbo/deployments/dubbo-sample-consumer
+    PROXY_CONFIG:
+      binaryPath: /usr/local/bin/envoy
+      controlPlaneAuthPolicy: MUTUAL_TLS
+      discoveryAddress: istiod.istio-system.svc:15012
+      proxyAdminPort: 15000
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+      serviceCluster: istio-proxy
+    SERVICE_ACCOUNT: default
+    WORKLOAD_NAME: dubbo-sample-consumer
 tracing:
   http:
     name: envoy.tracers.zipkin
@@ -23,6 +51,7 @@ static_resources:
       socket_address:
         address: 0.0.0.0
         port_value: 20880
+    traffic_direction: OUTBOUND
     filter_chains:
     - filters:
       - name: aeraki.meta_protocol_proxy
@@ -39,6 +68,7 @@ static_resources:
           codec:
             name: aeraki.meta_protocol.codec.dubbo
           metaProtocolFilters:
+          - name: aeraki.meta_protocol.filters.metadata_exchange
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:
