@@ -1,7 +1,8 @@
-#include "src/meta_protocol_proxy/filters/metadata_exchange/config.h"
+#include "src/meta_protocol_proxy/filters/stats/config.h"
 
 #include "envoy/registry/registry.h"
-#include "src/meta_protocol_proxy/filters/metadata_exchange/metadata_exchange.h"
+
+#include "src/meta_protocol_proxy/filters/stats/stats.h"
 
 namespace Envoy {
 namespace Extensions {

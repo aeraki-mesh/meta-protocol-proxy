@@ -12,7 +12,7 @@ StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1al
   traffic_direction_ = context.direction();
 }
 
-FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr, MutationSharedPtr mutation) {
+FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr, MutationSharedPtr) {
   return FilterStatus::ContinueIteration;
 }
 

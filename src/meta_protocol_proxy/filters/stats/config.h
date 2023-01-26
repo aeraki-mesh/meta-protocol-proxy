@@ -1,7 +1,7 @@
 #pragma once
 
-#include "api/meta_protocol_proxy/filters/metadata_exchange/v1alpha/metadata_exchange.pb.h"
-#include "api/meta_protocol_proxy/filters/metadata_exchange/v1alpha/metadata_exchange.pb.validate.h"
+#include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.h"
+#include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.validate.h"
 #include "src/meta_protocol_proxy/filters/factory_base.h"
 
 namespace Envoy {

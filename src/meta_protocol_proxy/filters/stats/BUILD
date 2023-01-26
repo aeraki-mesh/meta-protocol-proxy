@@ -10,7 +10,7 @@ envoy_cc_library(
     srcs = ["config.cc"],
     hdrs = ["config.h"],
     deps = [
-        ":metadata_exchange",
+        ":stats",
         "//api/meta_protocol_proxy/filters/stats/v1alpha:pkg_cc_proto",
         "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy/filters:factory_base_lib",
