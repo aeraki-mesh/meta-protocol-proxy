@@ -4,6 +4,7 @@
 #include <string>
 #include <grpcpp/grpcpp.h>
 
+//Envoy
 #include "envoy/local_info/local_info.h"
 #include "envoy/stats/scope.h"
 #include "envoy/buffer/buffer.h"
@@ -15,9 +16,13 @@
 #include "source/common/upstream/load_balancer_impl.h"
 #include "source/common/http/header_utility.h"
 
+//istio proxy
+#include "extensions/common/proto_util.h"
+
+#include "google/protobuf/util/json_util.h"
+
 #include "api/meta_protocol_proxy/filters/metadata_exchange/v1alpha/metadata_exchange.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
-#include "google/protobuf/util/json_util.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -25,13 +30,16 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace MetadataExchange {
 
+const std::string ExchangeMetadataHeader = "x-envoy-peer-metadata";
+const std::string ExchangeMetadataHeaderId = "x-envoy-peer-metadata-id";
+
 class MetadataExchangeFilter : public CodecFilter,
                                public Upstream::LoadBalancerContextBase,
                                Logger::Loggable<Logger::Id::filter> {
 public:
   MetadataExchangeFilter(
       const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange&,
-      const LocalInfo::LocalInfo& local_info& local_info):local_info_(local_info) {}
+      const LocalInfo::LocalInfo& local_info);
   ~MetadataExchangeFilter() override = default;
   void onDestroy() override {};
 
@@ -44,13 +52,12 @@ public:
 
 private:
   // Helper function to get node metadata.
-  void getMetadata(google::protobuf::Struct* metadata);
+  void loadMetadataFromNodeInfo(const LocalInfo::LocalInfo& local_info);
 
-  // Helper function to get metadata id.
-  std::string getMetadataId();
-
-  // LocalInfo instance.
-  const LocalInfo::LocalInfo& local_info_;
+  // base64 enocoded metadata
+  std::string metadata_;
+  // use node id as metadata id
+  std::string metadata_id_;
 };
 
 } // namespace MetadataExchange

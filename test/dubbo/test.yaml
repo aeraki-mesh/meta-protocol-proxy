@@ -6,6 +6,43 @@ admin:
       port_value: 8080
 node:
   cluster: dubbo-sample-consumer.metaprotocol
+  id: sidecar~10.244.0.14~dubbo-sample-consumer-797c4f7cc4-t678c.meta-dubbo~meta-dubbo.svc.cluster.local
+  locality: {}
+  metadata:
+    ANNOTATIONS:
+      kubectl.kubernetes.io/default-container: dubbo-sample-consumer
+      kubectl.kubernetes.io/default-logs-container: dubbo-sample-consumer
+      kubernetes.io/config.seen: "2023-01-25T10:10:50.847802347Z"
+      kubernetes.io/config.source: api
+      prometheus.io/path: /stats/prometheus
+      prometheus.io/port: "15020"
+      prometheus.io/scrape: "true"
+      sidecar.istio.io/bootstrapOverride: aeraki-bootstrap-config
+      sidecar.istio.io/proxyImage: aeraki/meta-protocol-proxy-debug:1.2.2
+      sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-socket","workload-certs","custom-bootstrap-volume","istio-envoy","istio-data","istio-podinfo","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+    APP_CONTAINERS: dubbo-sample-consumer
+    CLUSTER_ID: Kubernetes
+    INTERCEPTION_MODE: REDIRECT
+    LABELS:
+      app: dubbo-sample-consumer
+      pod-template-hash: 797c4f7cc4
+      security.istio.io/tlsMode: istio
+      service.istio.io/canonical-name: dubbo-sample-consumer
+      service.istio.io/canonical-revision: latest
+    MESH_ID: cluster.local
+    NAME: dubbo-sample-consumer-797c4f7cc4-t678c
+    NAMESPACE: meta-dubbo
+    OWNER: kubernetes://apis/apps/v1/namespaces/meta-dubbo/deployments/dubbo-sample-consumer
+    PROXY_CONFIG:
+      binaryPath: /usr/local/bin/envoy
+      controlPlaneAuthPolicy: MUTUAL_TLS
+      discoveryAddress: istiod.istio-system.svc:15012
+      proxyAdminPort: 15000
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+      serviceCluster: istio-proxy
+    SERVICE_ACCOUNT: default
+    WORKLOAD_NAME: dubbo-sample-consumer
 tracing:
   http:
     name: envoy.tracers.zipkin

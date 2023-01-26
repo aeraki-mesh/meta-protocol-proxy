@@ -23,14 +23,13 @@ envoy_cc_library(
     name = "metadata_exchange",
     repository = "@envoy",
     srcs = ["metadata_exchange.cc"],
-    hdrs = ["metadata_exchange.h"],
+    hdrs = ["metadata_exchange.h", "base64.h"],
     deps = [
         "//src/meta_protocol_proxy:codec_impl_lib",
         "//api/meta_protocol_proxy/filters/metadata_exchange/v1alpha:pkg_cc_proto",
         "//api/meta_protocol_proxy/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
-        "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/common:logger_lib",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_protobuf//:protobuf",
@@ -40,5 +39,6 @@ envoy_cc_library(
         "@envoy//envoy/stats:stats_interface",
         "@envoy//envoy/network:connection_interface",
         "@envoy//source/common/http:header_utility_lib",
+	"@io_istio_proxy//extensions/common:proto_util",
     ],
 )
