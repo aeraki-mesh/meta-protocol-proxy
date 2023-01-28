@@ -1,19 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <string>
-
 // Envoy
 #include "envoy/local_info/local_info.h"
 #include "envoy/stats/scope.h"
-#include "envoy/buffer/buffer.h"
 #include "envoy/server/factory_context.h"
 #include "source/common/common/logger.h"
-#include "source/common/buffer/buffer_impl.h"
-#include "envoy/network/connection.h"
 
 #include "source/common/protobuf/protobuf.h"
-#include "source/common/http/header_utility.h"
 
 // istio proxy
 #include "extensions/common/proto_util.h"
