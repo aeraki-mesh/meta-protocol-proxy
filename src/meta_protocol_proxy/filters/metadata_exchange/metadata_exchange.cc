@@ -1,5 +1,4 @@
 #include "src/meta_protocol_proxy/filters/metadata_exchange/metadata_exchange.h"
-#include "source/common/buffer/buffer_impl.h"
 
 #include "src/meta_protocol_proxy/filters/metadata_exchange/base64.h"
 

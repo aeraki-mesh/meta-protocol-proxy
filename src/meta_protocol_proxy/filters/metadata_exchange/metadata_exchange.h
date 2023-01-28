@@ -1,25 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <grpcpp/grpcpp.h>
-
 // Envoy
 #include "envoy/local_info/local_info.h"
-#include "envoy/stats/scope.h"
-#include "envoy/buffer/buffer.h"
 #include "envoy/server/factory_context.h"
 #include "source/common/common/logger.h"
-#include "source/common/buffer/buffer_impl.h"
-#include "envoy/network/connection.h"
-
-#include "source/common/protobuf/protobuf.h"
-#include "source/common/http/header_utility.h"
 
 // istio proxy
 #include "extensions/common/proto_util.h"
-
-#include "google/protobuf/util/json_util.h"
 
 #include "api/meta_protocol_proxy/filters/metadata_exchange/v1alpha/metadata_exchange.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
