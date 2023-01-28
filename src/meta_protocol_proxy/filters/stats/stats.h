@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <string>
-#include <grpcpp/grpcpp.h>
 
 // Envoy
 #include "envoy/local_info/local_info.h"

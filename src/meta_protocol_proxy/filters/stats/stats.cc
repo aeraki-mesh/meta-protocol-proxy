@@ -1,6 +1,4 @@
 #include "src/meta_protocol_proxy/filters/stats/stats.h"
-#include "src/meta_protocol_proxy/app_exception.h"
-#include "source/common/buffer/buffer_impl.h"
 
 namespace Envoy {
 namespace Extensions {

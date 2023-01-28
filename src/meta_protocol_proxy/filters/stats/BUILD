@@ -27,10 +27,8 @@ envoy_cc_library(
     deps = [
         "//src/meta_protocol_proxy:codec_impl_lib",
         "//api/meta_protocol_proxy/filters/stats/v1alpha:pkg_cc_proto",
-        "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//source/common/common:logger_lib",
-        "@com_github_grpc_grpc//:grpc++",
         "@com_google_protobuf//:protobuf",
         "@envoy//envoy/stats:stats_interface",
         "@envoy//envoy/network:connection_interface",
