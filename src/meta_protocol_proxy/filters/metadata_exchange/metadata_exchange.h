@@ -14,7 +14,6 @@
 #include "envoy/network/connection.h"
 
 #include "source/common/protobuf/protobuf.h"
-#include "source/common/upstream/load_balancer_impl.h"
 #include "source/common/http/header_utility.h"
 
 // istio proxy
@@ -35,7 +34,6 @@ const std::string ExchangeMetadataHeader = "x-envoy-peer-metadata";
 const std::string ExchangeMetadataHeaderId = "x-envoy-peer-metadata-id";
 
 class MetadataExchangeFilter : public CodecFilter,
-                               public Upstream::LoadBalancerContextBase,
                                Logger::Loggable<Logger::Id::filter> {
 public:
   MetadataExchangeFilter(
