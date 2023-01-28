@@ -32,7 +32,7 @@ envoy_cc_library(
         "@com_google_protobuf//:protobuf",
         "@envoy//envoy/stats:stats_interface",
         "@envoy//envoy/network:connection_interface",
-	"@envoy//source/common/http:header_utility_lib",
+	"@envoy//envoy/server:factory_context_interface",
 	"@io_istio_proxy//extensions/common:proto_util",
     ],
 )

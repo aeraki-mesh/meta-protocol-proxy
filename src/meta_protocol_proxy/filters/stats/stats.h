@@ -1,17 +1,8 @@
 #pragma once
 
 // Envoy
-#include "envoy/local_info/local_info.h"
-#include "envoy/stats/scope.h"
 #include "envoy/server/factory_context.h"
 #include "source/common/common/logger.h"
-
-#include "source/common/protobuf/protobuf.h"
-
-// istio proxy
-#include "extensions/common/proto_util.h"
-
-#include "google/protobuf/util/json_util.h"
 
 #include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
