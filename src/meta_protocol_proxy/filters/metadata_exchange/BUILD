@@ -28,7 +28,7 @@ envoy_cc_library(
         "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//source/common/common:logger_lib",
         "@envoy//envoy/stats:stats_interface",
-	"@envoy//envoy/server:factory_context_interface",
-	"@io_istio_proxy//extensions/common:proto_util",
+	    "@envoy//envoy/server:factory_context_interface",
+	    "@io_istio_proxy//extensions/common:proto_util",
     ],
 )
