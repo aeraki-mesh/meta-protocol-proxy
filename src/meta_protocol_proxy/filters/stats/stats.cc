@@ -26,14 +26,7 @@ static inline std::string_view GetFromFbStringView(const flatbuffers::String* st
 FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
   // if this is an inbound request, we can extract the peer node metadata from the request header
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {
-    std::string metadataHeader = metadata->getString(ExchangeMetadataHeader);
-    if (metadataHeader != "") {
-      auto bytes = Base64::decodeWithoutPadding(metadataHeader);
-      google::protobuf::Struct metadata;
-      if (metadata.ParseFromString(bytes)) {
-        peer_node_info_ = Wasm::Common::extractNodeFlatBufferFromStruct(metadata);
-      }
-    }
+    peer_node_info_ = extractPeerNodeMetadata(metadata);
   }
   ENVOY_LOG(info, "xxxxx stats request: {}", metadata->getRequestId());
   return FilterStatus::ContinueIteration;
@@ -42,14 +35,7 @@ FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr metadata, MutationS
 FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr) {
   // if this is an outbound request, we can extract the peer node metadata from the response header
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::OUTBOUND) {
-    std::string metadataHeader = metadata->getString(ExchangeMetadataHeader);
-    if (metadataHeader != "") {
-      auto bytes = Base64::decodeWithoutPadding(metadataHeader);
-      google::protobuf::Struct metadata;
-      if (metadata.ParseFromString(bytes)) {
-        peer_node_info_ = Wasm::Common::extractNodeFlatBufferFromStruct(metadata);
-      }
-    }
+    peer_node_info_ = extractPeerNodeMetadata(metadata);
   }
   const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
   const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
@@ -57,6 +43,18 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationS
   ENVOY_LOG(info, "xxxxx peer node: {}", GetFromFbStringView(peer_node.workload_name()));
   ENVOY_LOG(info, "xxxxx stats response: {}", metadata->getRequestId());
   return FilterStatus::ContinueIteration;
+}
+
+flatbuffers::DetachedBuffer StatsFilter::extractPeerNodeMetadata(MetadataSharedPtr metadata) {
+  std::string metadataHeader = metadata->getString(ExchangeMetadataHeader);
+  if (metadataHeader != "") {
+    auto bytes = Base64::decodeWithoutPadding(metadataHeader);
+    google::protobuf::Struct metadata;
+    if (metadata.ParseFromString(bytes)) {
+      return Wasm::Common::extractNodeFlatBufferFromStruct(metadata);
+    }
+  }
+  return Wasm::Common::extractEmptyNodeFlatBuffer(); 
 }
 
 } // namespace Stats

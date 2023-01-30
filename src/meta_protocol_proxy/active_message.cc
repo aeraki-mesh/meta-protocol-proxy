@@ -60,8 +60,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   // put real server ip in the response
   metadata_->putString(ReservedHeaders::RealServerAddress,
                        request_metadata_.getString(ReservedHeaders::RealServerAddress));
-  // TODO support response mutation
-  codec_->encode(*metadata_, Mutation{}, metadata->originMessage());
+  codec_->encode(*metadata_, *mutation, metadata->originMessage());
   downstream_connection_.write(metadata->originMessage(), false);
   ENVOY_LOG(debug,
             "meta protocol {} response: the upstream response message has been forwarded to the "

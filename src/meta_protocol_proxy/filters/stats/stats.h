@@ -36,6 +36,8 @@ public:
   FilterStatus onMessageEncoded(MetadataSharedPtr, MutationSharedPtr) override;
 
 private:
+  flatbuffers::DetachedBuffer extractPeerNodeMetadata(MetadataSharedPtr metadata);
+
   // traffic direction, inbound or outbound
   envoy::config::core::v3::TrafficDirection traffic_direction_;
 
