@@ -22,13 +22,16 @@ envoy_cc_library(
     name = "metadata_exchange",
     repository = "@envoy",
     srcs = ["metadata_exchange.cc"],
-    hdrs = ["metadata_exchange.h", "base64.h"],
+    hdrs = ["metadata_exchange.h"],
     deps = [
         "//api/meta_protocol_proxy/filters/metadata_exchange/v1alpha:pkg_cc_proto",
         "//src/meta_protocol_proxy/filters:filter_interface",
+        "//src/meta_protocol_proxy/filters/common:base64_lib",
         "@envoy//source/common/common:logger_lib",
         "@envoy//envoy/stats:stats_interface",
-	    "@envoy//envoy/server:factory_context_interface",
-	    "@io_istio_proxy//extensions/common:proto_util",
+	"@envoy//envoy/server:factory_context_interface",
+	"@io_istio_proxy//extensions/common:proto_util",
     ],
 )
+
+exports_files(["base64.h"])

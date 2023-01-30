@@ -1,6 +1,6 @@
 #include "src/meta_protocol_proxy/filters/metadata_exchange/metadata_exchange.h"
 
-#include "src/meta_protocol_proxy/filters/metadata_exchange/base64.h"
+#include "src/meta_protocol_proxy/filters/common/base64.h"
 
 namespace Envoy {
 namespace Extensions {
