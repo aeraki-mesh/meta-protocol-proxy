@@ -20,8 +20,7 @@ namespace MetadataExchange {
 const std::string ExchangeMetadataHeader = "x-envoy-peer-metadata";
 const std::string ExchangeMetadataHeaderId = "x-envoy-peer-metadata-id";
 
-class MetadataExchangeFilter : public CodecFilter,
-                               Logger::Loggable<Logger::Id::filter> {
+class MetadataExchangeFilter : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
 public:
   MetadataExchangeFilter(
       const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange&,
@@ -41,9 +40,9 @@ private:
   void loadMetadataFromNodeInfo(const LocalInfo::LocalInfo& local_info);
 
   // base64 enocoded metadata
-  std::string metadata_;
+  std::string local_node_metadata_;
   // use node id as metadata id
-  std::string metadata_id_;
+  std::string local_node_metadata_id_;
   // traffic direction, inbound or outbound
   envoy::config::core::v3::TrafficDirection traffic_direction_;
 };
