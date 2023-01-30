@@ -24,9 +24,9 @@ FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr metadata, MutationS
       auto bytes = Base64::decodeWithoutPadding(metadataHeader);
       google::protobuf::Struct metadata;
       if (metadata.ParseFromString(bytes)) {
-        auto fb = Wasm::Common::extractNodeFlatBufferFromStruct(metadata);
-        const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(fb.data());
-	ENVOY_LOG(info, "xxxxx {}", GetFromFbStringView(local_node.workload_name()));
+        peer_node_info_ = Wasm::Common::extractNodeFlatBufferFromStruct(metadata);
+        const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
+        ENVOY_LOG(info, "xxxxx {}", GetFromFbStringView(peer_node.workload_name()));
       }
     }
   }
@@ -42,3 +42,4 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr, MutationSharedPtr)
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+

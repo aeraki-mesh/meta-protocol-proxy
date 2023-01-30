@@ -37,6 +37,9 @@ public:
 private:
   // traffic direction, inbound or outbound
   envoy::config::core::v3::TrafficDirection traffic_direction_;
+
+  flatbuffers::DetachedBuffer local_node_info_;
+  flatbuffers::DetachedBuffer peer_node_info_;
 };
 
 } // namespace Stats
@@ -44,3 +47,4 @@ private:
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
