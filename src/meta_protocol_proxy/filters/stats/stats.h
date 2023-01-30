@@ -7,6 +7,7 @@
 
 // istio proxy
 #include "extensions/common/proto_util.h"
+#include "extensions/common/context.h"
 
 #include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"

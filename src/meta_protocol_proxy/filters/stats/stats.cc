@@ -10,6 +10,11 @@ namespace Stats {
 StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats&,
                          const Server::Configuration::FactoryContext& context) {
   traffic_direction_ = context.direction();
+  local_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
+  peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
+  if (context.localInfo().node().has_metadata()) {
+    local_node_info_ = Wasm::Common::extractNodeFlatBufferFromStruct(context.localInfo().node().metadata());
+  }
 }
 
 // Returns a string view stored in a flatbuffers string.
@@ -25,15 +30,19 @@ FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr metadata, MutationS
       google::protobuf::Struct metadata;
       if (metadata.ParseFromString(bytes)) {
         peer_node_info_ = Wasm::Common::extractNodeFlatBufferFromStruct(metadata);
-        const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
-        ENVOY_LOG(info, "xxxxx {}", GetFromFbStringView(peer_node.workload_name()));
       }
     }
   }
+  ENVOY_LOG(info, "xxxxx stats request: {}", metadata->getRequestId());
   return FilterStatus::ContinueIteration;
 }
 
-FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr, MutationSharedPtr) {
+FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationSharedPtr) {
+  const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
+  const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
+  ENVOY_LOG(info, "xxxxx local node: {}", GetFromFbStringView(local_node.workload_name()));
+  ENVOY_LOG(info, "xxxxx peer node: {}", GetFromFbStringView(peer_node.workload_name()));
+  ENVOY_LOG(info, "xxxxx stats response: {}", metadata->getRequestId());
   return FilterStatus::ContinueIteration;
 }
 
@@ -42,4 +51,3 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr, MutationSharedPtr)
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
