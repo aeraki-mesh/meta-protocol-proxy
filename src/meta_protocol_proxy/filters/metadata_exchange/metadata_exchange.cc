@@ -30,11 +30,11 @@ FilterStatus MetadataExchangeFilter::onMessageEncoded(MetadataSharedPtr, Mutatio
 void MetadataExchangeFilter::loadMetadataFromNodeInfo(const LocalInfo::LocalInfo& local_info) {
   if (local_info.node().has_metadata()) {
     google::protobuf::Struct metadata;
-    const auto fb = ::Wasm::Common::extractNodeFlatBufferFromStruct(local_info.node().metadata());
-    ::Wasm::Common::extractStructFromNodeFlatBuffer(
-        *flatbuffers::GetRoot<::Wasm::Common::FlatNode>(fb.data()), &metadata);
+    const auto fb = Wasm::Common::extractNodeFlatBufferFromStruct(local_info.node().metadata());
+    Wasm::Common::extractStructFromNodeFlatBuffer(
+        *flatbuffers::GetRoot<Wasm::Common::FlatNode>(fb.data()), &metadata);
     std::string metadata_bytes;
-    ::Wasm::Common::serializeToStringDeterministic(metadata, &metadata_bytes);
+    Wasm::Common::serializeToStringDeterministic(metadata, &metadata_bytes);
     metadata_ = Base64::encode(metadata_bytes.data(), metadata_bytes.size());
   }
   metadata_id_ = local_info.node().id();
