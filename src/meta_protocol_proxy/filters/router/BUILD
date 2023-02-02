@@ -77,6 +77,19 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "istio_stats_lib",
+    repository = "@envoy",
+    srcs = ["istio_stats.cc"],
+    hdrs = ["istio_stats.h"],
+    deps = [
+        "@envoy//envoy/stats:stats_interface",
+        "@envoy//source/common/common:linked_object",
+        "@envoy//source/common/stats:symbol_table_lib",
+        "@envoy//source/common/stats:utility_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "router_lib",
     repository = "@envoy",
     srcs = ["router_impl.cc"],
@@ -85,6 +98,7 @@ envoy_cc_library(
         ":router_interface",
         ":upstream_request_lib",
         ":shadow_writer_lib",
+        ":istio_stats_lib",
         "//src/meta_protocol_proxy:app_exception_lib",
         "//src/meta_protocol_proxy/filters:filter_interface",
         "//src/meta_protocol_proxy/route:route_interface",
