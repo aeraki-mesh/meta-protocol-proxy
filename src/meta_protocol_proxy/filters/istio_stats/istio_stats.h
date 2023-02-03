@@ -6,13 +6,13 @@
 
 #include "envoy/stats/scope.h"
 #include "envoy/config/core/v3/base.pb.h"
+#include "envoy/server/factory_context.h"
 
 #include "source/common/stats/symbol_table.h"
 #include "source/common/stats/utility.h"
 
 // istio proxy
 #include "extensions/common/proto_util.h"
-#include "extensions/common/node_info_bfbs_generated.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -22,7 +22,8 @@ namespace IstioStats {
 constexpr absl::string_view CustomStatNamespace = "aerakicustom";
 class IstioStats {
 public:
-  IstioStats(Stats::Scope& scope, envoy::config::core::v3::TrafficDirection traffic_direction);
+  IstioStats(Server::Configuration::FactoryContext& context,
+             envoy::config::core::v3::TrafficDirection traffic_direction);
 
   void incCounter(const ::Wasm::Common::FlatNode& node);
   void recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
@@ -31,8 +32,8 @@ public:
 private:
   // traffic direction, inbound or outbound
   envoy::config::core::v3::TrafficDirection traffic_direction_;
+  flatbuffers::DetachedBuffer local_node_info_;
   Stats::Scope& scope_;
-  Stats::StatNameSetPtr stat_name_set_;
   Stats::StatNameDynamicPool pool_;
   absl::flat_hash_map<std::string, Stats::StatName> all_metrics_;
   absl::flat_hash_map<std::string, Stats::StatName> all_tags_;

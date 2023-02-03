@@ -14,7 +14,7 @@ namespace IstioStats {
 FilterFactoryCb StatsFilterConfig::createFilterFactoryFromProtoTyped(
     const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats& cfg, const std::string&,
     Server::Configuration::FactoryContext& context) {
-  auto stats = std::make_shared<IstioStats>(context.scope(), context.direction());
+  auto stats = std::make_shared<IstioStats>(context, context.direction());
   // cfg is changed
   return [cfg, &context, stats](FilterChainFactoryCallbacks& callbacks) -> void {
     callbacks.addFilter(std::make_shared<StatsFilter>(cfg, context, *stats));
