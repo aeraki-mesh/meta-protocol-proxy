@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "envoy/stats/scope.h"
+#include "envoy/config/core/v3/base.pb.h"
 
 #include "source/common/stats/symbol_table.h"
 #include "source/common/stats/utility.h"
@@ -17,13 +18,15 @@ namespace Router {
 
 class IstioStats {
 public:
-  IstioStats(Stats::Scope& scope);
+  IstioStats(Stats::Scope& scope,envoy::config::core::v3::TrafficDirection traffic_direction);
 
-  void incCounter(const Stats::ElementVec& names);
+  void incCounter();
   void recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
                        uint64_t sample);
 
 private:
+  // traffic direction, inbound or outbound
+  envoy::config::core::v3::TrafficDirection traffic_direction_;
   Stats::Scope& scope_;
   Stats::StatNameSetPtr stat_name_set_;
 

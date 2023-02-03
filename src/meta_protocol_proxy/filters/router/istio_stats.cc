@@ -14,8 +14,10 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-IstioStats::IstioStats(Stats::Scope& scope)
-    : scope_(scope), stat_name_set_(scope.symbolTable().makeSet("aerakicustom")),
+IstioStats::IstioStats(Stats::Scope& scope,
+                       envoy::config::core::v3::TrafficDirection traffic_direction)
+    : scope_(scope), traffic_direction_(traffic_direction),
+      stat_name_set_(scope.symbolTable().makeSet("aerakicustom")),
       requests_total_(stat_name_set_->add("istio_requests_total")),
       request_duration_milliseconds_(stat_name_set_->add("istio_request_duration_milliseconds")),
       request_bytes_(stat_name_set_->add("istio_request_bytes")),
@@ -49,8 +51,17 @@ IstioStats::IstioStats(Stats::Scope& scope)
       connection_security_policy_(stat_name_set_->add("connection_security_policy")),
       response_code_(stat_name_set_->add("response_code")) {}
 
-void IstioStats::incCounter(const Stats::ElementVec& names) {
-  Stats::Utility::counterFromElements(scope_, names).inc();
+void IstioStats::incCounter() {
+  Stats::ElementVec tags;
+  tags.reserve(25);
+  tags.push_back(reporter_);
+  if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {
+    tags.push_back(destination_);
+  } else {
+    tags.push_back(source_);
+  }
+  tags.push_back(requests_total_);
+  Stats::Utility::counterFromElements(scope_, tags).inc();
 }
 
 void IstioStats::recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,

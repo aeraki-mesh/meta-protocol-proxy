@@ -177,6 +177,7 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     // emit access log
     assert(response_metadata_);
     emitLogEntry(request_metadata_, response_metadata_, static_cast<int>(ResponseStatus::Ok), "");
+    istio_stats_.incCounter();
     return;
   case UpstreamResponseStatus::Reset:
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
