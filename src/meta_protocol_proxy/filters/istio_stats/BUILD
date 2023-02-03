@@ -46,5 +46,6 @@ envoy_cc_library(
         "@envoy//source/common/common:linked_object",
         "@envoy//source/common/stats:symbol_table_lib",
         "@envoy//source/common/stats:utility_lib",
+        "@io_istio_proxy//extensions/common:proto_util",
     ],
 )

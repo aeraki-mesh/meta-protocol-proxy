@@ -50,13 +50,24 @@ IstioStats::IstioStats(Envoy::Stats::Scope& scope,
   traffic_direction_ = traffic_direction;
 }
 
-void IstioStats::incCounter() {
+// Returns a string view stored in a flatbuffers string.
+static inline std::string_view GetFromFbStringView(const flatbuffers::String* str) {
+  return str ? std::string_view(str->c_str(), str->size()) : std::string_view();
+}
+
+void IstioStats::incCounter(const ::Wasm::Common::FlatNode& node) {
   Stats::StatNameTagVector tags;
   tags.reserve(25);
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {
     tags.push_back({reporter_, destination_});
   } else {
     tags.push_back({reporter_, source_});
+    auto sourceWorkLoad = GetFromFbStringView(node.workload_name());
+    tags.push_back(
+        {source_workload_, !sourceWorkLoad.empty() ? pool_.add(sourceWorkLoad) : unknown_});
+    auto sourceNamespace = GetFromFbStringView(node.namespace_());
+    tags.push_back({source_workload_namespace_,
+                    !sourceNamespace.empty() ? pool_.add(sourceNamespace) : unknown_});
   }
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
 }

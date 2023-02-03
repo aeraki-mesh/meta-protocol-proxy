@@ -10,6 +10,8 @@
 #include "source/common/stats/symbol_table.h"
 #include "source/common/stats/utility.h"
 
+#include "extensions/common/node_info_bfbs_generated.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
@@ -20,7 +22,7 @@ class IstioStats {
 public:
   IstioStats(Stats::Scope& scope, envoy::config::core::v3::TrafficDirection traffic_direction);
 
-  void incCounter();
+  void incCounter(const ::Wasm::Common::FlatNode& node);
   void recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
                        uint64_t sample);
 
