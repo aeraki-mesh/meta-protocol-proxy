@@ -10,6 +10,8 @@
 #include "source/common/stats/symbol_table.h"
 #include "source/common/stats/utility.h"
 
+// istio proxy
+#include "extensions/common/proto_util.h"
 #include "extensions/common/node_info_bfbs_generated.h"
 
 namespace Envoy {

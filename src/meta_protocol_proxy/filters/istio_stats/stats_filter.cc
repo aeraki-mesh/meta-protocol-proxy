@@ -44,7 +44,7 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationS
   ENVOY_LOG(info, "xxxxx local node: {}", GetFromFbStringView(local_node.workload_name()));
   ENVOY_LOG(info, "xxxxx peer node: {}", GetFromFbStringView(peer_node.workload_name()));
   ENVOY_LOG(info, "xxxxx stats response: {}", metadata->getRequestId());
-  istio_stats_.incCounter();
+  istio_stats_.incCounter(local_node);
   return FilterStatus::ContinueIteration;
 }
 

@@ -51,8 +51,8 @@ IstioStats::IstioStats(Envoy::Stats::Scope& scope,
 }
 
 // Returns a string view stored in a flatbuffers string.
-static inline std::string_view GetFromFbStringView(const flatbuffers::String* str) {
-  return str ? std::string_view(str->c_str(), str->size()) : std::string_view();
+static inline absl::string_view GetFromFbStringView(const flatbuffers::String* str) {
+  return str ? absl::string_view(str->c_str(), str->size()) : absl::string_view();
 }
 
 void IstioStats::incCounter(const ::Wasm::Common::FlatNode& node) {
