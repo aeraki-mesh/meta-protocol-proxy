@@ -13,6 +13,7 @@
 
 // istio proxy
 #include "extensions/common/proto_util.h"
+#include "extensions/common/context.h"
 
 namespace Envoy {
 namespace Extensions {
