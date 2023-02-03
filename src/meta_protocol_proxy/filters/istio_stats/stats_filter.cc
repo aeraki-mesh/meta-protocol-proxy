@@ -10,14 +10,10 @@ namespace MetaProtocolProxy {
 namespace IstioStats {
 StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats&,
                          const Server::Configuration::FactoryContext& context,
-                         IstioStats& istioStats): istio_stats_(istioStats) {
+                         IstioStats& istioStats)
+    : istio_stats_(istioStats) {
   traffic_direction_ = context.direction();
-  local_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
   peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
-  if (context.localInfo().node().has_metadata()) {
-    local_node_info_ =
-        Wasm::Common::extractNodeFlatBufferFromStruct(context.localInfo().node().metadata());
-  }
 }
 
 // Returns a string view stored in a flatbuffers string.
@@ -30,7 +26,6 @@ FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr metadata, MutationS
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {
     peer_node_info_ = extractPeerNodeMetadata(metadata);
   }
-  ENVOY_LOG(info, "xxxxx stats request: {}", metadata->getRequestId());
   return FilterStatus::ContinueIteration;
 }
 
@@ -40,11 +35,7 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationS
     peer_node_info_ = extractPeerNodeMetadata(metadata);
   }
   const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
-  const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
-  ENVOY_LOG(info, "xxxxx local node: {}", GetFromFbStringView(local_node.workload_name()));
-  ENVOY_LOG(info, "xxxxx peer node: {}", GetFromFbStringView(peer_node.workload_name()));
-  ENVOY_LOG(info, "xxxxx stats response: {}", metadata->getRequestId());
-  istio_stats_.incCounter(local_node);
+  istio_stats_.incCounter(peer_node, metadata);
   return FilterStatus::ContinueIteration;
 }
 

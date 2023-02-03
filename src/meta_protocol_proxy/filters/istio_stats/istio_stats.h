@@ -15,6 +15,8 @@
 #include "extensions/common/proto_util.h"
 #include "extensions/common/context.h"
 
+#include "src/meta_protocol_proxy/codec/codec.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
@@ -26,11 +28,13 @@ public:
   IstioStats(Server::Configuration::FactoryContext& context,
              envoy::config::core::v3::TrafficDirection traffic_direction);
 
-  void incCounter(const ::Wasm::Common::FlatNode& node);
+  void incCounter(const ::Wasm::Common::FlatNode& node, MetadataSharedPtr metadata);
   void recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
                        uint64_t sample);
 
 private:
+  void populateSourceTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);
+  void populateDestinationTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);
   // traffic direction, inbound or outbound
   envoy::config::core::v3::TrafficDirection traffic_direction_;
   flatbuffers::DetachedBuffer local_node_info_;

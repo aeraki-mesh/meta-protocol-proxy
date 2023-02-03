@@ -16,7 +16,8 @@ namespace IstioStats {
 
 IstioStats::IstioStats(Server::Configuration::FactoryContext& context,
                        envoy::config::core::v3::TrafficDirection traffic_direction)
-    : scope_(context.scope()), pool_(context.scope().symbolTable()), stat_namespace_(pool_.add(CustomStatNamespace)),
+    : scope_(context.scope()), pool_(context.scope().symbolTable()),
+      stat_namespace_(pool_.add(CustomStatNamespace)),
       requests_total_(pool_.add("istio_requests_total")),
       request_duration_milliseconds_(pool_.add("istio_request_duration_milliseconds")),
       request_bytes_(pool_.add("istio_request_bytes")),
@@ -60,23 +61,39 @@ static inline absl::string_view GetFromFbStringView(const flatbuffers::String* s
   return str ? absl::string_view(str->c_str(), str->size()) : absl::string_view();
 }
 
-void IstioStats::incCounter(const ::Wasm::Common::FlatNode&) {
+void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSharedPtr metadata) {
   Stats::StatNameTagVector tags;
   tags.reserve(25);
   const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
 
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {
     tags.push_back({reporter_, destination_});
+    populateSourceTags(peer_node, tags);
+    populateDestinationTags(local_node, tags);
   } else {
     tags.push_back({reporter_, source_});
-    auto sourceWorkLoad = GetFromFbStringView(local_node.workload_name());
-    tags.push_back(
-        {source_workload_, !sourceWorkLoad.empty() ? pool_.add(sourceWorkLoad) : unknown_});
-    auto sourceNamespace = GetFromFbStringView(local_node.namespace_());
-    tags.push_back({source_workload_namespace_,
-                    !sourceNamespace.empty() ? pool_.add(sourceNamespace) : unknown_});
+    populateSourceTags(local_node, tags);
+    populateDestinationTags(peer_node, tags);
   }
+  tags.push_back(
+      {response_code_, pool_.add(absl::StrCat(static_cast<int>(metadata->getResponseStatus())))});
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
+}
+
+void IstioStats::populateSourceTags(const Wasm::Common::FlatNode& node,
+                                    Stats::StatNameTagVector& tags) {
+  auto workload = GetFromFbStringView(node.workload_name());
+  tags.push_back({source_workload_, !workload.empty() ? pool_.add(workload) : unknown_});
+  auto ns = GetFromFbStringView(node.namespace_());
+  tags.push_back({source_workload_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
+}
+
+void IstioStats::populateDestinationTags(const Wasm::Common::FlatNode& node,
+                                         Stats::StatNameTagVector& tags) {
+  auto workload = GetFromFbStringView(node.workload_name());
+  tags.push_back({destination_workload_, !sourceWorkLoad.empty() ? pool_.add(workload) : unknown_});
+  auto ns = GetFromFbStringView(node.namespace_());
+  tags.push_back({destination_workload_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
 }
 
 void IstioStats::recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
