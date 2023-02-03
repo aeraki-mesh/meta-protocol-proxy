@@ -11,12 +11,13 @@
 
 #include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
+#include "src/meta_protocol_proxy/filters/istio_stats/istio_stats.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Stats {
+namespace IstioStats {
 
 const std::string ExchangeMetadataHeader = "x-envoy-peer-metadata";
 const std::string ExchangeMetadataHeaderId = "x-envoy-peer-metadata-id";
@@ -43,11 +44,11 @@ private:
 
   flatbuffers::DetachedBuffer local_node_info_;
   flatbuffers::DetachedBuffer peer_node_info_;
+  IstioStats& istio_stats_;
 };
 
-} // namespace Stats
+} // namespace IstioStats
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-

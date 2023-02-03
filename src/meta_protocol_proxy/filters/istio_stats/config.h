@@ -8,7 +8,7 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Stats {
+namespace IstioStats {
 
 class StatsFilterConfig
     : public FactoryBase<aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats> {
@@ -21,7 +21,7 @@ private:
       const std::string& stat_prefix, Server::Configuration::FactoryContext& context) override;
 };
 
-} // namespace Stats
+} // namespace IstioStats
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

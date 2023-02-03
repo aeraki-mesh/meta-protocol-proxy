@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/router/istio_stats.h"
+#include "src/meta_protocol_proxy/filters/stats/istio_stats.h"
 
 #include <memory>
 #include <string>
@@ -12,12 +12,11 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace IstioStats {
 
-IstioStats::IstioStats(Stats::Scope& scope,
+IstioStats::IstioStats(Envoy::Stats::Scope& scope,
                        envoy::config::core::v3::TrafficDirection traffic_direction)
-    : scope_(scope), 
-      stat_name_set_(scope.symbolTable().makeSet("aerakicustom")),
+    : scope_(scope), stat_name_set_(scope.symbolTable().makeSet("aerakicustom")),
       requests_total_(stat_name_set_->add(";istio_requests_total")),
       request_duration_milliseconds_(stat_name_set_->add("istio_request_duration_milliseconds")),
       request_bytes_(stat_name_set_->add("istio_request_bytes")),
@@ -50,8 +49,8 @@ IstioStats::IstioStats(Stats::Scope& scope,
       response_flags_(stat_name_set_->add("response_flags")),
       connection_security_policy_(stat_name_set_->add("connection_security_policy")),
       response_code_(stat_name_set_->add("response_code")) {
-	      traffic_direction_ = traffic_direction;
-      }
+  traffic_direction_ = traffic_direction;
+}
 
 void IstioStats::incCounter() {
   Stats::ElementVec tags;
@@ -71,7 +70,7 @@ void IstioStats::recordHistogram(const Stats::ElementVec& names, Stats::Histogra
   Stats::Utility::histogramFromElements(scope_, names, unit).recordValue(sample);
 }
 
-} // namespace Router
+} // namespace IstioStats
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions

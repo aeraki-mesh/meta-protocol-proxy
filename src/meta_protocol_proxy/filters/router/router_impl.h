@@ -13,7 +13,6 @@
 #include "src/meta_protocol_proxy/filters/router/router.h"
 #include "src/meta_protocol_proxy/filters/router/upstream_request.h"
 #include "src/meta_protocol_proxy/route/route.h"
-#include "src/meta_protocol_proxy/filters/router/istio_stats.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -27,9 +26,8 @@ class Router : public Tcp::ConnectionPool::UpstreamCallbacks,
                public CodecFilter {
 public:
   Router(Upstream::ClusterManager& cluster_manager, Runtime::Loader& runtime,
-         ShadowWriter& shadow_writer, IstioStats& istio_stats)
-      : RequestOwner(cluster_manager), runtime_(runtime), shadow_writer_(shadow_writer),
-        istio_stats_(istio_stats) {}
+         ShadowWriter& shadow_writer)
+      : RequestOwner(cluster_manager), runtime_(runtime), shadow_writer_(shadow_writer) {}
   ~Router() override { ENVOY_LOG(trace, "********** Router destructed ***********"); };
 
   // DecoderFilter
@@ -65,8 +63,7 @@ public:
     decoder_filter_callbacks_->setUpstreamConnection(std::move(conn));
   };
   void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) override {
-    decoder_filter_callbacks_->streamInfo().setUpstreamInfo(
-        std::make_shared<StreamInfo::UpstreamInfoImpl>());
+    decoder_filter_callbacks_->streamInfo().setUpstreamInfo(std::make_shared<StreamInfo::UpstreamInfoImpl>());
     decoder_filter_callbacks_->streamInfo().upstreamInfo()->setUpstreamHost(host);
   }
 
@@ -97,7 +94,6 @@ private:
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;
   ShadowWriter& shadow_writer_;
-  IstioStats& istio_stats_;
 
   Envoy::Tracing::SpanPtr active_span_;
   bool is_first_span_{false};

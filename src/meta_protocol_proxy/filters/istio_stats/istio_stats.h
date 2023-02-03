@@ -14,11 +14,11 @@ namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-namespace Router {
+namespace IstioStats {
 
 class IstioStats {
 public:
-  IstioStats(Stats::Scope& scope,envoy::config::core::v3::TrafficDirection traffic_direction);
+  IstioStats(Stats::Scope& scope, envoy::config::core::v3::TrafficDirection traffic_direction);
 
   void incCounter();
   void recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
@@ -99,7 +99,7 @@ public:
 };
 using IstioStatsSharedPtr = std::shared_ptr<IstioStats>;
 
-} // namespace Router
+} // namespace IstioStats
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
