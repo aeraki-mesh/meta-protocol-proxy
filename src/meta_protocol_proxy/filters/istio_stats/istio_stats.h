@@ -15,7 +15,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace IstioStats {
-
+constexpr absl::string_view CustomStatNamespace = "aerakicustom";
 class IstioStats {
 public:
   IstioStats(Stats::Scope& scope, envoy::config::core::v3::TrafficDirection traffic_direction);
@@ -29,9 +29,13 @@ private:
   envoy::config::core::v3::TrafficDirection traffic_direction_;
   Stats::Scope& scope_;
   Stats::StatNameSetPtr stat_name_set_;
+  Stats::StatNameDynamicPool pool_;
+  absl::flat_hash_map<std::string, Stats::StatName> all_metrics_;
+  absl::flat_hash_map<std::string, Stats::StatName> all_tags_;
 
 public:
   // Metric names
+  const Stats::StatName stat_namespace_;
   const Stats::StatName requests_total_;
   const Stats::StatName request_duration_milliseconds_;
   const Stats::StatName request_bytes_;
@@ -97,7 +101,6 @@ public:
   const Stats::StatName tag_;
   const Stats::StatName istio_version_;
 };
-using IstioStatsSharedPtr = std::shared_ptr<IstioStats>;
 
 } // namespace IstioStats
 } // namespace MetaProtocolProxy
