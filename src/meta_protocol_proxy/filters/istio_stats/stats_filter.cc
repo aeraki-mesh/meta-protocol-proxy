@@ -16,11 +16,6 @@ StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1al
   peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
 }
 
-// Returns a string view stored in a flatbuffers string.
-static inline std::string_view GetFromFbStringView(const flatbuffers::String* str) {
-  return str ? std::string_view(str->c_str(), str->size()) : std::string_view();
-}
-
 FilterStatus StatsFilter::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr) {
   // if this is an inbound request, we can extract the peer node metadata from the request header
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {

@@ -91,7 +91,7 @@ void IstioStats::populateSourceTags(const Wasm::Common::FlatNode& node,
 void IstioStats::populateDestinationTags(const Wasm::Common::FlatNode& node,
                                          Stats::StatNameTagVector& tags) {
   auto workload = GetFromFbStringView(node.workload_name());
-  tags.push_back({destination_workload_, !sourceWorkLoad.empty() ? pool_.add(workload) : unknown_});
+  tags.push_back({destination_workload_, !workload.empty() ? pool_.add(workload) : unknown_});
   auto ns = GetFromFbStringView(node.namespace_());
   tags.push_back({destination_workload_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
 }

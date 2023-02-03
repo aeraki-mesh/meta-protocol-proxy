@@ -42,6 +42,7 @@ envoy_cc_library(
     srcs = ["istio_stats.cc"],
     hdrs = ["istio_stats.h"],
     deps = [
+        "//src/meta_protocol_proxy/codec:codec_interface",		    
         "@envoy//envoy/stats:stats_interface",
         "@envoy//source/common/common:linked_object",
         "@envoy//source/common/stats:symbol_table_lib",
