@@ -10,9 +10,8 @@ namespace MetaProtocolProxy {
 namespace IstioStats {
 StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats&,
                          const Server::Configuration::FactoryContext& context,
-                         const IstioStats& istioStats) {
+                         IstioStats& istioStats): istio_stats_(istioStats) {
   traffic_direction_ = context.direction();
-  istio_stats_ = istioStats;
   local_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
   peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
   if (context.localInfo().node().has_metadata()) {
@@ -45,7 +44,6 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationS
   ENVOY_LOG(info, "xxxxx local node: {}", GetFromFbStringView(local_node.workload_name()));
   ENVOY_LOG(info, "xxxxx peer node: {}", GetFromFbStringView(peer_node.workload_name()));
   ENVOY_LOG(info, "xxxxx stats response: {}", metadata->getRequestId());
-  ENVOY_LOG(info, "xxxxx stats response status: {}", metadata->getResponseStatus());
   istio_stats_.incCounter();
   return FilterStatus::ContinueIteration;
 }

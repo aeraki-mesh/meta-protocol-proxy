@@ -1,9 +1,9 @@
-#include "src/meta_protocol_proxy/filters/stats/config.h"
+#include "src/meta_protocol_proxy/filters/istio_stats/config.h"
 
 #include "envoy/registry/registry.h"
 
-#include "src/meta_protocol_proxy/filters/stats/stats_filter.h"
-#include "src/meta_protocol_proxy/filters/stats/istio_stats.h"
+#include "src/meta_protocol_proxy/filters/istio_stats/stats_filter.h"
+#include "src/meta_protocol_proxy/filters/istio_stats/istio_stats.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -16,8 +16,8 @@ FilterFactoryCb StatsFilterConfig::createFilterFactoryFromProtoTyped(
     Server::Configuration::FactoryContext& context) {
   auto stats = std::make_shared<IstioStats>(context.scope(), context.direction());
   // cfg is changed
-  return [cfg, &context, &stats](FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addFilter(std::make_shared<StatsFilter>(cfg, context, stats));
+  return [cfg, &context, stats](FilterChainFactoryCallbacks& callbacks) -> void {
+    callbacks.addFilter(std::make_shared<StatsFilter>(cfg, context, *stats));
   };
 }
 

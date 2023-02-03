@@ -1,4 +1,4 @@
-#include "src/meta_protocol_proxy/filters/stats/istio_stats.h"
+#include "src/meta_protocol_proxy/filters/istio_stats/istio_stats.h"
 
 #include <memory>
 #include <string>
