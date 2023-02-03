@@ -24,7 +24,7 @@ FilterFactoryCb RouterFilterConfig::createFilterFactoryFromProtoTyped(
   // destructed after the main request is finished.
   // The life span of shadow_writer is as long as the MetaProtocol ConfigImpl, see filter_factories_
   // member of the MetaProtocol ConfigImpl
-  return [&context, shadow_writer](FilterChainFactoryCallbacks& callbacks) -> void {
+  return [&context, shadow_writer, stats](FilterChainFactoryCallbacks& callbacks) -> void {
     callbacks.addFilter(std::make_shared<Router>(context.clusterManager(), context.runtime(),
                                                  *shadow_writer, *stats));
   };

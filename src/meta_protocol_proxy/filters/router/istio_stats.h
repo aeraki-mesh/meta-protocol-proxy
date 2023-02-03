@@ -95,7 +95,7 @@ public:
   const Stats::StatName component_;
   const Stats::StatName proxy_;
   const Stats::StatName tag_;
-  const Stats::StatName istio_version_
+  const Stats::StatName istio_version_;
 };
 using IstioStatsSharedPtr = std::shared_ptr<IstioStats>;
 

@@ -97,7 +97,7 @@ private:
   // member variables for traffic mirroring
   Runtime::Loader& runtime_;
   ShadowWriter& shadow_writer_;
-  IstioStat& istio_stats_;
+  IstioStats& istio_stats_;
 
   Envoy::Tracing::SpanPtr active_span_;
   bool is_first_span_{false};

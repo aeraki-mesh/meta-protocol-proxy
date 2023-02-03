@@ -16,17 +16,17 @@ namespace Router {
 
 IstioStats::IstioStats(Stats::Scope& scope,
                        envoy::config::core::v3::TrafficDirection traffic_direction)
-    : scope_(scope), traffic_direction_(traffic_direction),
+    : scope_(scope), 
       stat_name_set_(scope.symbolTable().makeSet("aerakicustom")),
-      requests_total_(stat_name_set_->add("istio_requests_total")),
+      requests_total_(stat_name_set_->add(";istio_requests_total")),
       request_duration_milliseconds_(stat_name_set_->add("istio_request_duration_milliseconds")),
       request_bytes_(stat_name_set_->add("istio_request_bytes")),
       response_bytes_(stat_name_set_->add("istio_response_bytes")), empty_(stat_name_set_->add("")),
-      unknown_(stat_name_set_->add("unknown")), source_(stat_name_set_->add("source")),
-      destination_(stat_name_set_->add("destination")), latest_(stat_name_set_->add("latest")),
+      unknown_(stat_name_set_->add("unknown")), source_(stat_name_set_->add("=source;")),
+      destination_(stat_name_set_->add("=destination")), latest_(stat_name_set_->add("latest")),
       http_(stat_name_set_->add("http")), grpc_(stat_name_set_->add("grpc")),
       tcp_(stat_name_set_->add("tcp")), mutual_tls_(stat_name_set_->add("mutual_tls")),
-      none_(stat_name_set_->add("none")), reporter_(stat_name_set_->add("reporter")),
+      none_(stat_name_set_->add("none")), reporter_(stat_name_set_->add("reporter=")),
       source_workload_(stat_name_set_->add("source_workload")),
       source_workload_namespace_(stat_name_set_->add("source_workload_namespace")),
       source_principal_(stat_name_set_->add("source_principal")),
@@ -49,7 +49,9 @@ IstioStats::IstioStats(Stats::Scope& scope,
       request_protocol_(stat_name_set_->add("request_protocol")),
       response_flags_(stat_name_set_->add("response_flags")),
       connection_security_policy_(stat_name_set_->add("connection_security_policy")),
-      response_code_(stat_name_set_->add("response_code")) {}
+      response_code_(stat_name_set_->add("response_code")) {
+	      traffic_direction_ = traffic_direction;
+      }
 
 void IstioStats::incCounter() {
   Stats::ElementVec tags;
