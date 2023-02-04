@@ -22,7 +22,8 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace IstioStats {
-constexpr absl::string_view CustomStatNamespace = "wasmcustom";
+constexpr absl::string_view CustomStatNamespace =
+    "wasmcustom"; // use wasmcustom namespace to keep compatible with istio
 class IstioStats {
 public:
   IstioStats(Server::Configuration::FactoryContext& context,

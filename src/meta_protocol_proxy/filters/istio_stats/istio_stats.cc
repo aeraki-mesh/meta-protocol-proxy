@@ -86,6 +86,40 @@ void IstioStats::populateSourceTags(const Wasm::Common::FlatNode& node,
   tags.push_back({source_workload_, !workload.empty() ? pool_.add(workload) : unknown_});
   auto ns = GetFromFbStringView(node.namespace_());
   tags.push_back({source_workload_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
+  auto cluster = GetFromFbStringView(node.cluster_id());
+  tags.push_back({source_cluster_, !cluster.empty() ? pool_.add(cluster) : unknown_});
+  auto labels = node.labels();
+  if (labels) {
+    auto app_iter = labels->LookupByKey("app");
+    auto app = app_iter ? app_iter->value() : nullptr;
+    auto app_view = GetFromFbStringView(app);
+    tags.push_back({source_app_, !app_view.empty() ? pool_.add(app_view) : unknown_});
+
+    auto version_iter = labels->LookupByKey("version");
+    auto version = version_iter ? version_iter->value() : nullptr;
+    auto version_view = GetFromFbStringView(version);
+    tags.push_back({source_version_, !version_view.empty() ? pool_.add(version_view) : unknown_});
+
+    auto canonical_name = labels->LookupByKey(::Wasm::Common::kCanonicalServiceLabelName.data());
+    auto name = canonical_name ? canonical_name->value() : node.workload_name();
+    auto name_view = GetFromFbStringView(version);
+    tags.push_back(
+        {source_canonical_service_, !name_view.empty() ? pool_.add(name_view) : unknown_});
+
+    auto rev = labels->LookupByKey(::Wasm::Common::kCanonicalServiceRevisionLabelName.data());
+    if (rev) {
+      auto rev_view = GetFromFbStringView(rev->value());
+      tags.push_back(
+          {source_canonical_revision_, !rev_view.empty() ? pool_.add(rev_view) : unknown_});
+    } else {
+      tags.push_back({source_canonical_revision_, latest_});
+    }
+  } else {
+    tags.push_back({source_app_, unknown_});
+    tags.push_back({source_version_, unknown_});
+    tags.push_back({source_canonical_service_, unknown_});
+    tags.push_back({source_canonical_revision_, latest_});
+  }
 }
 
 void IstioStats::populateDestinationTags(const Wasm::Common::FlatNode& node,
