@@ -68,20 +68,21 @@ void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSha
 
   if (traffic_direction_ == envoy::config::core::v3::TrafficDirection::INBOUND) {
     tags.push_back({reporter_, destination_});
-    populateSourceTags(peer_node, tags);
-    populateDestinationTags(local_node, tags);
+    populateSourceNodeTags(peer_node, tags);
+    populateDestinationNodeTags(local_node, tags);
   } else {
     tags.push_back({reporter_, source_});
-    populateSourceTags(local_node, tags);
-    populateDestinationTags(peer_node, tags);
+    populateSourceNodeTags(local_node, tags);
+    populateDestinationNodeTags(peer_node, tags);
   }
+metadata->getOperationName()
   tags.push_back(
       {response_code_, pool_.add(absl::StrCat(static_cast<int>(metadata->getResponseStatus())))});
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
 }
 
-void IstioStats::populateSourceTags(const Wasm::Common::FlatNode& node,
-                                    Stats::StatNameTagVector& tags) {
+void IstioStats::populateSourceNodeTags(const Wasm::Common::FlatNode& node,
+                                        Stats::StatNameTagVector& tags) {
   auto workload = GetFromFbStringView(node.workload_name());
   tags.push_back({source_workload_, !workload.empty() ? pool_.add(workload) : unknown_});
   auto ns = GetFromFbStringView(node.namespace_());
@@ -102,7 +103,7 @@ void IstioStats::populateSourceTags(const Wasm::Common::FlatNode& node,
 
     auto canonical_name = labels->LookupByKey(::Wasm::Common::kCanonicalServiceLabelName.data());
     auto name = canonical_name ? canonical_name->value() : node.workload_name();
-    auto name_view = GetFromFbStringView(version);
+    auto name_view = GetFromFbStringView(name);
     tags.push_back(
         {source_canonical_service_, !name_view.empty() ? pool_.add(name_view) : unknown_});
 
@@ -122,12 +123,48 @@ void IstioStats::populateSourceTags(const Wasm::Common::FlatNode& node,
   }
 }
 
-void IstioStats::populateDestinationTags(const Wasm::Common::FlatNode& node,
-                                         Stats::StatNameTagVector& tags) {
+void IstioStats::populateDestinationNodeTags(const Wasm::Common::FlatNode& node,
+                                             Stats::StatNameTagVector& tags) {
   auto workload = GetFromFbStringView(node.workload_name());
   tags.push_back({destination_workload_, !workload.empty() ? pool_.add(workload) : unknown_});
   auto ns = GetFromFbStringView(node.namespace_());
+  tags.push_back({destination_service_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
   tags.push_back({destination_workload_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
+  auto cluster = GetFromFbStringView(node.cluster_id());
+  tags.push_back({source_cluster_, !cluster.empty() ? pool_.add(cluster) : unknown_});
+  auto labels = node.labels();
+  if (labels) {
+    auto app_iter = labels->LookupByKey("app");
+    auto app = app_iter ? app_iter->value() : nullptr;
+    auto app_view = GetFromFbStringView(app);
+    tags.push_back({destination_app_, !app_view.empty() ? pool_.add(app_view) : unknown_});
+
+    auto version_iter = labels->LookupByKey("version");
+    auto version = version_iter ? version_iter->value() : nullptr;
+    auto version_view = GetFromFbStringView(version);
+    tags.push_back(
+        {destination_version_, !version_view.empty() ? pool_.add(version_view) : unknown_});
+
+    auto canonical_name = labels->LookupByKey(::Wasm::Common::kCanonicalServiceLabelName.data());
+    auto name = canonical_name ? canonical_name->value() : node.workload_name();
+    auto name_view = GetFromFbStringView(version);
+    tags.push_back(
+        {destination_canonical_service_, !name_view.empty() ? pool_.add(name_view) : unknown_});
+
+    auto rev = labels->LookupByKey(::Wasm::Common::kCanonicalServiceRevisionLabelName.data());
+    if (rev) {
+      auto rev_view = GetFromFbStringView(rev->value());
+      tags.push_back(
+          {source_canonical_revision_, !rev_view.empty() ? pool_.add(rev_view) : unknown_});
+    } else {
+      tags.push_back({destination_canonical_revision_, latest_});
+    }
+  } else {
+    tags.push_back({destination_app_, unknown_});
+    tags.push_back({destination_version_, unknown_});
+    tags.push_back({destination_canonical_service_, unknown_});
+    tags.push_back({destination_canonical_revision_, latest_});
+  }
 }
 
 void IstioStats::recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,

@@ -48,6 +48,8 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   parent_.stream_info_.onRequestComplete();
 
   metadata_ = metadata;
+  MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&(*metadata));
+  metadataImpl->setStreamInfo(parent_.streamInfo());
   if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::ContinueIteration) {
     response_status_ = UpstreamResponseStatus::Complete;
     return;
@@ -290,7 +292,8 @@ void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedP
   stream_info_.addBytesSent(metadata->getMessageSize());
 
   // application protocol will be used to emit access log
-  // Todo This may not be the best place to set application protocol for metadata, we better set it at the decode machine
+  // Todo This may not be the best place to set application protocol for metadata, we better set it
+  // at the decode machine
   metadata->putString(ReservedHeaders::ApplicationProtocol,
                       connection_manager_.config().applicationProtocol());
 

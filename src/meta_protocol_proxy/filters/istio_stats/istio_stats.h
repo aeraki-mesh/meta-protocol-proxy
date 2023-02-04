@@ -34,8 +34,9 @@ public:
                        uint64_t sample);
 
 private:
-  void populateSourceTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);
-  void populateDestinationTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);
+  void populateSourceNodeTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);
+  void populateDestinationNodeTags(const Wasm::Common::FlatNode& node,
+                                   Stats::StatNameTagVector& tags);
   // traffic direction, inbound or outbound
   envoy::config::core::v3::TrafficDirection traffic_direction_;
   flatbuffers::DetachedBuffer local_node_info_;

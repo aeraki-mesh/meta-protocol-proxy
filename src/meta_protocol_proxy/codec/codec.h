@@ -6,6 +6,7 @@
 #include "envoy/common/optref.h"
 #include "envoy/common/pure.h"
 #include "envoy/tracing/trace_context.h"
+#include "envoy/stream_info/stream_info.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -73,6 +74,8 @@ public:
   // protocols, we suggest using service/method as OperationName.
   virtual void setOperationName(std::string) PURE;
   virtual std::string getOperationName() const PURE;
+  // Additional information about a completed request.
+  virtual StreamInfo::StreamInfo& streamInfo() const PURE;
   virtual std::shared_ptr<Metadata> clone() const PURE;
 
   /**

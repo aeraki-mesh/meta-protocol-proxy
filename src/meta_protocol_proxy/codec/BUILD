@@ -16,12 +16,13 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
-    name = "factory_lib",
+    name = "fÏactory_lib",
     repository = "@envoy",
     hdrs = ["factory.h"],
     deps = [
         ":codec_interface",
         "@envoy//envoy/config:typed_config_interface",
+        "@envoy//envoy/stream_info:stream_info_interface",
         "@envoy//source/common/common:macros",
         "@envoy//source/common/protobuf:utility_lib",
     ],
