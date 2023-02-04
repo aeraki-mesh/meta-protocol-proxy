@@ -22,7 +22,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace IstioStats {
-constexpr absl::string_view CustomStatNamespace = "aerakicustom";
+constexpr absl::string_view CustomStatNamespace = "wasmcustom";
 class IstioStats {
 public:
   IstioStats(Server::Configuration::FactoryContext& context,
