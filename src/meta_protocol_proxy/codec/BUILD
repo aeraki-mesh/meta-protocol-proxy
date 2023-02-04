@@ -12,6 +12,7 @@ envoy_cc_library(
     deps = [
         "@envoy//envoy/buffer:buffer_interface",
 	"@envoy//envoy/tracing:trace_context_interface",
+        "@envoy//envoy/stream_info:stream_info_interface",
     ],
 )
 
@@ -22,7 +23,6 @@ envoy_cc_library(
     deps = [
         ":codec_interface",
         "@envoy//envoy/config:typed_config_interface",
-        "@envoy//envoy/stream_info:stream_info_interface",
         "@envoy//source/common/common:macros",
         "@envoy//source/common/protobuf:utility_lib",
     ],

@@ -48,7 +48,7 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
   parent_.stream_info_->onRequestComplete();
 
   metadata_ = metadata;
-  MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&(*metadata));
+  MetadataImpl* metadataImpl = static_cast<MetadataImpl*>(&(*metadata));
   metadataImpl->setStreamInfo(parent_.stream_info_);
   if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::ContinueIteration) {
     response_status_ = UpstreamResponseStatus::Complete;

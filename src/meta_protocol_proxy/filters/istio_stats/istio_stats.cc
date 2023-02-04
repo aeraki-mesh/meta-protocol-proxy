@@ -75,7 +75,6 @@ void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSha
     populateSourceNodeTags(local_node, tags);
     populateDestinationNodeTags(peer_node, tags);
   }
-metadata->getOperationName()
   tags.push_back(
       {response_code_, pool_.add(absl::StrCat(static_cast<int>(metadata->getResponseStatus())))});
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
@@ -147,7 +146,7 @@ void IstioStats::populateDestinationNodeTags(const Wasm::Common::FlatNode& node,
 
     auto canonical_name = labels->LookupByKey(::Wasm::Common::kCanonicalServiceLabelName.data());
     auto name = canonical_name ? canonical_name->value() : node.workload_name();
-    auto name_view = GetFromFbStringView(version);
+    auto name_view = GetFromFbStringView(name);
     tags.push_back(
         {destination_canonical_service_, !name_view.empty() ? pool_.add(name_view) : unknown_});
 
