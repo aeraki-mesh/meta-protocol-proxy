@@ -16,7 +16,7 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
-    name = "fÏactory_lib",
+    name = "factory_lib",
     repository = "@envoy",
     hdrs = ["factory.h"],
     deps = [

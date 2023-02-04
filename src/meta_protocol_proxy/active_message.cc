@@ -44,12 +44,12 @@ void ActiveResponseDecoder::onMessageDecoded(MetadataSharedPtr metadata,
                                              MutationSharedPtr mutation) {
   ASSERT(metadata->getMessageType() == MessageType::Response ||
          metadata->getMessageType() == MessageType::Error);
-  parent_.stream_info_.addBytesReceived(metadata->getMessageSize());
-  parent_.stream_info_.onRequestComplete();
+  parent_.stream_info_->addBytesReceived(metadata->getMessageSize());
+  parent_.stream_info_->onRequestComplete();
 
   metadata_ = metadata;
   MetadataImpl* metadataImpl = static_cast<const MetadataImpl*>(&(*metadata));
-  metadataImpl->setStreamInfo(parent_.streamInfo());
+  metadataImpl->setStreamInfo(parent_.stream_info_);
   if (applyMessageEncodedFilters(metadata, mutation) != FilterStatus::ContinueIteration) {
     response_status_ = UpstreamResponseStatus::Complete;
     return;
@@ -230,8 +230,9 @@ ActiveMessage::ActiveMessage(ConnectionManager& connection_manager)
           connection_manager.stats().request_time_ms_, connection_manager.timeSystem())),
       stream_id_(
           connection_manager.randomGenerator().random()), // todo: we don't need stream id here?
-      stream_info_(connection_manager.timeSystem(),
-                   connection_manager.connection().connectionInfoProviderSharedPtr()),
+      stream_info_(std::make_unique<StreamInfo::StreamInfoImpl>(
+          connection_manager.timeSystem(),
+          connection_manager.connection().connectionInfoProviderSharedPtr())),
       pending_stream_decoded_(false), local_response_sent_(false) {
   connection_manager.stats().request_active_.inc();
 }
@@ -289,7 +290,7 @@ ActiveMessage::commonDecodePrefix(ActiveMessageDecoderFilter* filter,
 
 void ActiveMessage::onMessageDecoded(MetadataSharedPtr metadata, MutationSharedPtr mutation) {
   connection_manager_.stats().request_decoding_success_.inc();
-  stream_info_.addBytesSent(metadata->getMessageSize());
+  stream_info_->addBytesSent(metadata->getMessageSize());
 
   // application protocol will be used to emit access log
   // Todo This may not be the best place to set application protocol for metadata, we better set it
@@ -587,7 +588,7 @@ uint64_t ActiveMessage::requestId() const {
 
 uint64_t ActiveMessage::streamId() const { return stream_id_; }
 
-StreamInfo::StreamInfo& ActiveMessage::streamInfo() { return stream_info_; }
+StreamInfo::StreamInfo& ActiveMessage::streamInfo() { return *stream_info_; }
 
 Event::Dispatcher& ActiveMessage::dispatcher() {
   return connection_manager_.connection().dispatcher();
