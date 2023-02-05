@@ -154,7 +154,7 @@ void IstioStats::populateDestinationNodeTags(const Wasm::Common::FlatNode& node,
   tags.push_back({destination_service_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
   tags.push_back({destination_workload_namespace_, !ns.empty() ? pool_.add(ns) : unknown_});
   auto cluster = GetFromFbStringView(node.cluster_id());
-  tags.push_back({source_cluster_, !cluster.empty() ? pool_.add(cluster) : unknown_});
+  tags.push_back({destination_cluster_, !cluster.empty() ? pool_.add(cluster) : unknown_});
   auto labels = node.labels();
   if (labels) {
     auto app_iter = labels->LookupByKey("app");
