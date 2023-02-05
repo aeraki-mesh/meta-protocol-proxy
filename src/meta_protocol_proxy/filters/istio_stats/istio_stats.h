@@ -22,16 +22,14 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace IstioStats {
-constexpr absl::string_view CustomStatNamespace =
-    "wasmcustom"; // use wasmcustom namespace to keep compatible with istio
+// use wasmcustom namespace to keep compatible with istio
+constexpr absl::string_view CustomStatNamespace = "wasmcustom";
 class IstioStats {
 public:
   IstioStats(Server::Configuration::FactoryContext& context,
              envoy::config::core::v3::TrafficDirection traffic_direction);
 
-  void incCounter(const ::Wasm::Common::FlatNode& node, MetadataSharedPtr metadata);
-  void recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
-                       uint64_t sample);
+  void report(const ::Wasm::Common::FlatNode& node, MetadataSharedPtr metadata);
 
 private:
   void populateSourceNodeTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);

@@ -61,7 +61,7 @@ static inline absl::string_view GetFromFbStringView(const flatbuffers::String* s
   return str ? absl::string_view(str->c_str(), str->size()) : absl::string_view();
 }
 
-void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSharedPtr metadata) {
+void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedPtr metadata) {
   Stats::StatNameTagVector tags;
   tags.reserve(25);
   const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
@@ -82,13 +82,26 @@ void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSha
     std::string cluster_name = metadata->streamInfo().upstreamClusterInfo().value()->name();
     size_t pos = cluster_name.find_last_of("|");
     if (pos != std::string::npos) {
-      cluster_name = cluster_name.substr(pos+1, cluster_name.length() - pos-1);
+      cluster_name = cluster_name.substr(pos + 1, cluster_name.length() - pos - 1);
     }
     auto destination_service_name = pool_.add(cluster_name);
     tags.push_back({destination_service_, destination_service_name});
     tags.push_back({destination_service_name_, destination_service_name});
   }
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
+  auto duration = metadata->streamInfo().requestComplete();
+  if (duration.has_value()) {
+    Stats::Utility::histogramFromStatNames(scope_,
+                                           {stat_namespace_, request_duration_milliseconds_},
+                                           Stats::Histogram::Unit::Milliseconds, tags)
+        .recordValue(absl::FromChrono(duration.value()) / absl::Milliseconds(1));
+  }
+  Stats::Utility::histogramFromStatNames(scope_, {stat_namespace_, request_bytes_},
+                                         Stats::Histogram::Unit::Bytes, tags)
+      .recordValue(metadata->streamInfo().bytesSent());
+  Stats::Utility::histogramFromStatNames(scope_, {stat_namespace_, response_bytes_},
+                                         Stats::Histogram::Unit::Bytes, tags)
+      .recordValue(metadata->streamInfo().bytesReceived());
 }
 
 void IstioStats::populateSourceNodeTags(const Wasm::Common::FlatNode& node,
@@ -177,14 +190,8 @@ void IstioStats::populateDestinationNodeTags(const Wasm::Common::FlatNode& node,
   }
 }
 
-void IstioStats::recordHistogram(const Stats::ElementVec& names, Stats::Histogram::Unit unit,
-                                 uint64_t sample) {
-  Stats::Utility::histogramFromElements(scope_, names, unit).recordValue(sample);
-}
-
 } // namespace IstioStats
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
-
