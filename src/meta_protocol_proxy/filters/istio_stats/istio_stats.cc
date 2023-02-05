@@ -77,6 +77,13 @@ void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSha
   }
   tags.push_back(
       {response_code_, pool_.add(absl::StrCat(static_cast<int>(metadata->getResponseStatus())))});
+  if (metadata->streamInfo().upstreamClusterInfo().has_value() &&
+      metadata->streamInfo().upstreamClusterInfo().value()) {
+    auto destination_service_name =
+        pool_.add(metadata->streamInfo().upstreamClusterInfo().value()->name());
+    tags.push_back({destination_service_, destination_service_name});
+    tags.push_back({destination_service_name_, destination_service_name});
+  }
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
 }
 
