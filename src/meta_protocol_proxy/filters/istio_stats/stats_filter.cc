@@ -8,10 +8,10 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace IstioStats {
-StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats&,
+StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats& config,
                          const Server::Configuration::FactoryContext& context,
                          IstioStats& istioStats)
-    : istio_stats_(istioStats) {
+    : istio_stats_(istioStats), local_service_(config.local_service()) {
   traffic_direction_ = context.direction();
   peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
 }
