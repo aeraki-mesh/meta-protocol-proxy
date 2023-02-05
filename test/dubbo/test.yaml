@@ -161,6 +161,9 @@ static_resources:
           metaProtocolFilters:
           - name: aeraki.meta_protocol.filters.metadata_exchange
           - name: aeraki.meta_protocol.filters.stats
+            config:
+              '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.stats.v1alpha.Stats
+              local_service: xxxx-test 
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:
