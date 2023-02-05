@@ -79,8 +79,12 @@ void IstioStats::incCounter(const Wasm::Common::FlatNode& peer_node, MetadataSha
       {response_code_, pool_.add(absl::StrCat(static_cast<int>(metadata->getResponseStatus())))});
   if (metadata->streamInfo().upstreamClusterInfo().has_value() &&
       metadata->streamInfo().upstreamClusterInfo().value()) {
-    auto destination_service_name =
-        pool_.add(metadata->streamInfo().upstreamClusterInfo().value()->name());
+    std::string cluster_name = metadata->streamInfo().upstreamClusterInfo().value()->name();
+    size_t pos = cluster_name.find_last_of("|");
+    if (pos != std::string::npos) {
+      cluster_name = cluster_name.substr(pos+1, cluster_name.length() - pos-1);
+    }
+    auto destination_service_name = pool_.add(cluster_name);
     tags.push_back({destination_service_, destination_service_name});
     tags.push_back({destination_service_name_, destination_service_name});
   }
@@ -183,3 +187,4 @@ void IstioStats::recordHistogram(const Stats::ElementVec& names, Stats::Histogra
 } // namespace NetworkFilters
 } // namespace Extensions
 } // namespace Envoy
+
