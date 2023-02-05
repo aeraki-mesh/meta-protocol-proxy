@@ -9,7 +9,7 @@
 #include "extensions/common/proto_util.h"
 #include "extensions/common/context.h"
 
-#include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.h"
+#include "api/meta_protocol_proxy/filters/istio_stats/v1alpha/stats.pb.h"
 #include "src/meta_protocol_proxy/filters/filter.h"
 #include "src/meta_protocol_proxy/filters/istio_stats/istio_stats.h"
 
@@ -44,7 +44,7 @@ private:
 
   flatbuffers::DetachedBuffer peer_node_info_;
   IstioStats& istio_stats_;
-  const std::string& local_service_;
+  const std::string& destination_service_;
 };
 
 } // namespace IstioStats

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package aeraki.meta_protocol_proxy.filters.istio_stats.v1alpha;
+
+import "udpa/annotations/status.proto";
+
+option java_package = "net.aeraki.meta_protocol_proxy.filters.istio_stats.v1alpha";
+option java_outer_classname = "IstiioStatsProto";
+option java_multiple_files = true;
+option go_package = "github.com/aeraki-mesh/meta-protocol-control-plane-api/meta_protocol_proxy/filters/istio_stats/v1alpha;istiostatsv1alpha";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// [#protodoc-title: istio stats]
+message IstioStats {
+  // The destination service name to use when emitting statistics.
+  string destination_service = 1;
+}

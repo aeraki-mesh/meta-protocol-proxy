@@ -11,7 +11,7 @@ namespace IstioStats {
 StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats& config,
                          const Server::Configuration::FactoryContext& context,
                          IstioStats& istioStats)
-    : istio_stats_(istioStats), local_service_(config.local_service()) {
+    : istio_stats_(istioStats), destination_service_(config.destination_service()) {
   traffic_direction_ = context.direction();
   peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
 }
@@ -30,7 +30,7 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationS
     peer_node_info_ = extractPeerNodeMetadata(metadata);
   }
   const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
-  istio_stats_.report(peer_node, metadata, local_service_);
+  istio_stats_.report(peer_node, metadata, destination_service_);
   return FilterStatus::ContinueIteration;
 }
 

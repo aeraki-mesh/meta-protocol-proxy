@@ -30,7 +30,7 @@ public:
              envoy::config::core::v3::TrafficDirection traffic_direction);
 
   void report(const ::Wasm::Common::FlatNode& node, MetadataSharedPtr metadata,
-              const std::string& local_service);
+              const std::string& destination_service);
 
 private:
   void populateSourceNodeTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);

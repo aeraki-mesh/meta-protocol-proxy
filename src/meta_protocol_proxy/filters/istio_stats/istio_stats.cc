@@ -62,7 +62,7 @@ static inline absl::string_view GetFromFbStringView(const flatbuffers::String* s
 }
 
 void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedPtr metadata,
-                        const std::string& local_service) {
+                        const std::string& destination_service) {
   Stats::StatNameTagVector tags;
   tags.reserve(25);
   const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
@@ -71,7 +71,7 @@ void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedP
     tags.push_back({reporter_, destination_});
     populateSourceNodeTags(peer_node, tags);
     populateDestinationNodeTags(local_node, tags);
-    auto destination_service_name = pool_.add(local_service);
+    auto destination_service_name = pool_.add(destination_service);
     tags.push_back({destination_service_, destination_service_name});
     tags.push_back({destination_service_name_, destination_service_name});
   } else {
