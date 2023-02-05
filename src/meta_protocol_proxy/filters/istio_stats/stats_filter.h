@@ -44,7 +44,7 @@ private:
 
   flatbuffers::DetachedBuffer peer_node_info_;
   IstioStats& istio_stats_;
-  std::string& local_service_;
+  const std::string& local_service_;
 };
 
 } // namespace IstioStats
