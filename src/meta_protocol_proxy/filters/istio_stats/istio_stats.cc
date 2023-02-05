@@ -178,7 +178,7 @@ void IstioStats::populateDestinationNodeTags(const Wasm::Common::FlatNode& node,
     if (rev) {
       auto rev_view = GetFromFbStringView(rev->value());
       tags.push_back(
-          {source_canonical_revision_, !rev_view.empty() ? pool_.add(rev_view) : unknown_});
+          {destination_canonical_revision_, !rev_view.empty() ? pool_.add(rev_view) : unknown_});
     } else {
       tags.push_back({destination_canonical_revision_, latest_});
     }
