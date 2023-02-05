@@ -61,7 +61,8 @@ static inline absl::string_view GetFromFbStringView(const flatbuffers::String* s
   return str ? absl::string_view(str->c_str(), str->size()) : absl::string_view();
 }
 
-void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedPtr metadata) {
+void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedPtr metadata,
+                        const std::string& local_service) {
   Stats::StatNameTagVector tags;
   tags.reserve(25);
   const auto& local_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(local_node_info_.data());
@@ -70,18 +71,9 @@ void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedP
     tags.push_back({reporter_, destination_});
     populateSourceNodeTags(peer_node, tags);
     populateDestinationNodeTags(local_node, tags);
-    if (metadata->streamInfo().upstreamClusterInfo().has_value() &&
-        metadata->streamInfo().upstreamClusterInfo().value()) {
-      std::string cluster_name =
-          metadata->streamInfo().upstreamClusterInfo().value()->observabilityName();
-      size_t pos = cluster_name.find_last_of("|");
-      if (pos != std::string::npos) {
-        cluster_name = cluster_name.substr(pos + 1, cluster_name.length() - pos - 1);
-      }
-      auto destination_service_name = pool_.add(cluster_name);
-      tags.push_back({destination_service_, destination_service_name});
-      tags.push_back({destination_service_name_, destination_service_name});
-    }
+    auto destination_service_name = pool_.add(local_service);
+    tags.push_back({destination_service_, destination_service_name});
+    tags.push_back({destination_service_name_, destination_service_name});
   } else {
     tags.push_back({reporter_, source_});
     populateSourceNodeTags(local_node, tags);

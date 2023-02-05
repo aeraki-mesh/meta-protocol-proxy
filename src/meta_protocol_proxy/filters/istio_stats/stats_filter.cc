@@ -30,7 +30,7 @@ FilterStatus StatsFilter::onMessageEncoded(MetadataSharedPtr metadata, MutationS
     peer_node_info_ = extractPeerNodeMetadata(metadata);
   }
   const auto& peer_node = *flatbuffers::GetRoot<Wasm::Common::FlatNode>(peer_node_info_.data());
-  istio_stats_.report(peer_node, metadata);
+  istio_stats_.report(peer_node, metadata, local_service_);
   return FilterStatus::ContinueIteration;
 }
 

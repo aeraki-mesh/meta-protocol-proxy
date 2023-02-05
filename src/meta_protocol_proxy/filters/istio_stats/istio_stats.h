@@ -29,7 +29,8 @@ public:
   IstioStats(Server::Configuration::FactoryContext& context,
              envoy::config::core::v3::TrafficDirection traffic_direction);
 
-  void report(const ::Wasm::Common::FlatNode& node, MetadataSharedPtr metadata);
+  void report(const ::Wasm::Common::FlatNode& node, MetadataSharedPtr metadata,
+              const std::string& local_service);
 
 private:
   void populateSourceNodeTags(const Wasm::Common::FlatNode& node, Stats::StatNameTagVector& tags);
