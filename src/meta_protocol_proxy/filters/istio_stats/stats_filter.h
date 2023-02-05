@@ -24,7 +24,7 @@ const std::string ExchangeMetadataHeaderId = "x-envoy-peer-metadata-id";
 
 class StatsFilter : public CodecFilter, Logger::Loggable<Logger::Id::filter> {
 public:
-  StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats&,
+  StatsFilter(const aeraki::meta_protocol_proxy::filters::istio_stats::v1alpha::IstioStats&,
               const Server::Configuration::FactoryContext& context, IstioStats& istioStats);
   ~StatsFilter() override = default;
   void onDestroy() override{};

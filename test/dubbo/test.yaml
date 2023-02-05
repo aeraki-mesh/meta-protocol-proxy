@@ -160,10 +160,10 @@ static_resources:
             name: aeraki.meta_protocol.codec.dubbo
           metaProtocolFilters:
           - name: aeraki.meta_protocol.filters.metadata_exchange
-          - name: aeraki.meta_protocol.filters.stats
+          - name: aeraki.meta_protocol.filters.istio_stats
             config:
-              '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.stats.v1alpha.Stats
-              local_service: xxxx-test 
+              '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.istio_stats.v1alpha.IstioStats
+              destination_service: org.apache.dubbo.samples.basic.api.demoservice
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:

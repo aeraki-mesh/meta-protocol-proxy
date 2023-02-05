@@ -12,7 +12,7 @@ namespace MetaProtocolProxy {
 namespace IstioStats {
 
 FilterFactoryCb StatsFilterConfig::createFilterFactoryFromProtoTyped(
-    const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats& cfg, const std::string&,
+    const aeraki::meta_protocol_proxy::filters::istio_stats::v1alpha::IstioStats& cfg, const std::string&,
     Server::Configuration::FactoryContext& context) {
   auto stats = std::make_shared<IstioStats>(context, context.direction());
   // cfg is changed

@@ -8,7 +8,7 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace IstioStats {
-StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats& config,
+StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::istio_stats::v1alpha::IstioStats& config,
                          const Server::Configuration::FactoryContext& context,
                          IstioStats& istioStats)
     : istio_stats_(istioStats), destination_service_(config.destination_service()) {

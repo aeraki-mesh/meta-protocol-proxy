@@ -1,7 +1,7 @@
 #pragma once
 
-#include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.h"
-#include "api/meta_protocol_proxy/filters/stats/v1alpha/stats.pb.validate.h"
+#include "api/meta_protocol_proxy/filters/istio_stats/v1alpha/stats.pb.h"
+#include "api/meta_protocol_proxy/filters/istio_stats/v1alpha/stats.pb.validate.h"
 #include "src/meta_protocol_proxy/filters/factory_base.h"
 
 namespace Envoy {
@@ -11,13 +11,13 @@ namespace MetaProtocolProxy {
 namespace IstioStats {
 
 class StatsFilterConfig
-    : public FactoryBase<aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats> {
+    : public FactoryBase<aeraki::meta_protocol_proxy::filters::istio_stats::v1alpha::IstioStats> {
 public:
-  StatsFilterConfig() : FactoryBase("aeraki.meta_protocol.filters.stats") {}
+  StatsFilterConfig() : FactoryBase("aeraki.meta_protocol.filters.istio_stats") {}
 
 private:
   FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const aeraki::meta_protocol_proxy::filters::stats::v1alpha::Stats& proto_config,
+      const aeraki::meta_protocol_proxy::filters::istio_stats::v1alpha::IstioStats& proto_config,
       const std::string& stat_prefix, Server::Configuration::FactoryContext& context) override;
 };
 
