@@ -38,6 +38,7 @@ api:
 	bazel build //api/meta_protocol_proxy/filters/local_ratelimit/v1alpha:pkg_go_proto && \
 	bazel build //api/meta_protocol_proxy/filters/global_ratelimit/v1alpha:pkg_go_proto && \
 	bazel build //api/meta_protocol_proxy/filters/metadata_exchange/v1alpha:pkg_go_proto && \
+	bazel build //api/meta_protocol_proxy/filters/stats/v1alpha:pkg_go_proto && \
 	bazel build //api/meta_protocol_proxy/config/route/v1alpha:pkg_go_proto
 
 clean:
