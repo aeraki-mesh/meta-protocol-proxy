@@ -223,8 +223,7 @@ private:
 
   // This value is used in the calculation of the weighted cluster.
   uint64_t stream_id_;
-  StreamInfo::StreamInfoImpl stream_info_;
-
+  std::shared_ptr<StreamInfo::StreamInfo> stream_info_;
   Buffer::OwnedImpl response_buffer_;
 
   bool pending_stream_decoded_ : 1;

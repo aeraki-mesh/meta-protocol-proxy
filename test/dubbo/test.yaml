@@ -34,6 +34,97 @@ node:
       serviceCluster: istio-proxy
     SERVICE_ACCOUNT: default
     WORKLOAD_NAME: dubbo-sample-consumer
+stats_config:
+  stats_tags:
+  - regex: ^cluster\.((.+?(\..+?\.svc\.cluster\.local)?)\.)
+    tag_name: cluster_name
+  - regex: ^tcp\.((.*?)\.)\w+?$
+    tag_name: tcp_prefix
+  - regex: (response_code=\.=(.+?);\.;)|_rq(_(\.d{3}))$
+    tag_name: response_code
+  - regex: _rq(_(\dxx))$
+    tag_name: response_code_class
+  - regex: ^listener(?=\.).*?\.http\.(((?:[_.[:digit:]]*|[_\[\]aAbBcCdDeEfF[:digit:]]*))\.)
+    tag_name: http_conn_manager_listener_prefix
+  - regex: ^http\.(((?:[_.[:digit:]]*|[_\[\]aAbBcCdDeEfF[:digit:]]*))\.)
+    tag_name: http_conn_manager_prefix
+  - regex: ^listener\.(((?:[_.[:digit:]]*|[_\[\]aAbBcCdDeEfF[:digit:]]*))\.)
+    tag_name: listener_address
+  - regex: ^mongo\.(.+?)\.(collection|cmd|cx_|op_|delays_|decoding_)(.*?)$
+    tag_name: mongo_prefix
+  - regex: (reporter=\.=(.*?);\.;)
+    tag_name: reporter
+  - regex: (source_namespace=\.=(.*?);\.;)
+    tag_name: source_namespace
+  - regex: (source_workload=\.=(.*?);\.;)
+    tag_name: source_workload
+  - regex: (source_workload_namespace=\.=(.*?);\.;)
+    tag_name: source_workload_namespace
+  - regex: (source_principal=\.=(.*?);\.;)
+    tag_name: source_principal
+  - regex: (source_app=\.=(.*?);\.;)
+    tag_name: source_app
+  - regex: (source_version=\.=(.*?);\.;)
+    tag_name: source_version
+  - regex: (source_cluster=\.=(.*?);\.;)
+    tag_name: source_cluster
+  - regex: (destination_namespace=\.=(.*?);\.;)
+    tag_name: destination_namespace
+  - regex: (destination_workload=\.=(.*?);\.;)
+    tag_name: destination_workload
+  - regex: (destination_workload_namespace=\.=(.*?);\.;)
+    tag_name: destination_workload_namespace
+  - regex: (destination_principal=\.=(.*?);\.;)
+    tag_name: destination_principal
+  - regex: (destination_app=\.=(.*?);\.;)
+    tag_name: destination_app
+  - regex: (destination_version=\.=(.*?);\.;)
+    tag_name: destination_version
+  - regex: (destination_service=\.=(.*?);\.;)        
+    tag_name: destination_service
+  - regex: (destination_service_name=\.=(.*?);\.;)
+    tag_name: destination_service_name
+  - regex: (destination_service_namespace=\.=(.*?);\.;)
+    tag_name: destination_service_namespace
+  - regex: (destination_port=\.=(.*?);\.;)
+    tag_name: destination_port
+  - regex: (destination_cluster=\.=(.*?);\.;)
+    tag_name: destination_cluster
+  - regex: (request_protocol=\.=(.*?);\.;)
+    tag_name: request_protocol
+  - regex: (request_operation=\.=(.*?);\.;)
+    tag_name: request_operation
+  - regex: (request_host=\.=(.*?);\.;)
+    tag_name: request_host
+  - regex: (response_flags=\.=(.*?);\.;)
+    tag_name: response_flags
+  - regex: (grpc_response_status=\.=(.*?);\.;)
+    tag_name: grpc_response_status
+  - regex: (connection_security_policy=\.=(.*?);\.;)
+    tag_name: connection_security_policy
+  - regex: (source_canonical_service=\.=(.*?);\.;)
+    tag_name: source_canonical_service
+  - regex: (destination_canonical_service=\.=(.*?);\.;)
+    tag_name: destination_canonical_service
+  - regex: (source_canonical_revision=\.=(.*?);\.;)
+    tag_name: source_canonical_revision
+  - regex: (destination_canonical_revision=\.=(.*?);\.;)
+    tag_name: destination_canonical_revision
+  - regex: (cache\.(.+?)\.)
+    tag_name: cache
+  - regex: (component\.(.+?)\.)
+    tag_name: component
+  - regex: (tag\.(.+?);\.)
+    tag_name: tag
+  - regex: (wasm_filter\.(.+?)\.)
+    tag_name: wasm_filter
+  - regex: rbac(\.(allowed|denied))
+    tag_name: authz_enforce_result
+  - regex: (\.istio_dry_run_(allow|deny)_)
+    tag_name: authz_dry_run_action
+  - regex: (\.shadow_(allowed|denied))
+    tag_name: authz_dry_run_result
+  use_all_default_tags: false  
 tracing:
   http:
     name: envoy.tracers.zipkin
@@ -69,6 +160,10 @@ static_resources:
             name: aeraki.meta_protocol.codec.dubbo
           metaProtocolFilters:
           - name: aeraki.meta_protocol.filters.metadata_exchange
+          - name: aeraki.meta_protocol.filters.istio_stats
+            config:
+              '@type': type.googleapis.com/aeraki.meta_protocol_proxy.filters.istio_stats.v1alpha.IstioStats
+              destination_service: org.apache.dubbo.samples.basic.api.demoservice
           - name: aeraki.meta_protocol.filters.router
           routeConfig:
             routes:

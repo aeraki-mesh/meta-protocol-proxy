@@ -51,6 +51,10 @@ public:
   size_t getBodySize() const override { return body_size_; };
   void setOperationName(std::string operation_name) override { operation_name_ = operation_name; };
   std::string getOperationName() const override { return operation_name_; };
+  void setStreamInfo(std::shared_ptr<StreamInfo::StreamInfo> stream_info) {
+    stream_info_ = stream_info;
+  };
+  StreamInfo::StreamInfo& streamInfo() const override { return *stream_info_; };
   MetadataSharedPtr clone() const override;
   Http::RequestHeaderMap& getHeaders() const { return *headers_; }
   Http::ResponseHeaderMap& getResponseHeaders() const { return *response_headers_; }
@@ -77,6 +81,7 @@ private:
   size_t header_size_{0};
   size_t body_size_{0};
   std::string operation_name_;
+  std::shared_ptr<StreamInfo::StreamInfo> stream_info_;
   // Reuse the HeaderMatcher API and related tools provided by Envoy to match the route
   std::unique_ptr<Http::RequestHeaderMap> headers_;
   std::unique_ptr<Http::ResponseHeaderMap> response_headers_;

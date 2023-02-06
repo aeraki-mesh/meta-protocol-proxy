@@ -63,7 +63,7 @@ public:
     decoder_filter_callbacks_->setUpstreamConnection(std::move(conn));
   };
   void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) override {
-    decoder_filter_callbacks_->streamInfo().setUpstreamInfo(std::make_shared<StreamInfo::UpstreamInfoImpl>());	  
+    decoder_filter_callbacks_->streamInfo().setUpstreamInfo(std::make_shared<StreamInfo::UpstreamInfoImpl>());
     decoder_filter_callbacks_->streamInfo().upstreamInfo()->setUpstreamHost(host);
   }
 
