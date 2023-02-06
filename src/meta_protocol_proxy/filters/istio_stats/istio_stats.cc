@@ -71,16 +71,29 @@ void IstioStats::report(const Wasm::Common::FlatNode& peer_node, MetadataSharedP
     tags.push_back({reporter_, destination_});
     populateSourceNodeTags(peer_node, tags);
     populateDestinationNodeTags(local_node, tags);
+    // use the destination_service in the stats config for inbound traffic
+    auto destination_service_name = pool_.add(destination_service);
+    tags.push_back({destination_service_, destination_service_name});
+    tags.push_back({destination_service_name_, destination_service_name});
   } else {
     tags.push_back({reporter_, source_});
     populateSourceNodeTags(local_node, tags);
     populateDestinationNodeTags(peer_node, tags);
+    // extract the destination_service from the cluster name for outbound traffic
+    if (metadata->streamInfo().upstreamClusterInfo().has_value() &&
+        metadata->streamInfo().upstreamClusterInfo().value()) {
+      std::string cluster_name = metadata->streamInfo().upstreamClusterInfo().value()->name();
+      size_t pos = cluster_name.find_last_of("|");
+      if (pos != std::string::npos) {
+        cluster_name = cluster_name.substr(pos + 1, cluster_name.length() - pos - 1);
+      }
+      auto destination_service_name = pool_.add(cluster_name);
+      tags.push_back({destination_service_, destination_service_name});
+      tags.push_back({destination_service_name_, destination_service_name});
+    }
   }
   tags.push_back(
       {response_code_, pool_.add(absl::StrCat(static_cast<int>(metadata->getResponseStatus())))});
-  auto destination_service_name = pool_.add(destination_service);
-  tags.push_back({destination_service_, destination_service_name});
-  tags.push_back({destination_service_name_, destination_service_name});
   Stats::Utility::counterFromStatNames(scope_, {stat_namespace_, requests_total_}, tags).inc();
   auto duration = metadata->streamInfo().requestComplete();
   if (duration.has_value()) {
