@@ -64,6 +64,9 @@ message MetaProtocolProxy {
 
   // for idle downstream timer.
   google.protobuf.Duration idle_timeout = 11;
+
+  // Configuration for protocol
+  ProtocolConfig protocol = 12;
 }
 
 message Rds {
@@ -149,5 +152,12 @@ message Tracing {
   //   Such a constraint is inherent to OpenCensus itself. It cannot be overcome without changes
   //   on OpenCensus side.
   envoy.config.trace.v3.Tracing.Http provider = 9;
+}
+
+message ProtocolConfig {
+  // The codec which encodes and decodes the application protocol.
+  Codec codec = 1;
+  // is open multiplexing
+  bool open_multiplexing = 2;
 }
 
