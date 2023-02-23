@@ -33,6 +33,7 @@ message MetaProtocolProxy {
   string stat_prefix = 1 [(validate.rules).string = {min_len: 1}];
 
   // The name of the application protocol built on top of meta protocol.
+  // this field has been deprecated, now use protocol
   string application_protocol = 2 [(validate.rules).string = {min_len: 1}];
 
   oneof route_specifier {
@@ -46,6 +47,7 @@ message MetaProtocolProxy {
   }
 
   // The codec which encodes and decodes the application protocol.
+  // this field has been deprecated, now use protocol
   Codec codec = 5;
 
 
@@ -66,7 +68,7 @@ message MetaProtocolProxy {
   google.protobuf.Duration idle_timeout = 11;
 
   // Configuration for protocol
-  ProtocolConfig protocol = 12;
+  ApplicationProtocol protocol = 12;
 }
 
 message Rds {
@@ -154,10 +156,12 @@ message Tracing {
   envoy.config.trace.v3.Tracing.Http provider = 9;
 }
 
-message ProtocolConfig {
+message ApplicationProtocol {
+  // The name of the application protocol built on top of meta protocol.
+  string name = 1 [(validate.rules).string = {min_len: 1}];
   // The codec which encodes and decodes the application protocol.
-  Codec codec = 1;
-  // is open multiplexing
-  bool open_multiplexing = 2;
+  Codec codec = 2;
+  // is multiplexing
+  bool multiplexing = 3;
 }
 
