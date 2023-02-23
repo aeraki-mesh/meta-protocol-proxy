@@ -33,6 +33,7 @@ message MetaProtocolProxy {
   string stat_prefix = 1 [(validate.rules).string = {min_len: 1}];
 
   // The name of the application protocol built on top of meta protocol.
+  // This has been deprecated in favor of name in ApplicationProtocol.
   string application_protocol = 2 [(validate.rules).string = {min_len: 1}];
 
   oneof route_specifier {
@@ -46,6 +47,7 @@ message MetaProtocolProxy {
   }
 
   // The codec which encodes and decodes the application protocol.
+  // This has been deprecated in favor of codec in ApplicationProtocol.
   Codec codec = 5;
 
 
@@ -64,6 +66,9 @@ message MetaProtocolProxy {
 
   // for idle downstream timer.
   google.protobuf.Duration idle_timeout = 11;
+
+  // Configuration for protocol
+  ApplicationProtocol protocol = 12;
 }
 
 message Rds {
@@ -149,5 +154,14 @@ message Tracing {
   //   Such a constraint is inherent to OpenCensus itself. It cannot be overcome without changes
   //   on OpenCensus side.
   envoy.config.trace.v3.Tracing.Http provider = 9;
+}
+
+message ApplicationProtocol {
+  // The name of the application protocol built on top of meta protocol.
+  string name = 1 [(validate.rules).string = {min_len: 1}];
+  // The codec which encodes and decodes the application protocol.
+  Codec codec = 2;
+  // is multiplexing
+  bool multiplexing = 3;
 }
 
