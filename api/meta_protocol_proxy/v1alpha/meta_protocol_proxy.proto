@@ -33,7 +33,7 @@ message MetaProtocolProxy {
   string stat_prefix = 1 [(validate.rules).string = {min_len: 1}];
 
   // The name of the application protocol built on top of meta protocol.
-  // this field has been deprecated, now use protocol
+  // This has been deprecated in favor of name in ApplicationProtocol.
   string application_protocol = 2 [(validate.rules).string = {min_len: 1}];
 
   oneof route_specifier {
@@ -47,7 +47,7 @@ message MetaProtocolProxy {
   }
 
   // The codec which encodes and decodes the application protocol.
-  // this field has been deprecated, now use protocol
+  // This has been deprecated in favor of codec in ApplicationProtocol.
   Codec codec = 5;
 
 
