@@ -56,16 +56,41 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   decoder_filter_callbacks_->streamInfo().setRouteName(route_entry_->routeName());
   const std::string& cluster_name = route_entry_->clusterName();
 
-  auto prepare_result = prepareUpstreamRequest(cluster_name, request_metadata_, this);
-  if (prepare_result.exception.has_value()) {
-    // emit access log
-    emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
-                 prepare_result.response_code_detail);
+  if (decoder_filter_callbacks_->multiplexing()) {
+    // if multiplexing, send by upstream handler
+    auto upstream_handler = decoder_filter_callbacks_->getUpstreamHandler(cluster_name, *this);
+    if (upstream_handler == nullptr) {
+      emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
+                   "no_matched_upstream_handler");
+      decoder_filter_callbacks_->sendLocalReply(
+          AppException(Error{
+              ErrorType::ClusterNotFound,
+              fmt::format("meta protocol router: no matched upstream handler for request '{}'",
+                          request_metadata_->getRequestId())}),
+          false);
+      return FilterStatus::AbortIteration;
+    }
+    upstream_handler->addResponseCallback(request_metadata_->getRequestId(),
+                                          [this](MetadataSharedPtr response_metadata) {
+                                            this->onUpstreamResponseCallback(response_metadata);
+                                          });
+    upstream_request_ = std::make_unique<UpstreamRequestByHandler>(
+        *this, request_metadata_, request_mutation, upstream_handler);
+  } else {
+    auto prepare_result = prepareUpstreamRequest(cluster_name, request_metadata_, this);
+    if (prepare_result.exception.has_value()) {
+      // emit access log
+      emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
+                   prepare_result.response_code_detail);
 
-    decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
-    return FilterStatus::AbortIteration;
+      decoder_filter_callbacks_->sendLocalReply(prepare_result.exception.value(), false);
+      return FilterStatus::AbortIteration;
+    }
+    auto& conn_pool_data = prepare_result.conn_pool_data.value();
+    upstream_request_ = std::make_unique<UpstreamRequest>(*this, conn_pool_data, request_metadata_,
+                                                          request_mutation);
   }
-  auto& conn_pool_data = prepare_result.conn_pool_data.value();
+
   decoder_filter_callbacks_->streamInfo().setUpstreamClusterInfo(cluster_);
 
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
@@ -81,8 +106,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   auto metadata_clone = request_metadata_->clone();
 
   route_entry_->requestMutation(request_mutation);
-  upstream_request_ =
-      std::make_unique<UpstreamRequest>(*this, conn_pool_data, request_metadata_, request_mutation);
+
   auto filter_status = upstream_request_->start();
 
   // Prepare connections for shadow routers, if there are mirror policies configured and currently
@@ -159,26 +183,11 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
 
   UpstreamResponseStatus status = decoder_filter_callbacks_->upstreamData(data);
   switch (status) {
-  case UpstreamResponseStatus::Complete:
-    ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
-    upstream_request_->onResponseComplete();
-    cleanUpstreamRequest();
-
-    // generate tracing span
-    if (active_span_) {
-      assert(response_metadata_);
-      Tracing::MetaProtocolTracerUtility::finalizeSpanWithResponse(
-          *active_span_, *response_metadata_, decoder_filter_callbacks_->streamInfo(),
-          *decoder_filter_callbacks_->tracingConfig());
-      ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
-                       *decoder_filter_callbacks_);
-    }
-
-    // emit access log
-    assert(response_metadata_);
-    emitLogEntry(request_metadata_, response_metadata_, static_cast<int>(ResponseStatus::Ok), "");
+  case UpstreamResponseStatus::Complete: {
+    onUpstreamResponseComplete(response_metadata_);
     return;
-  case UpstreamResponseStatus::Reset:
+  }
+  case UpstreamResponseStatus::Reset: {
     ENVOY_STREAM_LOG(debug, "meta protocol router: upstream reset", *decoder_filter_callbacks_);
     // When the upstreamData function returns Reset,
     // the current stream is already released from the upper layer,
@@ -199,7 +208,8 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
     emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
                  "upstream_reset");
     return;
-  case UpstreamResponseStatus::MoreData:
+  }
+  case UpstreamResponseStatus::MoreData: {
     // Response is incomplete, but no more data is coming. Probably codec or application side error.
     if (end_stream) {
       ENVOY_STREAM_LOG(debug,
@@ -226,9 +236,36 @@ void Router::onUpstreamData(Buffer::Instance& data, bool end_stream) {
       // todo we also need to clean the stream
     }
     return;
+  }
   default:
     PANIC("not reached");
   }
+}
+
+void Router::onUpstreamResponseComplete(MetadataSharedPtr response_metadata) {
+  ENVOY_STREAM_LOG(debug, "meta protocol router: response complete", *decoder_filter_callbacks_);
+  upstream_request_->onResponseComplete();
+  cleanUpstreamRequest();
+
+  // generate tracing span
+  if (active_span_) {
+    assert(response_metadata);
+    Tracing::MetaProtocolTracerUtility::finalizeSpanWithResponse(
+        *active_span_, *response_metadata, decoder_filter_callbacks_->streamInfo(),
+        *decoder_filter_callbacks_->tracingConfig());
+    ENVOY_STREAM_LOG(debug, "meta protocol router: finish tracing span",
+                     *decoder_filter_callbacks_);
+  }
+
+  // emit access log
+  assert(response_metadata);
+  emitLogEntry(request_metadata_, response_metadata, static_cast<int>(ResponseStatus::Ok), "");
+}
+
+void Router::onUpstreamResponseCallback(MetadataSharedPtr response_metadata) {
+  onUpstreamResponseComplete(response_metadata);
+  // defer delete message
+  decoder_filter_callbacks_->onUpstreamResponse();
 }
 
 void Router::onEvent(Network::ConnectionEvent event) {

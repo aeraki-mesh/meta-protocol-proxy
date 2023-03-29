@@ -8,6 +8,7 @@
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/heartbeat_response.h"
 #include "src/meta_protocol_proxy/codec_impl.h"
+#include "src/meta_protocol_proxy/upstream_handler_impl.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -17,10 +18,12 @@ namespace MetaProtocolProxy {
 constexpr uint32_t BufferLimit = UINT32_MAX;
 
 ConnectionManager::ConnectionManager(Config& config, Random::RandomGenerator& random_generator,
-                                     TimeSource& time_system)
+                                     TimeSource& time_system,
+                                     Upstream::ClusterManager& cluster_manager)
     : config_(config), time_system_(time_system), stats_(config_.stats()),
       random_generator_(random_generator), codec_(config.createCodec()),
-      decoder_(std::make_unique<RequestDecoder>(*codec_, *this)) {}
+      decoder_(std::make_unique<RequestDecoder>(*codec_, *this)),
+      cluster_manager_(cluster_manager) {}
 
 Network::FilterStatus ConnectionManager::onData(Buffer::Instance& data, bool end_stream) {
   ENVOY_LOG(debug, "meta protocol: read {} bytes", data.length());
@@ -57,12 +60,15 @@ void ConnectionManager::initializeReadFilterCallbacks(Network::ReadFilterCallbac
 }
 
 void ConnectionManager::onEvent(Network::ConnectionEvent event) {
+  ENVOY_LOG(debug, "ConnectionManager onEvent {}", static_cast<int>(event));
   if (event == Network::ConnectionEvent::LocalClose) {
     disableIdleTimer();
     resetAllMessages(true);
+    resetUpstreamHandlerManager();
   } else if (event == Network::ConnectionEvent::RemoteClose) {
     disableIdleTimer();
     resetAllMessages(false);
+    resetUpstreamHandlerManager();
   }
 }
 
@@ -229,6 +235,45 @@ void ConnectionManager::disableIdleTimer() {
     idle_timer_->disableTimer();
     idle_timer_.reset();
   }
+}
+
+void ConnectionManager::resetUpstreamHandlerManager() { upstream_handler_manager_.clear(); }
+
+UpstreamHandlerSharedPtr
+ConnectionManager::getUpstreamHandler(const std::string& cluster_name,
+                                      Upstream::LoadBalancerContext& context) {
+  auto* cluster = cluster_manager_.getThreadLocalCluster(cluster_name);
+  if (cluster == nullptr) {
+    ENVOY_LOG(error, "unknown cluster '{}'", cluster_name);
+    return nullptr;
+  }
+
+  auto tcp_pool_data = UpstreamHandler::createTcpPoolData(*cluster, context);
+  if (!tcp_pool_data) {
+    ENVOY_LOG(error, "no conn pool for {}", cluster_name);
+    return nullptr;
+  }
+  std::string key = cluster_name + "_" + tcp_pool_data.value().host()->address()->asString();
+
+  // get exist upstream handler
+  auto upstream_handler = upstream_handler_manager_.get(key);
+  if (upstream_handler) {
+    ENVOY_LOG(debug, "use exist upstream handler, key:{}", key);
+    return upstream_handler;
+  }
+
+  // create upstream handler
+  ENVOY_LOG(debug, "create upstream handler: key={}, hostname={}, address={}", key,
+            tcp_pool_data.value().host()->hostname(),
+            tcp_pool_data.value().host()->address()->asString());
+
+  auto new_upstream_handler = std::make_shared<UpstreamHandlerImpl>(
+      key, read_callbacks_->connection(), config_,
+      [this](const std::string& key) { this->upstream_handler_manager_.del(key); });
+  upstream_handler_manager_.add(key, new_upstream_handler);
+
+  new_upstream_handler->start(*tcp_pool_data);
+  return new_upstream_handler;
 }
 
 } // namespace  MetaProtocolProxy

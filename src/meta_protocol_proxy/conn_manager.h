@@ -5,6 +5,7 @@
 #include "envoy/network/connection.h"
 #include "envoy/network/filter.h"
 #include "envoy/stats/timespan.h"
+#include "envoy/upstream/cluster_manager.h"
 
 #include "source/common/common/logger.h"
 
@@ -20,36 +21,13 @@
 #include "src/meta_protocol_proxy/stream.h"
 #include "src/meta_protocol_proxy/tracing/tracer.h"
 #include "src/meta_protocol_proxy/request_id/config.h"
+#include "src/meta_protocol_proxy/upstream_handler.h"
+#include "src/meta_protocol_proxy/config_interface.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-
-/**
- * Config is a configuration interface for ConnectionManager.
- */
-class Config {
-public:
-  virtual ~Config() = default;
-
-  virtual FilterChainFactory& filterFactory() PURE;
-  virtual MetaProtocolProxyStats& stats() PURE;
-  virtual CodecPtr createCodec() PURE;
-  virtual Route::Config& routerConfig() PURE;
-  virtual std::string applicationProtocol() PURE;
-  virtual absl::optional<std::chrono::milliseconds> idleTimeout() PURE;
-  /**
-   * @return Route::RouteConfigProvider* the configuration provider used to acquire a route
-   *         config for each request flow. Pointer ownership is _not_ transferred to the caller of
-   *         this function.
-   */
-  virtual Route::RouteConfigProvider* routeConfigProvider() PURE;
-  virtual Tracing::MetaProtocolTracerSharedPtr tracer() PURE;
-  virtual Tracing::TracingConfig* tracingConfig() PURE;
-  virtual RequestIDExtensionSharedPtr requestIDExtension() PURE;
-  virtual const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() const PURE;
-};
 
 // class ActiveMessagePtr;
 class ConnectionManager : public Network::ReadFilter,
@@ -58,7 +36,7 @@ class ConnectionManager : public Network::ReadFilter,
                           Logger::Loggable<Logger::Id::filter> {
 public:
   ConnectionManager(Config& config, Random::RandomGenerator& random_generator,
-                    TimeSource& time_system);
+                    TimeSource& time_system, Upstream::ClusterManager& cluster_manager);
   ~ConnectionManager() override {
     ENVOY_LOG(trace, "********** ConnectionManager destructed ***********");
   };
@@ -97,6 +75,9 @@ public:
   RequestIDExtensionSharedPtr requestIDExtension() { return config_.requestIDExtension(); };
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() { return config_.accessLogs(); };
 
+  UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+                                                      Upstream::LoadBalancerContext& context);
+
   // This function is for testing only.
   std::list<ActiveMessagePtr>& getActiveMessagesForTest() { return active_message_list_; }
 
@@ -110,6 +91,8 @@ private:
   void resetIdleTimer();
   // Disable the timer
   void disableIdleTimer();
+  // resrt upstream handler mng
+  void resetUpstreamHandlerManager();
 
   Buffer::OwnedImpl request_buffer_;
   std::list<ActiveMessagePtr> active_message_list_;
@@ -125,6 +108,9 @@ private:
   Network::ReadFilterCallbacks* read_callbacks_{};
   // timer for idle timeout
   Event::TimerPtr idle_timer_;
+  // upstream mng
+  UpstreamHandlerManager upstream_handler_manager_;
+  Upstream::ClusterManager& cluster_manager_;
 };
 
 } // namespace MetaProtocolProxy

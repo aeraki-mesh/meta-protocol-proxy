@@ -55,9 +55,9 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
   // Keep in mind the lambda capture list **doesn't** determine the destruction order, but it's fine
   // as these captured objects are also global singletons.
   return [singletons, filter_config, &context](Network::FilterManager& filter_manager) -> void {
-    filter_manager.addReadFilter(
-        std::make_shared<ConnectionManager>(*filter_config, context.api().randomGenerator(),
-                                            context.mainThreadDispatcher().timeSource()));
+    filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
+        *filter_config, context.api().randomGenerator(),
+        context.mainThreadDispatcher().timeSource(), context.clusterManager()));
   };
 }
 
@@ -77,6 +77,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
           fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
       stats_(MetaProtocolProxyStats::generateStats(stats_prefix_, context_.scope())),
       application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
+      application_protocol_config_(config.protocol()),
       route_config_provider_manager_(route_config_provider_manager) {
   ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl constructor ***********");
   // check idle_timer config

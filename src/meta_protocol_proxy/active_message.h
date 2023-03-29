@@ -109,6 +109,10 @@ public:
   Tracing::TracingConfig* tracingConfig() override;
   RequestIDExtensionSharedPtr requestIDExtension() override;
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() override;
+  UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+                                              Upstream::LoadBalancerContext& context) override;
+  bool multiplexing() override;
+  void onUpstreamResponse() override;
 
   DecoderFilterSharedPtr handler() { return handle_; }
 
@@ -190,6 +194,10 @@ public:
   Tracing::TracingConfig* tracingConfig() override;
   RequestIDExtensionSharedPtr requestIDExtension() override;
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() override;
+  UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+                                              Upstream::LoadBalancerContext& context) override;
+  bool multiplexing() override;
+  void onUpstreamResponse() override;
 
   void createFilterChain();
   FilterStatus applyDecoderFilters(ActiveMessageDecoderFilter* filter,

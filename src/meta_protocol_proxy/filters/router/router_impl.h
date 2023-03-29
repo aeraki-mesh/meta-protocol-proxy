@@ -63,9 +63,12 @@ public:
     decoder_filter_callbacks_->setUpstreamConnection(std::move(conn));
   };
   void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) override {
-    decoder_filter_callbacks_->streamInfo().setUpstreamInfo(std::make_shared<StreamInfo::UpstreamInfoImpl>());
+    decoder_filter_callbacks_->streamInfo().setUpstreamInfo(
+        std::make_shared<StreamInfo::UpstreamInfoImpl>());
     decoder_filter_callbacks_->streamInfo().upstreamInfo()->setUpstreamHost(host);
   }
+
+  void onUpstreamResponseCallback(MetadataSharedPtr response_metadata);
 
   // This function is for testing only.
   // Envoy::Buffer::Instance& upstreamRequestBufferForTest() { return upstream_request_buffer_; }
@@ -81,13 +84,15 @@ private:
                     const MetadataSharedPtr& response_metadata, int response_code,
                     const std::string& response_code_detail);
 
+  void onUpstreamResponseComplete(MetadataSharedPtr response_metadata);
+
   DecoderFilterCallbacks* decoder_filter_callbacks_{};
   EncoderFilterCallbacks* encoder_filter_callbacks_{};
   Route::RouteConstSharedPtr route_{};
   const Route::RouteEntry* route_entry_{};
   // Upstream::ClusterInfoConstSharedPtr cluster_;
 
-  std::unique_ptr<UpstreamRequest> upstream_request_;
+  std::unique_ptr<UpstreamRequestBase> upstream_request_;
   MetadataSharedPtr request_metadata_;
   MetadataSharedPtr response_metadata_;
 

@@ -13,18 +13,13 @@
 #include "src/meta_protocol_proxy/request_id/config.h"
 #include "src/meta_protocol_proxy/route/route.h"
 #include "src/meta_protocol_proxy/tracing/tracer.h"
+#include "src/meta_protocol_proxy/upstream_handler.h"
+#include "src/meta_protocol_proxy/filters/filter_define.h"
 
 namespace Envoy {
 namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
-
-enum class UpstreamResponseStatus : uint8_t {
-  MoreData = 0, // The upstream response requires more data.
-  Complete = 1, // The upstream response is complete.
-  Reset = 2,    // The upstream response is invalid and its connection must be reset.
-  Retry = 3, // The upstream response is failure need to retry. TODO not used, may remove it later
-};
 
 class DirectResponse {
 public:
@@ -61,7 +56,7 @@ using DirectResponsePtr = std::unique_ptr<DirectResponse>;
 class CodecFactory {
 public:
   virtual ~CodecFactory() = default;
-  
+
   /**
    * Create a codec, which will be used by the router to encode request and response
    * @return CodecPtr
@@ -183,6 +178,29 @@ public:
    * @return
    */
   virtual const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() PURE;
+
+  /**
+   * @brief get upstream handler
+   *
+   * @param cluster_name
+   * @param context
+   * @return
+   */
+  virtual UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+                                                      Upstream::LoadBalancerContext& context) PURE;
+
+  /**
+   * @brief is multiplexing
+   *
+   * @return true
+   * @return false
+   */
+  virtual bool multiplexing() PURE;
+
+  /**
+   * on upstream response
+   */
+  virtual void onUpstreamResponse() PURE;
 };
 
 /**

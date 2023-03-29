@@ -17,42 +17,32 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-class UpstreamRequest : public Tcp::ConnectionPool::Callbacks,
-                        Logger::Loggable<Logger::Id::filter> {
+class UpstreamRequestBase : public Logger::Loggable<Logger::Id::filter> {
 public:
-  UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool, MetadataSharedPtr& metadata,
-                  MutationSharedPtr& mutation);
-  ~UpstreamRequest() { ENVOY_LOG(trace, "********** UpstreamRequest destructed ***********"); };
+  UpstreamRequestBase(RequestOwner& parent, MetadataSharedPtr& metadata,
+                      MutationSharedPtr& mutation);
+  virtual ~UpstreamRequestBase() = default;
 
-  // Tcp::ConnectionPool::Callbacks
-  void onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
-                     Upstream::HostDescriptionConstSharedPtr host) override;
-  void onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn,
-                   Upstream::HostDescriptionConstSharedPtr host) override;
+  virtual FilterStatus start() PURE;
+  virtual void releaseUpStreamConnection(bool close) PURE;
+  virtual void onRequestStart(bool continue_decoding);
+  virtual void onRequestComplete() { request_complete_ = true; }
+  virtual void onResponseStarted() { response_started_ = true; }
+  virtual void onResponseComplete() { response_complete_ = true; }
 
-  FilterStatus start();
   void onUpstreamConnectionEvent(Network::ConnectionEvent event);
-  void releaseUpStreamConnection(const bool close);
-  void encodeData(Buffer::Instance& data);
-  void onRequestStart(bool continue_decoding);
-  void onRequestComplete();
-  void onResponseComplete();
   void onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host);
   void onUpstreamConnectionReset(ConnectionPool::PoolFailureReason reason);
   bool requestCompleted() { return request_complete_; };
   bool responseCompleted() { return response_complete_; };
   bool responseStarted() { return response_started_; };
-  void onResponseStarted() { response_started_ = true; };
   Upstream::HostDescriptionConstSharedPtr upstreamHost() { return upstream_host_; };
 
-private:
+protected:
   RequestOwner& parent_;
-  Upstream::TcpPoolData& conn_pool_;
   MetadataSharedPtr metadata_;
   MutationSharedPtr mutation_;
 
-  Tcp::ConnectionPool::Cancellable* conn_pool_handle_{};
-  Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
   Upstream::HostDescriptionConstSharedPtr upstream_host_;
   Envoy::Buffer::OwnedImpl upstream_request_buffer_;
 
@@ -60,6 +50,51 @@ private:
   bool response_started_ : 1;
   bool response_complete_ : 1;
   bool stream_reset_ : 1;
+};
+
+class UpstreamRequest : public Tcp::ConnectionPool::Callbacks, public UpstreamRequestBase {
+public:
+  UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool, MetadataSharedPtr& metadata,
+                  MutationSharedPtr& mutation);
+  virtual ~UpstreamRequest() {
+    ENVOY_LOG(trace, "********** UpstreamRequest destructed ***********");
+  };
+
+  // Tcp::ConnectionPool::Callbacks
+  void onPoolFailure(ConnectionPool::PoolFailureReason reason, absl::string_view,
+                     Upstream::HostDescriptionConstSharedPtr host) override;
+  void onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn,
+                   Upstream::HostDescriptionConstSharedPtr host) override;
+
+  // UpstreamRequestBase
+  FilterStatus start() override;
+  void releaseUpStreamConnection(const bool close) override;
+  void onResponseComplete() override;
+
+private:
+  void encodeData(Buffer::Instance& data);
+
+private:
+  Upstream::TcpPoolData& conn_pool_;
+
+  Tcp::ConnectionPool::Cancellable* conn_pool_handle_{};
+  Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
+};
+
+class UpstreamRequestByHandler : public UpstreamRequestBase {
+public:
+  UpstreamRequestByHandler(RequestOwner& parent, MetadataSharedPtr& metadata,
+                           MutationSharedPtr& mutation, UpstreamHandlerSharedPtr& upstream_handler);
+  virtual ~UpstreamRequestByHandler() {
+    ENVOY_LOG(trace, "********** UpstreamRequestByHandler destructed ***********");
+  };
+
+  // UpstreamRequestBase
+  FilterStatus start() override;
+  void releaseUpStreamConnection(const bool close) override;
+
+private:
+  UpstreamHandlerSharedPtr upstream_handler_;
 };
 
 } // namespace Router
