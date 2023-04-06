@@ -1,6 +1,8 @@
 [中文](README_ZH.md)
 
 # meta-protocol-proxy
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Faeraki-mesh%2Fmeta-protocol-proxy.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Faeraki-mesh%2Fmeta-protocol-proxy?ref=badge_shield)
+
 
 ## Why MetaProtocol is needed?
 
@@ -161,3 +163,7 @@ Hello Aeraki, response from 400c8a27e761/172.17.0.2
 
 This output means that the dubbo test client has successfully reached the dubbo test server through envoy MetaProtocol proxy, with the route configuration fetched from the RDS server.
 To understand how it works, you can look into [test/rds/test.yaml](test/rds/test.yaml) and play with the MetaProtocol configuration. 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Faeraki-mesh%2Fmeta-protocol-proxy.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Faeraki-mesh%2Fmeta-protocol-proxy?ref=badge_large)
