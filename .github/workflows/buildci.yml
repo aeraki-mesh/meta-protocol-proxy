@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Clean
         run: |
-          make clean
+         sudo rm -rf /home/ubuntu/.cache/bazel
       - name: Checkout
         uses: actions/checkout@v2
       - name: install dependency
