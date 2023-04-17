@@ -41,7 +41,7 @@ jobs:
       - name: run test
         shell: bash -x -eo pipefail {0}
         run: |
-          mkdir $LOG_DIR
+          mkdir $LOG_DIR || true
           sudo bash ${GITHUB_WORKSPACE}/test/${{ matrix.protocal }}/test.sh > $LOG_PATH 2>&1 &
           echo $! > $LOG_DIR/cmd.pid
           sleep 60
