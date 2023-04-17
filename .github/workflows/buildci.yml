@@ -42,7 +42,7 @@ jobs:
         shell: bash -x -eo pipefail {0}
         run: |
           mkdir $LOG_DIR
-          bash ${GITHUB_WORKSPACE}/test/${{ matrix.protocal }}/test.sh > $LOG_PATH 2>&1 &
+          sudo bash ${GITHUB_WORKSPACE}/test/${{ matrix.protocal }}/test.sh > $LOG_PATH 2>&1 &
           echo $! > $LOG_DIR/cmd.pid
           sleep 60
       - name: check result
