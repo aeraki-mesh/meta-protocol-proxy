@@ -72,12 +72,11 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
                        Server::Configuration::FactoryContext& context,
                        Route::RouteConfigProviderManager& route_config_provider_manager,
                        MetaProtocolProxy::Tracing::MetaProtocolTracerManager& tracer_manager)
-    : context_(context),
+    : context_(context), application_protocol_(config.application_protocol()),
+      codecConfig_(config.codec()), application_protocol_config_(config.protocol()),
       stats_prefix_(
-          fmt::format("meta_protocol.{}.{}.", config.application_protocol(), config.stat_prefix())),
+          fmt::format("meta_protocol.{}.{}.", applicationProtocol(), config.stat_prefix())),
       stats_(MetaProtocolProxyStats::generateStats(stats_prefix_, context_.scope())),
-      application_protocol_(config.application_protocol()), codecConfig_(config.codec()),
-      application_protocol_config_(config.protocol()),
       route_config_provider_manager_(route_config_provider_manager) {
   ENVOY_LOG(trace, "********** MetaProtocolProxy ConfigImpl constructor ***********");
   // check idle_timer config
@@ -206,9 +205,9 @@ Route::RouteConstSharedPtr ConfigImpl::route(const Metadata& metadata,
 
 CodecPtr ConfigImpl::createCodec() {
   auto& factory = Envoy::Config::Utility::getAndCheckFactoryByName<NamedCodecConfigFactory>(
-      codecConfig_.name());
+      getCodecConfig().name());
   ProtobufTypes::MessagePtr message = factory.createEmptyConfigProto();
-  Envoy::Config::Utility::translateOpaqueConfig(codecConfig_.config(),
+  Envoy::Config::Utility::translateOpaqueConfig(getCodecConfig().config(),
                                                 context_.messageValidationVisitor(), *message);
   return factory.createCodec(*message);
 }
@@ -230,6 +229,14 @@ void ConfigImpl::registerFilter(const MetaProtocolFilterConfig& proto_config) {
       factory.createFilterFactoryFromProto(*message, stats_prefix_, context_);
 
   filter_factories_.push_back(callback);
+}
+
+const ConfigImpl::CodecConfig& ConfigImpl::getCodecConfig() {
+  if (application_protocol_config_.has_codec() &&
+      (!application_protocol_config_.codec().name().empty())) {
+    return application_protocol_config_.codec();
+  }
+  return codecConfig_;
 }
 
 } // namespace  MetaProtocolProxy
