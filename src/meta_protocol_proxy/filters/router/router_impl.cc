@@ -56,6 +56,18 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   decoder_filter_callbacks_->streamInfo().setRouteName(route_entry_->routeName());
   const std::string& cluster_name = route_entry_->clusterName();
 
+  // if x-request-id is created, then it's the first span in this trace
+  is_first_span_ = setXRequestID(request_metadata, request_mutation);
+  // only trace request if there's a tracing config
+  if (decoder_filter_callbacks_->tracingConfig()) {
+    traceRequest(request_metadata, request_mutation, cluster_name);
+  }
+
+  // Save the clone for request mirroring
+  auto metadata_clone = request_metadata_->clone();
+
+  route_entry_->requestMutation(request_mutation);
+
   if (decoder_filter_callbacks_->multiplexing()) {
     // if multiplexing, send by upstream handler
     auto upstream_handler = decoder_filter_callbacks_->getUpstreamHandler(cluster_name, *this);
@@ -77,7 +89,8 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
     upstream_request_ = std::make_unique<UpstreamRequestByHandler>(
         *this, request_metadata_, request_mutation, upstream_handler);
   } else {
-    auto prepare_result = prepareUpstreamRequest(cluster_name, request_metadata_, this);
+    auto prepare_result =
+        prepareUpstreamRequest(cluster_name, request_metadata_->getRequestId(), this);
     if (prepare_result.exception.has_value()) {
       // emit access log
       emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
@@ -92,20 +105,7 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   }
 
   decoder_filter_callbacks_->streamInfo().setUpstreamClusterInfo(cluster_);
-
   ENVOY_STREAM_LOG(debug, "meta protocol router: decoding request", *decoder_filter_callbacks_);
-
-  // if x-request-id is created, then it's the first span in this trace
-  is_first_span_ = setXRequestID(request_metadata, request_mutation);
-  // only trace request if there's a tracing config
-  if (decoder_filter_callbacks_->tracingConfig()) {
-    traceRequest(request_metadata, request_mutation, cluster_name);
-  }
-
-  // Save the clone for request mirroring
-  auto metadata_clone = request_metadata_->clone();
-
-  route_entry_->requestMutation(request_mutation);
 
   auto filter_status = upstream_request_->start();
 

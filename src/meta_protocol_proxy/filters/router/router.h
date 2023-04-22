@@ -43,7 +43,7 @@ protected:
   };
 
   PrepareUpstreamRequestResult prepareUpstreamRequest(const std::string& cluster_name,
-                                                      MetadataSharedPtr& metadata,
+                                                      uint64_t request_id,
                                                       Upstream::LoadBalancerContext* lb_context) {
     Upstream::ThreadLocalCluster* cluster = cluster_manager_.getThreadLocalCluster(cluster_name);
     if (!cluster) {
@@ -56,7 +56,7 @@ protected:
 
     cluster_ = cluster->info();
     ENVOY_LOG(debug, "meta protocol router: cluster {} match for request '{}'", cluster_->name(),
-              metadata->getRequestId());
+              request_id);
 
     if (cluster_->maintenanceMode()) {
       ENVOY_LOG(warn, "meta protocol router: maintenance mode for cluster '{}'", cluster_name);
