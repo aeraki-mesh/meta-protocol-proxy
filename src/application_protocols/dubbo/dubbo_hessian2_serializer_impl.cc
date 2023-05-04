@@ -90,7 +90,7 @@ std::pair<RpcResultSharedPtr, bool>
 DubboHessian2SerializerImpl::deserializeRpcResult(Buffer::Instance& buffer,
                                                   ContextSharedPtr context) {
   ASSERT(buffer.length() >= context->bodySize());
-  bool has_value = true;
+  bool has_value_or_attachment = true;
 
   auto result = std::make_shared<RpcResultImpl>();
 
@@ -108,9 +108,9 @@ DubboHessian2SerializerImpl::deserializeRpcResult(Buffer::Instance& buffer,
     result->setException(true);
     break;
   case RpcResponseType::ResponseWithNullValue:
-  case RpcResponseType::ResponseNullValueWithAttachments:
-    has_value = false;
+    has_value_or_attachment = false;
     FALLTHRU;
+  case RpcResponseType::ResponseNullValueWithAttachments:
   case RpcResponseType::ResponseWithValue:
   case RpcResponseType::ResponseValueWithAttachments:
     result->setException(false);
@@ -126,7 +126,7 @@ DubboHessian2SerializerImpl::deserializeRpcResult(Buffer::Instance& buffer,
                                      context->bodySize()));
   }
 
-  if (!has_value && context->bodySize() != total_size) {
+  if (!has_value_or_attachment && context->bodySize() != total_size) {
     throw EnvoyException(
         fmt::format("RpcResult is no value, but the rest of the body size({}) not equal 0",
                     (context->bodySize() - total_size)));
