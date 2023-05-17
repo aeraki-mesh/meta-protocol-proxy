@@ -186,7 +186,7 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
       config, request_metadata, span_name, stream_info.startTime(), tracing_decision);
 
   // inject tracing context to metadata
-  active_span->injectContext(request_metadata);
+  active_span->injectContext(request_metadata, nullptr);
   // set tracing context related header to mutation so these headers can be sent to the application.
   // the application is responsible to pass these headers to upstream requests.
   for (int i = 0; i < 10; i++) {

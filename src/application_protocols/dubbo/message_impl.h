@@ -90,9 +90,8 @@ public:
     size_t attachment_offset_{};
 
     // To reuse the HeaderMatcher API and related tools provided by Envoy, we store the key/value
-    // pair of the string type in the attachment in the Http::HeaderMap. This introduces
-    // additional overhead and ignores the case of the key in the attachment. But for now, it's
-    // acceptable.
+    // pair of the string type in the attachment in the Http::HeaderMap. This introduces additional
+    // overhead and ignores the case of the key in the attachment. But for now, it's acceptable.
     Http::HeaderMapPtr headers_;
   };
   using AttachmentPtr = std::unique_ptr<Attachment>;
