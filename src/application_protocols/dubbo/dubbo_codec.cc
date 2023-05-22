@@ -119,7 +119,7 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata,
       if (!key.has_value() || !value.has_value()) {
         continue;
       }
-      metadata.putString(*(key.value()), *(value.value()));
+      metadata.putString(key.value(), value.value());
     }
   }
   metadata.put("InvocationInfo", msgMetadata.invocationInfoPtr());

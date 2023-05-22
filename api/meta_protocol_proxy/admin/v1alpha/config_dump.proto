@@ -3,6 +3,7 @@ syntax = "proto3";
 package aeraki.meta_protocol_proxy.admin.v1alpha;
 
 import "envoy/admin/v3/config_dump.proto";
+import "envoy/admin/v3/config_dump_shared.proto";
 import "envoy/config/bootstrap/v3/bootstrap.proto";
 
 import "google/protobuf/any.proto";

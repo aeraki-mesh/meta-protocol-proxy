@@ -21,9 +21,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 
 http_archive(
     name = "io_istio_proxy",
-    strip_prefix = "proxy-1.14.5",
-    sha256 = "5f609018554bce88a48e2fcd0c6317ce19d79af031f33389c7916a1b9d91c88a",
-    url = "https://github.com/istio/proxy/archive/refs/tags/1.14.5.tar.gz",
+    strip_prefix = "proxy-1.16.4",
+    sha256 = "a4d9c29bac3ecea5a1243c5506dee0595ca57987ed6170ef329b89735ccb3a18",
+    url = "https://github.com/istio/proxy/archive/refs/tags/1.16.4.tar.gz",
 )
 
 load(
@@ -47,11 +47,11 @@ bind(
 #
 # Note: this is needed by release builder to resolve envoy dep sha to tag.
 # Commit date: 2022-08-18
-ENVOY_SHA = "fee1c20b5c0b168aef50a4455bb6bcc8869e6590"
+ENVOY_SHA = "b07cce42ccaf39a37d2f1ac54995cc048d4db92d"
 
-ENVOY_SHA256 = "782a886eb13f0a6002be820f2215540182610a9613bf4b93962422f3c7828d55"
+ENVOY_SHA256 = "3a449d355dc0cedfdacb83553bebf63f45b1e24f478fd8aa4de67d4ffa4c7de7"
 
-ENVOY_ORG = "envoyproxy"
+ENVOY_ORG = "istio"
 
 ENVOY_REPO = "envoy"
 
@@ -86,6 +86,10 @@ envoy_dependencies()
 load("@envoy//bazel:repositories_extra.bzl", "envoy_dependencies_extra")
 
 envoy_dependencies_extra()
+
+load("@envoy//bazel:python_dependencies.bzl", "envoy_python_dependencies")
+
+envoy_python_dependencies()
 
 load("@base_pip3//:requirements.bzl", "install_deps")
 
