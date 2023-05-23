@@ -162,7 +162,10 @@ message ApplicationProtocol {
   string name = 1 [(validate.rules).string = {min_len: 1}];
   // The codec which encodes and decodes the application protocol.
   Codec codec = 2;
-  // is multiplexing
+  // If multiplexing is true, the meta protocol proxy will multiplex multiple requests on a single connection.
   bool multiplexing = 3;
+  // Some protocols are stateful, such as MySQL and Postgres. If stateful is true, routing will be based on connection
+  // level instead of request level.
+  bool stateful = 4;
 }
 
