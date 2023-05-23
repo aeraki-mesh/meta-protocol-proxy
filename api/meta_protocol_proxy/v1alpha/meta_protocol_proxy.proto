@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package aeraki.meta_protocol_proxy.v1alpha;
 
+import "envoy/annotations/deprecation.proto";
 import "envoy/config/accesslog/v3/accesslog.proto";
 import "envoy/config/core/v3/config_source.proto";
 import "envoy/config/trace/v3/http_tracer.proto";
@@ -34,7 +35,7 @@ message MetaProtocolProxy {
 
   // The name of the application protocol built on top of meta protocol.
   // This has been deprecated in favor of name in ApplicationProtocol.
-  string application_protocol = 2 [(validate.rules).string = {min_len: 1}];
+  string application_protocol = 2 [deprecated = true, (validate.rules).string = {min_len: 1}];
 
   oneof route_specifier {
     option (validate.required) = true;
@@ -48,7 +49,7 @@ message MetaProtocolProxy {
 
   // The codec which encodes and decodes the application protocol.
   // This has been deprecated in favor of codec in ApplicationProtocol.
-  Codec codec = 5;
+  Codec codec = 5 [deprecated = true];
 
 
   // A list of individual Layer-7 filters that make up the filter chain for requests made to
