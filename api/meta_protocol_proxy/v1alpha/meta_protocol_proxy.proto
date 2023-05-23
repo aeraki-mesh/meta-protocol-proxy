@@ -49,7 +49,7 @@ message MetaProtocolProxy {
 
   // The codec which encodes and decodes the application protocol.
   // This has been deprecated in favor of codec in ApplicationProtocol.
-  Codec codec = 5; [deprecated = true];
+  Codec codec = 5 [deprecated = true];
 
 
   // A list of individual Layer-7 filters that make up the filter chain for requests made to
