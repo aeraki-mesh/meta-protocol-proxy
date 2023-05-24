@@ -109,7 +109,7 @@ public:
   Tracing::TracingConfig* tracingConfig() override;
   RequestIDExtensionSharedPtr requestIDExtension() override;
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() override;
-  UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+  GetUpstreamHandlerResult getUpstreamHandler(const std::string& cluster_name,
                                               Upstream::LoadBalancerContext& context) override;
   bool multiplexing() override;
   void onUpstreamResponse() override;
@@ -194,7 +194,7 @@ public:
   Tracing::TracingConfig* tracingConfig() override;
   RequestIDExtensionSharedPtr requestIDExtension() override;
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() override;
-  UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+  GetUpstreamHandlerResult getUpstreamHandler(const std::string& cluster_name,
                                               Upstream::LoadBalancerContext& context) override;
   bool multiplexing() override;
   void onUpstreamResponse() override;

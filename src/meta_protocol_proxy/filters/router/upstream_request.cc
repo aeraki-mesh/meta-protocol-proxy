@@ -235,15 +235,60 @@ UpstreamRequestByHandler::UpstreamRequestByHandler(RequestOwner& parent,
                                                    UpstreamHandlerSharedPtr& upstream_handler)
     : UpstreamRequestBase(parent, metadata, mutation), upstream_handler_(upstream_handler) {}
 
-FilterStatus UpstreamRequestByHandler::start() {
-  ENVOY_LOG(trace, "proxying {} bytes", upstream_request_buffer_.length());
-  auto codec = parent_.createCodec();
-  codec->encode(*metadata_, *mutation_, upstream_request_buffer_);
-  upstream_handler_->onData(upstream_request_buffer_, false);
-  return FilterStatus::ContinueIteration;
+void UpstreamRequestByHandler::onPoolFailure(ConnectionPool::PoolFailureReason reason,
+                                             absl::string_view,
+                                             Upstream::HostDescriptionConstSharedPtr host) {
+  parent_.onUpstreamHostSelected(host);
+
+  // Mimic an upstream reset.
+  onUpstreamHostSelected(host);
+  onUpstreamConnectionReset(reason);
+
+  upstream_request_buffer_.drain(upstream_request_buffer_.length());
+
+  // If it is a connection error, it means that the connection pool returned
+  // the error asynchronously and the upper layer needs to be notified to continue decoding.
+  // If it is a non-connection error, it is returned synchronously from the connection pool
+  // and is still in the callback at the current Filter, nothing to do.
+  if (reason == ConnectionPool::PoolFailureReason::Timeout ||
+      reason == ConnectionPool::PoolFailureReason::LocalConnectionFailure ||
+      reason == ConnectionPool::PoolFailureReason::RemoteConnectionFailure) {
+    parent_.continueDecoding();
+  }
 }
 
-void UpstreamRequestByHandler::releaseUpStreamConnection(bool) {}
+void UpstreamRequestByHandler::onPoolReady(Upstream::HostDescriptionConstSharedPtr host) {
+  ENVOY_LOG(debug, "meta protocol upstream request: tcp connection is ready");
+  parent_.onUpstreamHostSelected(host);
+
+  onUpstreamHostSelected(host);
+
+  onRequestStart(true);
+  encodeData(upstream_request_buffer_);
+
+  onRequestComplete();
+}
+
+FilterStatus UpstreamRequestByHandler::start() {
+  if (upstream_handler_->isPoolReady()) {
+    encodeData(upstream_request_buffer_);
+    return FilterStatus::ContinueIteration;
+  } else {
+    upstream_handler_->addUpsteamRequestCallbacks(this);
+    return FilterStatus::PauseIteration;
+  }
+}
+
+void UpstreamRequestByHandler::releaseUpStreamConnection(bool) {
+  upstream_handler_->removeUpsteamRequestCallbacks(this);
+}
+
+void UpstreamRequestByHandler::encodeData(Buffer::Instance& data) {
+  ENVOY_LOG(trace, "proxying {} bytes", data.length());
+  auto codec = parent_.createCodec();
+  codec->encode(*metadata_, *mutation_, data);
+  upstream_handler_->onData(upstream_request_buffer_, false);
+}
 
 } // namespace Router
 } // namespace  MetaProtocolProxy

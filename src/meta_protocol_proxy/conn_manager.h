@@ -75,7 +75,7 @@ public:
   RequestIDExtensionSharedPtr requestIDExtension() { return config_.requestIDExtension(); };
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() { return config_.accessLogs(); };
 
-  UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+  GetUpstreamHandlerResult getUpstreamHandler(const std::string& cluster_name,
                                                       Upstream::LoadBalancerContext& context);
 
   // This function is for testing only.

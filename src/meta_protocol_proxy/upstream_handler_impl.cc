@@ -16,6 +16,8 @@ UpstreamHandlerImpl::~UpstreamHandlerImpl() {
 
 void UpstreamHandlerImpl::onClose() {
   ENVOY_LOG(debug, "UpstreamHandlerImpl[{}] onClose", key_);
+  pool_ready_ = false;
+
   delete_callback_(key_);
 
   if (upstream_handle_) {
@@ -24,9 +26,15 @@ void UpstreamHandlerImpl::onClose() {
     upstream_handle_ = nullptr;
     ENVOY_LOG(debug, "UpstreamHandlerImpl::onClose reset connection pool handler");
   }
+
+  if (conn_data_) {
+    conn_data_.reset();
+    ENVOY_LOG(debug, "UpstreamHandlerImpl conn reset");
+  }
 }
 
 int UpstreamHandlerImpl::start(Upstream::TcpPoolData& pool_data) {
+  pool_ready_ = false;
   Tcp::ConnectionPool::Cancellable* handle = pool_data.newConnection(*this);
   if (handle) {
     ASSERT(upstream_handle_ == nullptr);
@@ -42,6 +50,13 @@ void UpstreamHandlerImpl::onPoolFailure(ConnectionPool::PoolFailureReason reason
             host->address()->asString(), static_cast<int>(reason), transport_failure_reason);
   upstream_handle_ = nullptr;
   delete_callback_(key_);
+
+  for (auto upstream_request_callbacks : upstream_request_callbacks_) {
+    if (upstream_request_callbacks) {
+      upstream_request_callbacks->onPoolFailure(reason, transport_failure_reason, host);
+    }
+  }
+  upstream_request_callbacks_.clear();
 }
 
 void UpstreamHandlerImpl::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_data,
@@ -53,25 +68,22 @@ void UpstreamHandlerImpl::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& c
   conn_data_->addUpstreamCallbacks(*this);
   pool_ready_ = true;
 
-  ENVOY_CONN_LOG(debug, "UpstreamHandlerImpl[{}]: request_caches_ size:{}",
-                 conn_data_->connection(), key_, request_caches_.size());
-  for (auto& request_caches : request_caches_) {
-    conn_data_->connection().write(request_caches.first, request_caches.second);
+  ENVOY_CONN_LOG(debug, "UpstreamHandlerImpl[{}]: upstream_request_callbacks_ size:{}",
+                 conn_data_->connection(), key_, upstream_request_callbacks_.size());
+  for (auto upstream_request_callbacks : upstream_request_callbacks_) {
+    if (upstream_request_callbacks) {
+      upstream_request_callbacks->onPoolReady(host);
+    }
   }
+  upstream_request_callbacks_.clear();
 }
 
 void UpstreamHandlerImpl::onData(Buffer::Instance& data, bool end_stream) {
-  if (conn_data_) {
-    ENVOY_CONN_LOG(debug, "UpstreamHandlerImpl[{}] data length:{}, end_stream:{}",
-                   conn_data_->connection(), key_, data.length(), end_stream);
-    conn_data_->connection().write(data, end_stream);
-  } else if (upstream_handle_) {
-    ENVOY_LOG(debug, "UpstreamHandler[{}] data length:{}, end_stream:{}, cache msg", key_,
-              data.length(), end_stream);
-    request_caches_.push_back(std::make_pair(Buffer::OwnedImpl(data), end_stream));
-  } else {
-    ENVOY_LOG(error, "UpstreamHandler[{}] sendMessage failed", key_);
-  }
+  ASSERT(conn_data_);
+  ASSERT(!upstream_handle_);
+  ENVOY_CONN_LOG(debug, "UpstreamHandlerImpl[{}] data length:{}, end_stream:{}",
+                 conn_data_->connection(), key_, data.length(), end_stream);
+  conn_data_->connection().write(data, end_stream);
 }
 
 void UpstreamHandlerImpl::addResponseCallback(uint64_t request_id, ResponseCallback callback) {
@@ -82,6 +94,18 @@ void UpstreamHandlerImpl::addResponseCallback(uint64_t request_id, ResponseCallb
     return;
   }
   response_callbacks_.insert({request_id, callback});
+}
+
+bool UpstreamHandlerImpl::isPoolReady() { return pool_ready_; }
+
+void UpstreamHandlerImpl::addUpsteamRequestCallbacks(UpstreamRequestCallbacks* callbacks) {
+  upstream_request_callbacks_.push_back(callbacks);
+}
+
+void UpstreamHandlerImpl::removeUpsteamRequestCallbacks(UpstreamRequestCallbacks* callbacks) {
+  upstream_request_callbacks_.erase(std::remove(upstream_request_callbacks_.begin(),
+                                                upstream_request_callbacks_.end(), callbacks),
+                                    upstream_request_callbacks_.end());
 }
 
 void UpstreamHandlerImpl::onUpstreamData(Buffer::Instance& data, bool end_stream) {

@@ -192,6 +192,7 @@ envoy_cc_library(
     deps = [
         ":upstream_response_lib",
         ":upstream_handler_lib",
+        "//src/meta_protocol_proxy/filters/router:upstream_request_lib",
         "@envoy//source/common/buffer:buffer_lib",
         "@envoy//envoy/upstream:thread_local_cluster_interface",
         "@envoy//envoy/upstream:load_balancer_interface",

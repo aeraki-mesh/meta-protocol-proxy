@@ -70,24 +70,23 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
 
   if (decoder_filter_callbacks_->multiplexing()) {
     // if multiplexing, send by upstream handler
-    auto upstream_handler = decoder_filter_callbacks_->getUpstreamHandler(cluster_name, *this);
-    if (upstream_handler == nullptr) {
+    auto get_upstream_handler_result =
+        decoder_filter_callbacks_->getUpstreamHandler(cluster_name, *this);
+    if (get_upstream_handler_result.error.has_value()) {
+      // emit access log
       emitLogEntry(request_metadata_, nullptr, static_cast<int>(ResponseStatus::Error),
-                   "no_matched_upstream_handler");
+                   get_upstream_handler_result.response_code_detail);
+
       decoder_filter_callbacks_->sendLocalReply(
-          AppException(Error{
-              ErrorType::ClusterNotFound,
-              fmt::format("meta protocol router: no matched upstream handler for request '{}'",
-                          request_metadata_->getRequestId())}),
-          false);
+          AppException(get_upstream_handler_result.error.value()), false);
       return FilterStatus::AbortIteration;
     }
-    upstream_handler->addResponseCallback(request_metadata_->getRequestId(),
-                                          [this](MetadataSharedPtr response_metadata) {
-                                            this->onUpstreamResponseCallback(response_metadata);
-                                          });
+    get_upstream_handler_result.upstream_handler->addResponseCallback(
+        request_metadata_->getRequestId(), [this](MetadataSharedPtr response_metadata) {
+          this->onUpstreamResponseCallback(response_metadata);
+        });
     upstream_request_ = std::make_unique<UpstreamRequestByHandler>(
-        *this, request_metadata_, request_mutation, upstream_handler);
+        *this, request_metadata_, request_mutation, get_upstream_handler_result.upstream_handler);
   } else {
     auto prepare_result =
         prepareUpstreamRequest(cluster_name, request_metadata_->getRequestId(), this);

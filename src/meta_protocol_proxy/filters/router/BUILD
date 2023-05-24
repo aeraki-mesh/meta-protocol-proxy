@@ -32,7 +32,7 @@ envoy_cc_library(
     deps = [
         "//src/meta_protocol_proxy/filters:filter_interface",
         "@envoy//envoy/tcp:conn_pool_interface",
-	    "@envoy//envoy/upstream:cluster_manager_interface",
+        "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//envoy/upstream:thread_local_cluster_interface",
     ],
 )

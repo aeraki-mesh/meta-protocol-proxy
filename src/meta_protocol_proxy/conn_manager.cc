@@ -239,19 +239,23 @@ void ConnectionManager::disableIdleTimer() {
 
 void ConnectionManager::resetUpstreamHandlerManager() { upstream_handler_manager_.clear(); }
 
-UpstreamHandlerSharedPtr
+GetUpstreamHandlerResult
 ConnectionManager::getUpstreamHandler(const std::string& cluster_name,
                                       Upstream::LoadBalancerContext& context) {
   auto* cluster = cluster_manager_.getThreadLocalCluster(cluster_name);
   if (cluster == nullptr) {
     ENVOY_LOG(error, "unknown cluster '{}'", cluster_name);
-    return nullptr;
+    return {Error{ErrorType::ClusterNotFound,
+                  fmt::format("meta protocol router: unknown cluster '{}'", cluster_name)},
+            nullptr, "unknown_cluster"};
   }
 
   auto tcp_pool_data = UpstreamHandler::createTcpPoolData(*cluster, context);
   if (!tcp_pool_data) {
-    ENVOY_LOG(error, "no conn pool for {}", cluster_name);
-    return nullptr;
+    ENVOY_LOG(error, "no healthy upstream for {}", cluster_name);
+    return {Error{ErrorType::NoHealthyUpstream,
+                  fmt::format("meta protocol router: no healthy upstream for '{}'", cluster_name)},
+            nullptr, "no_healthy_upstream"};
   }
   std::string key = cluster_name + "_" + tcp_pool_data.value().host()->address()->asString();
 
@@ -259,7 +263,7 @@ ConnectionManager::getUpstreamHandler(const std::string& cluster_name,
   auto upstream_handler = upstream_handler_manager_.get(key);
   if (upstream_handler) {
     ENVOY_LOG(debug, "use exist upstream handler, key:{}", key);
-    return upstream_handler;
+    return {absl::nullopt, upstream_handler, ""};
   }
 
   // create upstream handler
@@ -270,10 +274,12 @@ ConnectionManager::getUpstreamHandler(const std::string& cluster_name,
   auto new_upstream_handler = std::make_shared<UpstreamHandlerImpl>(
       key, read_callbacks_->connection(), config_,
       [this](const std::string& key) { this->upstream_handler_manager_.del(key); });
+  ASSERT(new_upstream_handler);
+
   upstream_handler_manager_.add(key, new_upstream_handler);
 
   new_upstream_handler->start(*tcp_pool_data);
-  return new_upstream_handler;
+  return {absl::nullopt, new_upstream_handler, ""};
 }
 
 } // namespace  MetaProtocolProxy

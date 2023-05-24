@@ -81,7 +81,7 @@ private:
   Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
 };
 
-class UpstreamRequestByHandler : public UpstreamRequestBase {
+class UpstreamRequestByHandler : public UpstreamRequestCallbacks, public UpstreamRequestBase {
 public:
   UpstreamRequestByHandler(RequestOwner& parent, MetadataSharedPtr& metadata,
                            MutationSharedPtr& mutation, UpstreamHandlerSharedPtr& upstream_handler);
@@ -89,9 +89,18 @@ public:
     ENVOY_LOG(trace, "********** UpstreamRequestByHandler destructed ***********");
   };
 
+  // UpstreamRequestCallbacks
+  void onPoolFailure(ConnectionPool::PoolFailureReason reason,
+                     absl::string_view transport_failure_reason,
+                     Upstream::HostDescriptionConstSharedPtr host) override;
+  void onPoolReady(Upstream::HostDescriptionConstSharedPtr host) override;
+
   // UpstreamRequestBase
   FilterStatus start() override;
   void releaseUpStreamConnection(const bool close) override;
+
+private:
+  void encodeData(Buffer::Instance& data);
 
 private:
   UpstreamHandlerSharedPtr upstream_handler_;

@@ -203,7 +203,7 @@ const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessageDecoderFilter::acc
   return activeMessage_.accessLogs();
 }
 
-UpstreamHandlerSharedPtr
+GetUpstreamHandlerResult
 ActiveMessageDecoderFilter::getUpstreamHandler(const std::string& cluster_name,
                                                Upstream::LoadBalancerContext& context) {
   return activeMessage_.getUpstreamHandler(cluster_name, context);
@@ -427,7 +427,7 @@ const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessage::accessLogs() {
   return connection_manager_.accessLogs();
 }
 
-UpstreamHandlerSharedPtr ActiveMessage::getUpstreamHandler(const std::string& cluster_name,
+GetUpstreamHandlerResult ActiveMessage::getUpstreamHandler(const std::string& cluster_name,
                                                            Upstream::LoadBalancerContext& context) {
   return connection_manager_.getUpstreamHandler(cluster_name, context);
 }

@@ -15,6 +15,17 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
+class UpstreamRequestCallbacks {
+public:
+  virtual ~UpstreamRequestCallbacks() = default;
+
+  virtual void onPoolFailure(ConnectionPool::PoolFailureReason reason,
+                             absl::string_view transport_failure_reason,
+                             Upstream::HostDescriptionConstSharedPtr host) PURE;
+
+  virtual void onPoolReady(Upstream::HostDescriptionConstSharedPtr host) PURE;
+};
+
 using ResponseCallback = std::function<void(MetadataSharedPtr response_metadata)>;
 class UpstreamHandler {
 public:
@@ -25,6 +36,12 @@ public:
   virtual void onData(Buffer::Instance& data, bool end_stream) PURE;
 
   virtual void addResponseCallback(uint64_t request_id, ResponseCallback callback) PURE;
+
+  virtual bool isPoolReady() PURE;
+
+  virtual void addUpsteamRequestCallbacks(UpstreamRequestCallbacks* callbacks) PURE;
+
+  virtual void removeUpsteamRequestCallbacks(UpstreamRequestCallbacks* callbacks) PURE;
 
   static absl::optional<Upstream::TcpPoolData>
   createTcpPoolData(Upstream::ThreadLocalCluster& thread_local_cluster,

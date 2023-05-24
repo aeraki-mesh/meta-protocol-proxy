@@ -31,6 +31,9 @@ public:
   int start(Upstream::TcpPoolData& pool_data) override;
   void onData(Buffer::Instance& data, bool end_stream) override;
   void addResponseCallback(uint64_t request_id, ResponseCallback callback) override;
+  bool isPoolReady() override;
+  void addUpsteamRequestCallbacks(UpstreamRequestCallbacks* callbacks) override;
+  void removeUpsteamRequestCallbacks(UpstreamRequestCallbacks* callbacks) override;
 
   // Tcp::ConnectionPool::Callbacks
   void onPoolFailure(ConnectionPool::PoolFailureReason reason,
@@ -60,7 +63,7 @@ private:
   Tcp::ConnectionPool::ConnectionDataPtr conn_data_;
   Upstream::HostDescriptionConstSharedPtr upstream_host_;
 
-  std::vector<std::pair<Buffer::OwnedImpl, bool>> request_caches_;
+  std::vector<UpstreamRequestCallbacks*> upstream_request_callbacks_;
 
   // key: request id
   std::map<uint64_t, ResponseCallback> response_callbacks_;

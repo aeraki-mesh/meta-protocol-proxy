@@ -21,6 +21,12 @@ namespace Extensions {
 namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
+struct GetUpstreamHandlerResult {
+  absl::optional<Error> error;
+  UpstreamHandlerSharedPtr upstream_handler;
+  std::string response_code_detail;
+};
+
 class DirectResponse {
 public:
   virtual ~DirectResponse() = default;
@@ -186,7 +192,7 @@ public:
    * @param context
    * @return
    */
-  virtual UpstreamHandlerSharedPtr getUpstreamHandler(const std::string& cluster_name,
+  virtual GetUpstreamHandlerResult getUpstreamHandler(const std::string& cluster_name,
                                                       Upstream::LoadBalancerContext& context) PURE;
 
   /**
