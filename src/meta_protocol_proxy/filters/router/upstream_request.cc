@@ -11,13 +11,16 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 namespace Router {
 
-UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool,
-                                 MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
-    : parent_(parent), conn_pool_(pool), metadata_(metadata), mutation_(mutation),
-      request_complete_(false), response_started_(false), response_complete_(false),
-      stream_reset_(false) {
+UpstreamRequestBase::UpstreamRequestBase(RequestOwner& parent, MetadataSharedPtr& metadata,
+                                         MutationSharedPtr& mutation)
+    : parent_(parent), metadata_(metadata), mutation_(mutation), request_complete_(false),
+      response_started_(false), response_complete_(false), stream_reset_(false) {
   upstream_request_buffer_.move(metadata->originMessage(), metadata->originMessage().length());
 }
+
+UpstreamRequest::UpstreamRequest(RequestOwner& parent, Upstream::TcpPoolData& pool,
+                                 MetadataSharedPtr& metadata, MutationSharedPtr& mutation)
+    : UpstreamRequestBase(parent, metadata, mutation), conn_pool_(pool) {}
 
 FilterStatus UpstreamRequest::start() {
   Tcp::ConnectionPool::Cancellable* handle = conn_pool_.newConnection(*this);
@@ -30,20 +33,22 @@ FilterStatus UpstreamRequest::start() {
   return FilterStatus::ContinueIteration;
 }
 
-void UpstreamRequest::onUpstreamConnectionEvent(Network::ConnectionEvent event) {
+void UpstreamRequestBase::onUpstreamConnectionEvent(Network::ConnectionEvent event) {
   ASSERT(!response_complete_);
 
   switch (event) {
-  case Network::ConnectionEvent::RemoteClose:
+  case Network::ConnectionEvent::RemoteClose: {
     ENVOY_LOG(debug, "meta protocol router: upstream remote close");
     onUpstreamConnectionReset(ConnectionPool::PoolFailureReason::RemoteConnectionFailure);
     upstream_host_->outlierDetector().putResult(
         Upstream::Outlier::Result::LocalOriginConnectFailed);
     break;
-  case Network::ConnectionEvent::LocalClose:
+  }
+  case Network::ConnectionEvent::LocalClose: {
     ENVOY_LOG(debug, "meta protocol router: upstream local close");
     onUpstreamConnectionReset(ConnectionPool::PoolFailureReason::LocalConnectionFailure);
     break;
+  }
   default:
     // Connected event is consumed by the connection pool.
     PANIC("not reached");
@@ -148,10 +153,10 @@ void UpstreamRequest::onPoolReady(Tcp::ConnectionPool::ConnectionDataPtr&& conn_
     parent_.resetStream();
     parent_.setUpstreamConnection(std::move(conn_data_));
   }
-  request_complete_ = true;
+  onRequestComplete();
 }
 
-void UpstreamRequest::onRequestStart(bool continue_decoding) {
+void UpstreamRequestBase::onRequestStart(bool continue_decoding) {
   ENVOY_LOG(debug, "meta protocol upstream request: start sending data to the server {}",
             upstream_host_->address()->asString());
 
@@ -165,13 +170,13 @@ void UpstreamRequest::onResponseComplete() {
   conn_data_.reset();
 }
 
-void UpstreamRequest::onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) {
+void UpstreamRequestBase::onUpstreamHostSelected(Upstream::HostDescriptionConstSharedPtr host) {
   ENVOY_LOG(debug, "meta protocol upstream request: selected upstream {}",
             host->address()->asString());
   upstream_host_ = host;
 }
 
-void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReason reason) {
+void UpstreamRequestBase::onUpstreamConnectionReset(ConnectionPool::PoolFailureReason reason) {
   if (metadata_->getMessageType() == MessageType::Oneway) {
     // For oneway requests, we should not attempt a response. Reset the downstream to signal
     // an error.
@@ -222,6 +227,67 @@ void UpstreamRequest::onUpstreamConnectionReset(ConnectionPool::PoolFailureReaso
   if (!response_complete_) {
     parent_.resetStream();
   }
+}
+
+UpstreamRequestByHandler::UpstreamRequestByHandler(RequestOwner& parent,
+                                                   MetadataSharedPtr& metadata,
+                                                   MutationSharedPtr& mutation,
+                                                   UpstreamHandlerSharedPtr& upstream_handler)
+    : UpstreamRequestBase(parent, metadata, mutation), upstream_handler_(upstream_handler) {}
+
+void UpstreamRequestByHandler::onPoolFailure(ConnectionPool::PoolFailureReason reason,
+                                             absl::string_view,
+                                             Upstream::HostDescriptionConstSharedPtr host) {
+  parent_.onUpstreamHostSelected(host);
+
+  // Mimic an upstream reset.
+  onUpstreamHostSelected(host);
+  onUpstreamConnectionReset(reason);
+
+  upstream_request_buffer_.drain(upstream_request_buffer_.length());
+
+  // If it is a connection error, it means that the connection pool returned
+  // the error asynchronously and the upper layer needs to be notified to continue decoding.
+  // If it is a non-connection error, it is returned synchronously from the connection pool
+  // and is still in the callback at the current Filter, nothing to do.
+  if (reason == ConnectionPool::PoolFailureReason::Timeout ||
+      reason == ConnectionPool::PoolFailureReason::LocalConnectionFailure ||
+      reason == ConnectionPool::PoolFailureReason::RemoteConnectionFailure) {
+    parent_.continueDecoding();
+  }
+}
+
+void UpstreamRequestByHandler::onPoolReady(Upstream::HostDescriptionConstSharedPtr host) {
+  ENVOY_LOG(debug, "meta protocol upstream request: tcp connection is ready");
+  parent_.onUpstreamHostSelected(host);
+
+  onUpstreamHostSelected(host);
+
+  onRequestStart(true);
+  encodeData(upstream_request_buffer_);
+
+  onRequestComplete();
+}
+
+FilterStatus UpstreamRequestByHandler::start() {
+  if (upstream_handler_->isPoolReady()) {
+    encodeData(upstream_request_buffer_);
+    return FilterStatus::ContinueIteration;
+  } else {
+    upstream_handler_->addUpsteamRequestCallbacks(this);
+    return FilterStatus::PauseIteration;
+  }
+}
+
+void UpstreamRequestByHandler::releaseUpStreamConnection(bool) {
+  upstream_handler_->removeUpsteamRequestCallbacks(this);
+}
+
+void UpstreamRequestByHandler::encodeData(Buffer::Instance& data) {
+  ENVOY_LOG(trace, "proxying {} bytes", data.length());
+  auto codec = parent_.createCodec();
+  codec->encode(*metadata_, *mutation_, data);
+  upstream_handler_->onData(upstream_request_buffer_, false);
 }
 
 } // namespace Router

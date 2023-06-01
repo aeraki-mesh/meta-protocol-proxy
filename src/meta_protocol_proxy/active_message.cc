@@ -203,6 +203,18 @@ const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessageDecoderFilter::acc
   return activeMessage_.accessLogs();
 }
 
+GetUpstreamHandlerResult
+ActiveMessageDecoderFilter::getUpstreamHandler(const std::string& cluster_name,
+                                               Upstream::LoadBalancerContext& context) {
+  return activeMessage_.getUpstreamHandler(cluster_name, context);
+}
+
+bool ActiveMessageDecoderFilter::multiplexing() { return activeMessage_.multiplexing(); }
+
+void ActiveMessageDecoderFilter::onUpstreamResponse() {
+  return activeMessage_.onUpstreamResponse();
+}
+
 // class ActiveMessageEncoderFilter
 ActiveMessageEncoderFilter::ActiveMessageEncoderFilter(ActiveMessage& parent,
                                                        EncoderFilterSharedPtr filter,
@@ -414,6 +426,15 @@ RequestIDExtensionSharedPtr ActiveMessage::requestIDExtension() {
 const std::vector<AccessLog::InstanceSharedPtr>& ActiveMessage::accessLogs() {
   return connection_manager_.accessLogs();
 }
+
+GetUpstreamHandlerResult ActiveMessage::getUpstreamHandler(const std::string& cluster_name,
+                                                           Upstream::LoadBalancerContext& context) {
+  return connection_manager_.getUpstreamHandler(cluster_name, context);
+}
+
+bool ActiveMessage::multiplexing() { return connection_manager_.config().multiplexing(); }
+
+void ActiveMessage::onUpstreamResponse() { connection_manager_.deferredDeleteMessage(*this); }
 
 void ActiveMessage::maybeDeferredDeleteMessage() {
   pending_stream_decoded_ = false;

@@ -67,6 +67,7 @@ public:
   using MetaProtocolProxyConfig = aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy;
   using MetaProtocolFilterConfig = aeraki::meta_protocol_proxy::v1alpha::MetaProtocolFilter;
   using CodecConfig = aeraki::meta_protocol_proxy::v1alpha::Codec;
+  using ApplicationProtocolConfig = aeraki::meta_protocol_proxy::v1alpha::ApplicationProtocol;
 
   ConfigImpl(const MetaProtocolProxyConfig& config, Server::Configuration::FactoryContext& context,
              Route::RouteConfigProviderManager& route_config_provider_manager,
@@ -90,7 +91,10 @@ public:
   FilterChainFactory& filterFactory() override { return *this; }
   Route::Config& routerConfig() override { return *this; }
   CodecPtr createCodec() override;
-  std::string applicationProtocol() override { return application_protocol_; };
+  std::string applicationProtocol() override {
+    return application_protocol_config_.name().empty() ? application_protocol_
+                                                       : application_protocol_config_.name();
+  };
   absl::optional<std::chrono::milliseconds> idleTimeout() override { return idle_timeout_; };
   Tracing::MetaProtocolTracerSharedPtr tracer() override { return tracer_; };
   Tracing::TracingConfig* tracingConfig() override { return tracing_config_.get(); };
@@ -98,6 +102,7 @@ public:
   const std::vector<AccessLog::InstanceSharedPtr>& accessLogs() const override {
     return access_logs_;
   }
+  bool multiplexing() override { return application_protocol_config_.multiplexing(); }
 
 private:
   void registerFilter(const MetaProtocolFilterConfig& proto_config);
@@ -108,12 +113,15 @@ private:
   const envoy::config::trace::v3::Tracing_Http*
   getPerFilterTracerConfig(const MetaProtocolProxyConfig& config);
 
+  const CodecConfig& getCodecConfig();
+
   Server::Configuration::FactoryContext& context_;
-  const std::string stats_prefix_;
-  MetaProtocolProxyStats stats_;
   // Router::RouteMatcherPtr route_matcher_;
   std::string application_protocol_;
   CodecConfig codecConfig_;
+  ApplicationProtocolConfig application_protocol_config_;
+  const std::string stats_prefix_;
+  MetaProtocolProxyStats stats_;
   std::list<FilterFactoryCb> filter_factories_;
   Route::RouteConfigProviderSharedPtr route_config_provider_;
   Route::RouteConfigProviderManager& route_config_provider_manager_;

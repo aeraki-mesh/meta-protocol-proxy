@@ -16,8 +16,10 @@ envoy_cc_library(
         "//src/meta_protocol_proxy:decoder_events_lib",
         "//src/meta_protocol_proxy/route:route_interface",
         "//src/meta_protocol_proxy/codec:codec_interface",
-	"//src/meta_protocol_proxy/tracing:tracer_interface",
-	"//src/meta_protocol_proxy/request_id:request_id_interface",
+        "//src/meta_protocol_proxy/tracing:tracer_interface",
+        "//src/meta_protocol_proxy/request_id:request_id_interface",
+        "//src/meta_protocol_proxy:upstream_handler_lib",
+        "//src/meta_protocol_proxy/filters:filter_define_lib",
     ],
 )
 
@@ -41,5 +43,13 @@ envoy_cc_library(
     deps = [
         ":filter_config_interface",
         "@envoy//source/common/protobuf:utility_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "filter_define_lib",
+    repository = "@envoy",
+    hdrs = ["filter_define.h"],
+    deps = [
     ],
 )
