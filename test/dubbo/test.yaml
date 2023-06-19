@@ -148,7 +148,11 @@ static_resources:
       - name: aeraki.meta_protocol_proxy
         typed_config:
           '@type': type.googleapis.com/aeraki.meta_protocol_proxy.v1alpha.MetaProtocolProxy
-          application_protocol: dubbo
+          protocol:
+            name: dubbo
+            codec:
+              name: aeraki.meta_protocol.codec.dubbo
+            multiplexing: true
           tracing:
             client_sampling:
               value: 100
@@ -156,8 +160,6 @@ static_resources:
               value: 100
             overall_sampling:
               value: 100
-          codec:
-            name: aeraki.meta_protocol.codec.dubbo
           metaProtocolFilters:
           - name: aeraki.meta_protocol.filters.metadata_exchange
           - name: aeraki.meta_protocol.filters.istio_stats
