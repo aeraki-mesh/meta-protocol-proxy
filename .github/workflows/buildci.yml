@@ -1,7 +1,24 @@
 ---
 name: build-metaprotocol
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - "main"
+    - "master"
+    - "release/v*"
+    paths-ignore:
+    - "**/*.md"
+    - "**/*.png"
+  pull_request:
+    branches:
+    - "main"
+    - "master"
+    - "release/v*"
+    paths-ignore:
+    - "**/*.md"
+    - "**/*.png"
 
 concurrency: ci-${{ github.ref }}
 

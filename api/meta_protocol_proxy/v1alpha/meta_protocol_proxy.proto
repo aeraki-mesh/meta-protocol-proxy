@@ -35,7 +35,7 @@ message MetaProtocolProxy {
 
   // The name of the application protocol built on top of meta protocol.
   // This has been deprecated in favor of name in ApplicationProtocol.
-  string application_protocol = 2 [deprecated = true, (validate.rules).string = {min_len: 1}];
+  string application_protocol = 2 [deprecated = true];
 
   oneof route_specifier {
     option (validate.required) = true;

@@ -1,42 +1,39 @@
 #!/bin/bash
-
-# This file was imported from https://github.com/bazelbuild/bazel at d6fec93.
-
-# This script will be run bazel when building process starts to
-# generate key-value information that represents the status of the
-# workspace. The output should be like
 #
-# KEY1 VALUE1
-# KEY2 VALUE2
+# Copyright 2020 Istio Authors. All Rights Reserved.
 #
-# If the script exits with non-zero code, it's considered as a failure
-# and the output will be discarded.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
 
-# For Envoy in particular, we want to force binaries to relink when the Git
-# SHA changes (https://github.com/envoyproxy/envoy/issues/2551). This can be
-# done by prefixing keys with "STABLE_". To avoid breaking compatibility with
-# other status scripts, this one still echos the non-stable ("volatile") names.
-
-# If this SOURCE_VERSION file exists then it must have been placed here by a
-# distribution doing a non-git, source build.
-# Distributions would be expected to echo the commit/tag as BUILD_SCM_REVISION
-if [ -f SOURCE_VERSION ]
-then
-    echo "BUILD_SCM_REVISION $(cat SOURCE_VERSION)"
-    echo "STABLE_BUILD_SCM_REVISION $(cat SOURCE_VERSION)"
-    echo "BUILD_SCM_STATUS Distribution"
-    exit 0
+if [ -z "${BUILD_SCM_REVISION}" ]; then
+  if git rev-parse --verify --quiet HEAD >/dev/null; then
+    BUILD_SCM_REVISION="$(git rev-parse --verify HEAD)"
+  else
+    exit 1
+  fi
 fi
 
-# The code below presents an implementation that works for git repository
-git_rev=$(git rev-parse HEAD) || exit 1
-echo "BUILD_SCM_REVISION ${git_rev}"
-echo "STABLE_BUILD_SCM_REVISION ${git_rev}"
+if [ -z "${BUILD_SCM_STATUS}" ]; then
+  if git diff-index --quiet HEAD; then
+    BUILD_SCM_STATUS="Clean"
+  else
+    BUILD_SCM_STATUS="Modified"
+  fi
+fi
 
-# Check whether there are any uncommitted changes
-tree_status="Clean"
-git diff-index --quiet HEAD -- || {
-    tree_status="Modified"
-}
-echo "BUILD_SCM_STATUS ${tree_status}"
-echo "STABLE_BUILD_SCM_STATUS ${tree_status}"
+echo "BUILD_SCM_REVISION ${BUILD_SCM_REVISION}"
+echo "BUILD_SCM_STATUS ${BUILD_SCM_STATUS}"
+echo "BUILD_CONFIG ${BUILD_CONFIG:-default}"
+echo "DOCKER_REPOSITORY ${DOCKER_REPOSITORY:-istio-testing/envoy}"
+echo "WASM_REPOSITORY ${WASM_REPOSITORY:-istio-testing/wasm}"
