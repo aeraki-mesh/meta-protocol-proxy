@@ -30,6 +30,8 @@ public:
 private:
   void headerMutation(Buffer::Instance& buffer, const MessageMetadata& metadata,
                       const Context& context);
+  void rspheaderMutation(Buffer::Instance& buffer, const MessageMetadata& metadata,
+                         const Context& context);
 };
 
 } // namespace Dubbo

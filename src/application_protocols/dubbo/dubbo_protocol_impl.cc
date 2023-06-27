@@ -163,6 +163,7 @@ bool DubboProtocolImpl::decodeData(Buffer::Instance& buffer, ContextSharedPtr co
     if (!ret.second) {
       return false;
     }
+    metadata->setRpcResultInfo(ret.first);
     if (ret.first->hasException()) {
       metadata->setMessageType(MessageType::Exception);
     }
@@ -175,9 +176,46 @@ bool DubboProtocolImpl::decodeData(Buffer::Instance& buffer, ContextSharedPtr co
   return true;
 }
 
+void DubboProtocolImpl::rspheaderMutation(Buffer::Instance& buffer, const MessageMetadata& metadata,
+                                          const Context& ctx) {
+  if (metadata.hasRpcResultInfo()) {
+    auto* result =
+        const_cast<RpcResultImpl*>(dynamic_cast<const RpcResultImpl*>(&metadata.rpcResultInfo()));
+    if (result->attachment_ != nullptr) {
+      Buffer::OwnedImpl origin_buffer;
+      origin_buffer.move(buffer, buffer.length());
+
+      constexpr size_t body_length_size = sizeof(uint32_t);
+
+      const size_t attachment_offset = result->attachment_->attachmentOffset();
+      const size_t request_header_size = ctx.headerSize();
+      ASSERT(attachment_offset <= origin_buffer.length());
+
+      // Move the other parts of the request headers except the body size to the upstream request
+      // buffer.
+      buffer.move(origin_buffer, request_header_size - body_length_size);
+      // Discard the old body size.
+      origin_buffer.drain(body_length_size);
+
+      // Re-serialize the updated attachment.
+      Buffer::OwnedImpl attachment_buffer;
+      Hessian2::Encoder encoder(std::make_unique<BufferWriter>(attachment_buffer));
+      encoder.encode(result->attachment_->attachment());
+
+      size_t new_body_size = attachment_offset - request_header_size + attachment_buffer.length();
+
+      buffer.writeBEInt<uint32_t>(new_body_size);
+      buffer.move(origin_buffer, attachment_offset - request_header_size);
+      buffer.move(attachment_buffer);
+
+      origin_buffer.drain(origin_buffer.length());
+    }
+  }
+}
+
 bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& metadata,
                                const Context& ctx, const std::string& content,
-                               RpcResponseType type) {
+                               RpcResponseType /*type*/) {
   ASSERT(serializer_);
 
   switch (metadata.messageType()) {
@@ -200,18 +238,11 @@ bool DubboProtocolImpl::encode(Buffer::Instance& buffer, const MessageMetadata& 
   }
   case MessageType::Response: {
     ASSERT(metadata.hasResponseStatus());
-    ASSERT(!content.empty());
-    buffer.drain(buffer.length());
-    Buffer::OwnedImpl body_buffer;
-    size_t serialized_body_size = serializer_->serializeRpcResult(body_buffer, content, type);
-
-    buffer.writeBEInt<uint16_t>(MagicNumber);
-    buffer.writeByte(static_cast<uint8_t>(metadata.serializationType()));
-    buffer.writeByte(static_cast<uint8_t>(metadata.responseStatus()));
-    buffer.writeBEInt<uint64_t>(metadata.requestId());
-    buffer.writeBEInt<uint32_t>(serialized_body_size);
-
-    buffer.move(body_buffer, serialized_body_size);
+    if (content == "addheader") {
+      // only when server sidecar response,we need add header
+      // client sidecar response not need
+      rspheaderMutation(buffer, metadata, ctx);
+    }
     return true;
   }
   case MessageType::Request: {
