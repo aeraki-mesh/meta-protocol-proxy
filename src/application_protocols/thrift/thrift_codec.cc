@@ -154,21 +154,26 @@ void ThriftCodec::onError(const MetaProtocolProxy::Metadata& metadata,
 
   msgMetadata.setMessageType(ThriftProxy::MessageType::Exception);
 
-  protocol_->writeMessageBegin(buffer, msgMetadata);
-  protocol_->writeStructBegin(buffer, TApplicationException);
+  Buffer::OwnedImpl response_buffer;
 
-  protocol_->writeFieldBegin(buffer, MessageField, ThriftProxy::FieldType::String, 1);
-  protocol_->writeString(buffer, error.message);
-  protocol_->writeFieldEnd(buffer);
+  protocol_->writeMessageBegin(response_buffer, msgMetadata);
+  protocol_->writeStructBegin(response_buffer, TApplicationException);
 
-  protocol_->writeFieldBegin(buffer, TypeField, ThriftProxy::FieldType::I32, 2);
-  protocol_->writeInt32(buffer, static_cast<int32_t>(ThriftProxy::AppExceptionType::InternalError));
-  protocol_->writeFieldEnd(buffer);
+  protocol_->writeFieldBegin(response_buffer, MessageField, ThriftProxy::FieldType::String, 1);
+  protocol_->writeString(response_buffer, error.message);
+  protocol_->writeFieldEnd(response_buffer);
 
-  protocol_->writeFieldBegin(buffer, StopField, ThriftProxy::FieldType::Stop, 0);
+  protocol_->writeFieldBegin(response_buffer, TypeField, ThriftProxy::FieldType::I32, 2);
+  protocol_->writeInt32(response_buffer, static_cast<int32_t>(ThriftProxy::AppExceptionType::InternalError));
+  protocol_->writeFieldEnd(response_buffer);
 
-  protocol_->writeStructEnd(buffer);
-  protocol_->writeMessageEnd(buffer);
+  protocol_->writeFieldBegin(response_buffer, StopField, ThriftProxy::FieldType::Stop, 0);
+
+  protocol_->writeStructEnd(response_buffer);
+  protocol_->writeMessageEnd(response_buffer);
+
+  // frame process
+  transport_->encodeFrame(buffer, msgMetadata, response_buffer);
 }
 
 void ThriftCodec::toMetadata(const ThriftProxy::MessageMetadata& msgMetadata, Metadata& metadata) {
