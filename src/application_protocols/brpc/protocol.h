@@ -11,7 +11,12 @@ namespace Brpc {
 
 enum class BrpcCode {
   NoRoute = 1,
-  Error = 1,
+  Error = 2,
+  NoCluster = 3,
+  UnHealthy = 4,
+  BadResponse = 5,
+  UnspecifiedError = 6,
+  OverLimit = 7
 };
 
 struct BrpcHeader : public Logger::Loggable<Logger::Id::filter> {
@@ -26,7 +31,7 @@ struct BrpcHeader : public Logger::Loggable<Logger::Id::filter> {
   uint32_t get_body_len() const {return _body_len;};
   uint32_t get_meta_len() const {return _meta_len;};
   void set_body_len(uint32_t body_len) {_body_len = body_len;};
-  void set_meta_len(uint32_t meta_len) {_meta_len = meta_len;};   
+  void set_meta_len(uint32_t meta_len) {_meta_len = meta_len;};
 };
 
 } // namespace Brpc

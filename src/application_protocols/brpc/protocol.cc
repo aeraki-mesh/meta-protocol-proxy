@@ -17,12 +17,20 @@ bool BrpcHeader::decode(Buffer::Instance& buffer) {
 
   uint32_t pos = 0;
 
-  // todo : Check MAGIC
-  pos += sizeof(uint32_t);
+  // Check MAGIC
+  uint32_t header_magic = 0;
+  header_magic = buffer.peekBEInt<uint32_t>(pos);
+  if (header_magic != MAGIC)
+  {
+    ENVOY_LOG(warn, "Brpc Header magic_error need={} real={}.", MAGIC, header_magic);
+  }
 
+  pos += sizeof(uint32_t);
   _body_len = buffer.peekBEInt<uint32_t>(pos);
+
   pos += sizeof(uint32_t);
   _meta_len = buffer.peekBEInt<uint32_t>(pos);
+
   pos += sizeof(uint32_t);
 
   ASSERT(pos == HEADER_SIZE);
@@ -31,9 +39,10 @@ bool BrpcHeader::decode(Buffer::Instance& buffer) {
 }
 
 bool BrpcHeader::encode(Buffer::Instance& buffer) {
-  buffer.writeBEInt(MAGIC);
-  buffer.writeBEInt(_body_len);
-  buffer.writeBEInt(_meta_len);
+  //buffer.writeBEInt<uint32_t>(MAGIC);
+  buffer.add("PRPC", 4);
+  buffer.writeBEInt<uint32_t>(_body_len);
+  buffer.writeBEInt<uint32_t>(_meta_len);
   return true;
 }
 
