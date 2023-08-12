@@ -137,7 +137,7 @@ private:
 
   const std::string route_config_name_;
   // This scope must outlive the subscription_ below as the subscription has derived stats.
-  Stats::ScopePtr scope_;
+  Stats::ScopeSharedPtr scope_;
   Envoy::Config::SubscriptionPtr subscription_;
   Server::Configuration::ServerFactoryContext& factory_context_;
 
@@ -214,7 +214,7 @@ class RouteConfigProviderManagerImpl : public RouteConfigProviderManager,
                                        public Singleton::Instance,
                                        Logger::Loggable<Logger::Id::router> {
 public:
-  RouteConfigProviderManagerImpl(Server::Admin& admin);
+  RouteConfigProviderManagerImpl(OptRef<Server::Admin> admin);
 
   std::unique_ptr<aeraki::meta_protocol_proxy::admin::v1alpha::RoutesConfigDump> dumpRouteConfigs(const Matchers::StringMatcher& name_matcher) const;
 

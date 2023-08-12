@@ -61,7 +61,7 @@ public:
 
   // Tracing::TraceContext
   absl::string_view protocol() const override { return "meta-protocol"; };
-  absl::string_view authority() const override { return operation_name_; };
+  absl::string_view host() const override { return operation_name_; };
   absl::string_view path() const override { return ""; };   // not applicable for MetaProtocol
   absl::string_view method() const override { return ""; }; // not applicable for MetaProtocol
   void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override;

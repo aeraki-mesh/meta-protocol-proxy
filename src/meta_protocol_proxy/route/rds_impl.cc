@@ -274,8 +274,11 @@ void RdsRouteConfigProviderImpl::validateConfig(
   ConfigImpl validation_config(config, factory_context_);
 }
 
-RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(Server::Admin& admin) {
-  config_tracker_entry_ = admin.getConfigTracker().add(
+RouteConfigProviderManagerImpl::RouteConfigProviderManagerImpl(OptRef<Server::Admin> admin) {
+  if (!admin.has_value()) {
+    return;
+  }	
+  config_tracker_entry_ = admin->getConfigTracker().add(
       "meta_protocol_routes",
       [this](const Matchers::StringMatcher& matcher) { return dumpRouteConfigs(matcher); });
 
