@@ -39,7 +39,7 @@ jobs:
         run: |
          sudo rm -rf /home/ubuntu/.cache/bazel
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: install dependency
         run: |
           ./bazel/setup_clang.sh /home/ubuntu/clang+llvm-10.0.0-linux-gnu
