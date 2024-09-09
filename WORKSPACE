@@ -19,12 +19,11 @@ workspace(name = "meta_protocol_proxy")
 # http_archive is not a native function since bazel 0.19
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# todo
 http_archive(
     name = "io_istio_proxy",
-    strip_prefix = "proxy-1.18.1",
-    sha256 = "ce682bf4bad606bfe5188e85d585a2ba12fec177254381e08da6cb27e8c872a1",
-    url = "https://github.com/istio/proxy/archive/refs/tags/1.18.1.tar.gz",
+    strip_prefix = "proxy-1.23.0",
+    sha256 = "06489d7379741cd0fb5d7bddcca7616ebc1c02fc6470afe463e48d5d01653b2a",
+    url = "https://github.com/istio/proxy/archive/refs/tags/1.23.0.tar.gz",
 )
 
 # 1. Determine SHA256 `wget https://github.com/envoyproxy/envoy/archive/$COMMIT.tar.gz && sha256sum $COMMIT.tar.gz`
