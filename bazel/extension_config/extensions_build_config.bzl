@@ -233,6 +233,7 @@ ENVOY_EXTENSIONS = {
     "envoy.tracers.dynamic_ot":                         "//source/extensions/tracers/dynamic_ot:config",
     "envoy.tracers.datadog":                            "//source/extensions/tracers/datadog:config",
     "envoy.tracers.zipkin":                             "//source/extensions/tracers/zipkin:config",
+    "envoy.tracers.opencensus":                         "//source/extensions/tracers/opencensus:config",
     "envoy.tracers.xray":                               "//source/extensions/tracers/xray:config",
     "envoy.tracers.skywalking":                         "//source/extensions/tracers/skywalking:config",
     "envoy.tracers.opentelemetry":                      "//source/extensions/tracers/opentelemetry:config",
@@ -448,7 +449,6 @@ ENVOY_EXTENSIONS = {
     #
 
     "envoy.http.injected_credentials.generic":              "//source/extensions/http/injected_credentials/generic:config",
-    "envoy.http.injected_credentials.oauth2":               "//source/extensions/http/injected_credentials/oauth2:config",
 }
 
 ENVOY_CONTRIB_EXTENSIONS = {
