@@ -1,16 +1,16 @@
 # Generated file, do not edit. If you want to disable clang, just delete this file.
-build:clang --action_env='PATH=/home/ubuntu/clang+llvm-10.0.0-linux-gnu/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/home/ubuntu/clang+llvm-14/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin:/home/ubuntu/go/bin/'
+build:clang --action_env='PATH=/root/clang+llvm-10.0.0-linux-gnu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/root/clang+llvm-10.0.0-linux-gnu/bin'
 build:clang --action_env=CC=clang
 build:clang --action_env=CXX=clang++
-build:clang --action_env='LLVM_CONFIG=/home/ubuntu/clang+llvm-10.0.0-linux-gnu/bin/llvm-config'
-build:clang --repo_env='LLVM_CONFIG=/home/ubuntu/clang+llvm-10.0.0-linux-gnu/bin/llvm-config'
-build:clang --linkopt='-L/home/ubuntu/clang+llvm-10.0.0-linux-gnu/lib'
-build:clang --linkopt='-Wl,-rpath,/home/ubuntu/clang+llvm-10.0.0-linux-gnu/lib'
+build:clang --action_env='LLVM_CONFIG=/root/clang+llvm-10.0.0-linux-gnu//bin/llvm-config'
+build:clang --repo_env='LLVM_CONFIG=/root/clang+llvm-10.0.0-linux-gnu//bin/llvm-config'
+build:clang --linkopt='-L/root/clang+llvm-10.0.0-linux-gnu/lib'
+build:clang --linkopt='-Wl,-rpath,/root/clang+llvm-10.0.0-linux-gnu/lib'
 
 build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
 build:clang-asan --copt=-fsanitize=vptr,function
 build:clang-asan --linkopt=-fsanitize=vptr,function
-build:clang-asan --linkopt='-L/home/ubuntu/clang+llvm-10.0.0-linux-gnu/lib/clang/10.0.0/lib/x86_64-unknown-linux-gnu'
+build:clang-asan --linkopt='-L/root/clang+llvm-10.0.0-linux-gnu/lib/clang/10.0.0/lib/x86_64-unknown-linux-gnu'
 build:clang-asan --linkopt=-l:libclang_rt.ubsan_standalone.a
 build:clang-asan --linkopt=-l:libclang_rt.ubsan_standalone_cxx.a
 
