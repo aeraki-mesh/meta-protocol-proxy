@@ -21,14 +21,13 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "io_istio_proxy",
-    strip_prefix = "proxy-1.19.0",
-    sha256 = "f23b30ec772fd08b310d4fe2fc73855148a2a60b06f6fae08f26db765424ee68",
-    url = "https://github.com/istio/proxy/archive/refs/tags/1.19.0.tar.gz",
+    strip_prefix = "proxy-1.20.0",
+    sha256 = "1505346f463fd7a9a6f2b04c67f754873fcebb30783d6d121e7685139b4b7100",
+    url = "https://github.com/istio/proxy/archive/refs/tags/1.20.0.tar.gz",
 )
 
 load(
     "@io_istio_proxy//bazel:repositories.bzl",
-    "docker_dependencies",
     "istioapi_dependencies",
 )
 
@@ -42,10 +41,10 @@ bind(
 # 1. Determine SHA256 `wget https://github.com/envoyproxy/envoy/archive/$COMMIT.tar.gz && sha256sum $COMMIT.tar.gz`
 # 2. Update .bazelversion, envoy.bazelrc and .bazelrc if needed.
 #
-# Commit date: 2023-08-30
-ENVOY_SHA = "47297e26f07520d39272e5925ac1fee05f50ced3"
+# Commit date: 2024-07-02
+ENVOY_SHA = "346cc3385269016f7c36ad15a23a7b382348f7af"
 
-ENVOY_SHA256 = "e73238b75a71cd927015c2997d2734a3f1fe21da9ec24f440780506d81088b49"
+ENVOY_SHA256 = "60b7065957c9a06bad0b9edd09a812b664990a89ebdeac2095b8577895079b02"
 
 ENVOY_ORG = "envoyproxy"
 
@@ -94,61 +93,3 @@ install_deps()
 load("@envoy//bazel:dependency_imports.bzl", "envoy_dependency_imports")
 
 envoy_dependency_imports()
-
-# Bazel @rules_pkg
-
-http_archive(
-    name = "rules_pkg",
-    sha256 = "aeca78988341a2ee1ba097641056d168320ecc51372ef7ff8e64b139516a4937",
-    urls = [
-        "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.6-1/rules_pkg-0.2.6.tar.gz",
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.2.6/rules_pkg-0.2.6.tar.gz",
-    ],
-)
-
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-
-rules_pkg_dependencies()
-
-# Docker dependencies
-
-docker_dependencies()
-
-load(
-    "@io_bazel_rules_docker//repositories:repositories.bzl",
-    container_repositories = "repositories",
-)
-
-container_repositories()
-
-load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
-
-container_deps()
-
-load(
-    "@io_bazel_rules_docker//container:container.bzl",
-    "container_pull",
-)
-
-container_pull(
-    name = "distroless_cc",
-    # Latest as of 10/21/2019. To update, remove this line, re-build, and copy the suggested digest.
-    digest = "sha256:86f16733f25964c40dcd34edf14339ddbb2287af2f7c9dfad88f0366723c00d7",
-    registry = "gcr.io",
-    repository = "distroless/cc",
-)
-
-container_pull(
-    name = "bionic",
-    # Latest as of 10/21/2019. To update, remove this line, re-build, and copy the suggested digest.
-    digest = "sha256:3e83eca7870ee14a03b8026660e71ba761e6919b6982fb920d10254688a363d4",
-    registry = "index.docker.io",
-    repository = "library/ubuntu",
-    tag = "bionic",
-)
-
-# End of docker dependencies
-
-load("//bazel:wasm.bzl", "wasm_dependencies")
-
-wasm_dependencies()
