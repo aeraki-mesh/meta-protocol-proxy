@@ -1,2 +1,1 @@
-startup --host_jvm_args=-Djavax.net.ssl.trustStore=/var/lib/ca-certificates/java-cacerts  --host_jvm_args=-Djavax.net.ssl.trustStorePassword=changeit
 import %workspace%/proxy.bazelrc
