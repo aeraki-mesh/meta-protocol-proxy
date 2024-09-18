@@ -408,11 +408,11 @@ void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
     const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
       access_log->log(&requestHeaders, &responseHeaders, nullptr,
-                      decoder_filter_callbacks_->streamInfo(), 0);
+                      decoder_filter_callbacks_->streamInfo(), Envoy::AccessLog::AccessLogType::NotSet);
     }
   } else {
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-      access_log->log(&requestHeaders, nullptr, nullptr, decoder_filter_callbacks_->streamInfo(), 0);
+      access_log->log(&requestHeaders, nullptr, nullptr, decoder_filter_callbacks_->streamInfo(), Envoy::AccessLog::AccessLogType::NotSet);
     }
   }
 }
