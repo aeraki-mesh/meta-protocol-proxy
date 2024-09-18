@@ -80,43 +80,51 @@ RdsRouteConfigSubscription::~RdsRouteConfigSubscription() {
   route_config_provider_manager_.dynamic_route_config_providers_.erase(manager_identifier_);
 }
 
-void RdsRouteConfigSubscription::onConfigUpdate(
+absl::Status RdsRouteConfigSubscription::onConfigUpdate(
     const std::vector<Envoy::Config::DecodedResourceRef>& resources,
     const std::string& version_info) {
   if (!validateUpdateSize(resources.size())) {
-    return;
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Invalid update size");
   }
-  const auto& http_route_config = dynamic_cast<const envoy::config::route::v3::RouteConfiguration&>(
-      resources[0].get().resource());
 
-  auto meta_protocol_route_config =
-      aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration();
-  httpRouteConfig2MetaProtocolRouteConfig(http_route_config, meta_protocol_route_config);
+  try {
+    const auto& http_route_config = dynamic_cast<const envoy::config::route::v3::RouteConfiguration&>(
+        resources[0].get().resource());
 
-  ENVOY_LOG(info, "meta protocol rds update: route_config_name: {} ",
-            meta_protocol_route_config.name());
+    aeraki::meta_protocol_proxy::config::route::v1alpha::RouteConfiguration meta_protocol_route_config;
+    httpRouteConfig2MetaProtocolRouteConfig(http_route_config, meta_protocol_route_config);
 
-  if (meta_protocol_route_config.name() != route_config_name_) {
-    throw EnvoyException(fmt::format("Unexpected RDS configuration (expecting {}): {}",
-                                     route_config_name_, meta_protocol_route_config.name()));
-  }
-  if (route_config_provider_opt_.has_value()) {
-    route_config_provider_opt_.value()->validateConfig(meta_protocol_route_config);
-  }
-  std::unique_ptr<Init::ManagerImpl> noop_init_manager;
-  std::unique_ptr<Cleanup> resume_rds;
-  if (config_update_info_->onRdsUpdate(meta_protocol_route_config, version_info)) {
-    stats_.config_reload_.inc();
-    stats_.config_reload_time_ms_.set(DateUtil::nowToMilliseconds(factory_context_.timeSource()));
-    ENVOY_LOG(debug, "rds: loading new configuration: config_name={} hash={}", route_config_name_,
-              config_update_info_->configHash());
+    ENVOY_LOG(info, "meta protocol rds update: route_config_name: {}", meta_protocol_route_config.name());
+
+    if (meta_protocol_route_config.name() != route_config_name_) {
+      return absl::Status(absl::StatusCode::kInternal,
+                          absl::StrFormat("Unexpected RDS configuration (expecting %s): %s",
+                                          route_config_name_, meta_protocol_route_config.name()));
+    }
 
     if (route_config_provider_opt_.has_value()) {
-      route_config_provider_opt_.value()->onConfigUpdate();
+      route_config_provider_opt_.value()->validateConfig(meta_protocol_route_config);
     }
-  }
 
-  local_init_target_.ready();
+    std::unique_ptr<Init::ManagerImpl> noop_init_manager;
+    std::unique_ptr<Cleanup> resume_rds;
+    if (config_update_info_->onRdsUpdate(meta_protocol_route_config, version_info)) {
+      stats_.config_reload_.inc();
+      stats_.config_reload_time_ms_.set(
+          DateUtil::nowToMilliseconds(factory_context_.timeSource()));
+      ENVOY_LOG(debug, "rds: loading new configuration: config_name={} hash={}", route_config_name_,
+                config_update_info_->configHash());
+
+      if (route_config_provider_opt_.has_value()) {
+        route_config_provider_opt_.value()->onConfigUpdate();
+      }
+    }
+
+    local_init_target_.ready();
+    return absl::OkStatus();
+  } catch (const EnvoyException& e) {
+    return absl::Status(absl::StatusCode::kInternal, e.what());
+  }
 }
 
 // We use the Envoy RDS(HTTP RouteConfiguration) to transmit MetaProtocol RouteConfiguration between
@@ -197,7 +205,7 @@ void RdsRouteConfigSubscription::httpRouteConfig2MetaProtocolRouteConfig(
   }
 }
 
-void RdsRouteConfigSubscription::onConfigUpdate(
+absl::Status RdsRouteConfigSubscription::onConfigUpdate(
     const std::vector<Envoy::Config::DecodedResourceRef>& added_resources,
     const Protobuf::RepeatedPtrField<std::string>& removed_resources, const std::string&) {
   if (!removed_resources.empty()) {
@@ -207,10 +215,12 @@ void RdsRouteConfigSubscription::onConfigUpdate(
         error,
         "Server sent a delta RDS update attempting to remove a resource (name: {}). Ignoring.",
         removed_resources[0]);
+    return absl::OkStatus();
   }
   if (!added_resources.empty()) {
     onConfigUpdate(added_resources, added_resources[0].get().version());
   }
+  return absl::OkStatus();
 }
 
 void RdsRouteConfigSubscription::onConfigUpdateFailed(
