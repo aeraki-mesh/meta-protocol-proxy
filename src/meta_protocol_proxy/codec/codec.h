@@ -92,7 +92,7 @@ public:
    * @param key
    * @return
    */
-  virtual AnyOptConstRef get(std::string key) const PURE;
+  virtual AnyOptConstRef getByKey(std::string key) const PURE;
 
   /**
    * Put a string key:value pair in the metadata, the stored value will be used for routing.

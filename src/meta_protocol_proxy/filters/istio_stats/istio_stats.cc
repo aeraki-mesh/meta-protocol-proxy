@@ -50,9 +50,9 @@ IstioStats::IstioStats(Server::Configuration::FactoryContext& context,
       response_code_(pool_.add("response_code")) {
   traffic_direction_ = traffic_direction;
   local_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
-  if (context.localInfo().node().has_metadata()) {
+  if (context.serverFactoryContext().localInfo().node().has_metadata()) {
     local_node_info_ =
-        Wasm::Common::extractNodeFlatBufferFromStruct(context.localInfo().node().metadata());
+        Wasm::Common::extractNodeFlatBufferFromStruct(context.serverFactoryContext().localInfo().node().metadata());
   }
 }
 

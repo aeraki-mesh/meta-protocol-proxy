@@ -13,7 +13,7 @@ namespace NetworkFilters {
 namespace MetaProtocolProxy {
 
 void MetadataImpl::put(std::string key, std::any value) { properties_[key] = value; }
-AnyOptConstRef MetadataImpl::get(std::string key) const {
+AnyOptConstRef MetadataImpl::getByKey(std::string key) const {
   auto it = properties_.find(key);
   if (it != properties_.end()) {
     return OptRef<const std::any>(it->second);
@@ -29,7 +29,7 @@ void MetadataImpl::putString(std::string key, std::string value) {
   response_headers_->addCopy(lowcase_key, value);
 };
 std::string MetadataImpl::getString(std::string key) const {
-  auto value = this->get(key);
+  auto value = this->getByKey(key);
   if (value.has_value()) {
     return std::any_cast<std::string>(value.ref());
   }
@@ -37,14 +37,14 @@ std::string MetadataImpl::getString(std::string key) const {
 };
 
 bool MetadataImpl::getBool(std::string key) const {
-  auto value = this->get(key);
+  auto value = this->getByKey(key);
   if (value.has_value()) {
     return std::any_cast<bool>(value.ref());
   }
   return false;
 };
 uint32_t MetadataImpl::getUint32(std::string key) const {
-  auto value = this->get(key);
+  auto value = this->getByKey(key);
   if (value.has_value()) {
     return std::any_cast<uint32_t>(value.ref());
   }
@@ -78,7 +78,7 @@ void MetadataImpl::forEach(Envoy::Tracing::TraceContext::IterateCallback callbac
   }
 };
 
-absl::optional<absl::string_view> MetadataImpl::getByKey(absl::string_view key) const {
+absl::optional<absl::string_view> MetadataImpl::get(absl::string_view key) const {
   // TODO use string_view instead of string
   auto val = getStringPointer(std::string{key.data(), key.length()});
   if (val && *val != "") {
@@ -88,22 +88,22 @@ absl::optional<absl::string_view> MetadataImpl::getByKey(absl::string_view key) 
 };
 
 const std::string* MetadataImpl::getStringPointer(std::string key) const {
-  auto value = this->get(key);
+  auto value = this->getByKey(key);
   if (value.has_value()) {
     return std::any_cast<std::string>(value.ptr());
   }
   return nullptr;
 };
 
-void MetadataImpl::setByKey(absl::string_view key, absl::string_view val) {
-  putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
-};
-void MetadataImpl::setByReferenceKey(absl::string_view key, absl::string_view val) {
-  putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
-};
-void MetadataImpl::setByReference(absl::string_view key, absl::string_view val) {
-  putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
-};
+//void MetadataImpl::setByKey(absl::string_view key, absl::string_view val) {
+//  putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
+//};
+//void MetadataImpl::setByReferenceKey(absl::string_view key, absl::string_view val) {
+//  putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
+//};
+//void MetadataImpl::setByReference(absl::string_view key, absl::string_view val) {
+//  putString(std::string(key.data(), key.length()), std::string(val.data(), val.length()));
+//};
 } // namespace MetaProtocolProxy
 } // namespace NetworkFilters
 } // namespace Extensions
