@@ -18,7 +18,6 @@ envoy_cc_binary(
         "@io_istio_proxy//extensions/stackdriver:stackdriver_plugin",
         "@io_istio_proxy//source/extensions/common/workload_discovery:api_lib",  # Experimental: WIP
         "@io_istio_proxy//source/extensions/filters/http/alpn:config_lib",
-        "@io_istio_proxy//source/extensions/filters/http/authn:filter_lib",
         "@io_istio_proxy//source/extensions/filters/http/istio_stats",
         "@io_istio_proxy//source/extensions/filters/http/peer_metadata:filter_lib",
         "@io_istio_proxy//source/extensions/filters/network/metadata_exchange:config_lib",
