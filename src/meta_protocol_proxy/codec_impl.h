@@ -29,6 +29,7 @@ public:
   void put(std::string key, std::any value) override;
   AnyOptConstRef getByKey(std::string key) const override;
   void putString(std::string key, std::string value) override;
+  void removeString(std::string key) override;
   std::string getString(std::string key) const override;
   bool getBool(std::string key) const override;
   uint32_t getUint32(std::string key) const override;
@@ -66,11 +67,8 @@ public:
   absl::string_view method() const override { return ""; }; // not applicable for MetaProtocol
   void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override;
   absl::optional<absl::string_view> get(absl::string_view) const override;
-//  void setByKey(absl::string_view key, absl::string_view val);
-//  void setByReferenceKey(absl::string_view key, absl::string_view val);
-//  void setByReference(absl::string_view key, absl::string_view val);
-  void set(absl::string_view key, absl::string_view val) override { properties_[std::string{key.data(), key.length()}] = val; };
-  void remove(absl::string_view key) override { properties_.erase(std::string{key.data(), key.length()}); };
+  void set(absl::string_view key, absl::string_view val) override;
+  void remove(absl::string_view key) override;
 
 private:
   const std::string* getStringPointer(std::string key) const;

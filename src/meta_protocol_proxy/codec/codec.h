@@ -102,6 +102,12 @@ public:
   virtual void putString(std::string key, std::string value) PURE;
 
   /**
+   * Remove a string key:value pair in the metadata.
+   * @param key
+   */
+  virtual void removeString(std::string key) PURE;
+
+  /**
    * Get a string value from the metadata.
    * @param key
    * @return
