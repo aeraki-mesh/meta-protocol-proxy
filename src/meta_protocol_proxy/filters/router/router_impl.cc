@@ -53,7 +53,6 @@ FilterStatus Router::onMessageDecoded(MetadataSharedPtr request_metadata,
   }
 
   route_entry_ = route_->routeEntry();
-  decoder_filter_callbacks_->streamInfo().setRouteName(route_entry_->routeName());
   const std::string& cluster_name = route_entry_->clusterName();
 
   // if x-request-id is created, then it's the first span in this trace
