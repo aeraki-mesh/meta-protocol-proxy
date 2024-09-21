@@ -98,8 +98,8 @@ absl::Status RdsRouteConfigSubscription::onConfigUpdate(
 
     if (meta_protocol_route_config.name() != route_config_name_) {
       return absl::Status(absl::StatusCode::kInternal,
-                          absl::StrFormat("Unexpected RDS configuration (expecting %s): %s",
-                                          route_config_name_, meta_protocol_route_config.name()));
+                          fmt::format("Unexpected RDS configuration (expecting {}): {}",
+                                      route_config_name_, meta_protocol_route_config.name()));
     }
 
     if (route_config_provider_opt_.has_value()) {
@@ -218,7 +218,7 @@ absl::Status RdsRouteConfigSubscription::onConfigUpdate(
     return absl::OkStatus();
   }
   if (!added_resources.empty()) {
-    onConfigUpdate(added_resources, added_resources[0].get().version());
+    return onConfigUpdate(added_resources, added_resources[0].get().version());
   }
   return absl::OkStatus();
 }

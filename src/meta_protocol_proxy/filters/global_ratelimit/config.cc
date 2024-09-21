@@ -15,7 +15,7 @@ FilterFactoryCb RateLimitFilterConfig::createFilterFactoryFromProtoTyped(
 
   // cfg is changed
   return [cfg, &context](FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addFilter(std::make_shared<RateLimit>(context.clusterManager(), cfg));
+    callbacks.addFilter(std::make_shared<RateLimit>(context.serverFactoryContext().clusterManager(), cfg));
   };
 }
 

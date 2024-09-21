@@ -2,6 +2,7 @@
 
 #include "envoy/upstream/thread_local_cluster.h"
 #include "envoy/tracing/trace_reason.h"
+#include "envoy/formatter/http_formatter_context.h"
 
 #include "src/meta_protocol_proxy/app_exception.h"
 #include "src/meta_protocol_proxy/codec/codec.h"
@@ -401,17 +402,18 @@ void Router::emitLogEntry(const MetadataSharedPtr& request_metadata,
 
   const MetadataImpl* requestMetadataImpl = static_cast<const MetadataImpl*>(&(*request_metadata));
   const auto& requestHeaders = requestMetadataImpl->getHeaders();
+  Envoy::Formatter::HttpFormatterContext* httpFormatterContext = new Envoy::Formatter::HttpFormatterContext(&requestHeaders);
   if (response_metadata) {
     const MetadataImpl* responseMetadataImpl =
         static_cast<const MetadataImpl*>(&(*response_metadata));
     const auto& responseHeaders = responseMetadataImpl->getResponseHeaders();
+    httpFormatterContext->setResponseHeaders(responseHeaders);
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-      access_log->log(&requestHeaders, &responseHeaders, nullptr,
-                      decoder_filter_callbacks_->streamInfo(), Envoy::AccessLog::AccessLogType::NotSet);
+      access_log->log(*httpFormatterContext, decoder_filter_callbacks_->streamInfo());
     }
   } else {
     for (const auto& access_log : decoder_filter_callbacks_->accessLogs()) {
-      access_log->log(&requestHeaders, nullptr, nullptr, decoder_filter_callbacks_->streamInfo(), Envoy::AccessLog::AccessLogType::NotSet);
+      access_log->log(*httpFormatterContext, decoder_filter_callbacks_->streamInfo());
     }
   }
 }

@@ -92,7 +92,7 @@ public:
    * @param key
    * @return
    */
-  virtual AnyOptConstRef get(std::string key) const PURE;
+  virtual AnyOptConstRef getByKey(std::string key) const PURE;
 
   /**
    * Put a string key:value pair in the metadata, the stored value will be used for routing.
@@ -100,6 +100,12 @@ public:
    * @param value
    */
   virtual void putString(std::string key, std::string value) PURE;
+
+  /**
+   * Remove a string key:value pair in the metadata.
+   * @param key
+   */
+  virtual void removeString(std::string key) PURE;
 
   /**
    * Get a string value from the metadata.

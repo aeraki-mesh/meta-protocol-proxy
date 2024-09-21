@@ -12,7 +12,7 @@ StatsFilter::StatsFilter(const aeraki::meta_protocol_proxy::filters::istio_stats
                          const Server::Configuration::FactoryContext& context,
                          IstioStats& istioStats)
     : istio_stats_(istioStats), destination_service_(config.destination_service()) {
-  traffic_direction_ = context.direction();
+  traffic_direction_ = context.listenerInfo().direction();
   peer_node_info_ = Wasm::Common::extractEmptyNodeFlatBuffer();
 }
 

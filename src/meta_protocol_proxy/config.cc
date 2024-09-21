@@ -28,17 +28,17 @@ SINGLETON_MANAGER_REGISTRATION(meta_tracer_manager);
 
 Utility::Singletons Utility::createSingletons(Server::Configuration::FactoryContext& context) {
   Route::RouteConfigProviderManagerSharedPtr meta_route_config_provider_manager =
-      context.singletonManager().getTyped<Route::RouteConfigProviderManager>(
+      context.serverFactoryContext().singletonManager().getTyped<Route::RouteConfigProviderManager>(
           SINGLETON_MANAGER_REGISTERED_NAME(meta_route_config_provider_manager), [&context] {
-            return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.admin());
+            return std::make_shared<Route::RouteConfigProviderManagerImpl>(context.serverFactoryContext().admin());
           });
   auto tracer_manager =
-      context.singletonManager()
+      context.serverFactoryContext().singletonManager()
           .getTyped<MetaProtocolProxy::Tracing::MetaProtocolTracerManagerImpl>(
               SINGLETON_MANAGER_REGISTERED_NAME(meta_tracer_manager), [&context] {
                 return std::make_shared<MetaProtocolProxy::Tracing::MetaProtocolTracerManagerImpl>(
                     std::make_unique<MetaProtocolProxy::Tracing::TracerFactoryContextImpl>(
-                        context.getServerFactoryContext(), context.messageValidationVisitor()));
+                        context.serverFactoryContext(), context.messageValidationVisitor()));
               });
   return {meta_route_config_provider_manager, tracer_manager};
 }
@@ -56,8 +56,8 @@ Network::FilterFactoryCb MetaProtocolProxyFilterConfigFactory::createFilterFacto
   // as these captured objects are also global singletons.
   return [singletons, filter_config, &context](Network::FilterManager& filter_manager) -> void {
     filter_manager.addReadFilter(std::make_shared<ConnectionManager>(
-        *filter_config, context.api().randomGenerator(),
-        context.mainThreadDispatcher().timeSource(), context.clusterManager()));
+        *filter_config, context.serverFactoryContext().api().randomGenerator(),
+        context.serverFactoryContext().mainThreadDispatcher().timeSource(), context.serverFactoryContext().clusterManager()));
   };
 }
 
@@ -89,11 +89,11 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
   switch (config.route_specifier_case()) {
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRds:
     route_config_provider_ = route_config_provider_manager_.createRdsRouteConfigProvider(
-        config.rds(), context_.getServerFactoryContext(), stats_prefix_, context_.initManager());
+        config.rds(), context_.serverFactoryContext(), stats_prefix_, context_.initManager());
     break;
   case aeraki::meta_protocol_proxy::v1alpha::MetaProtocolProxy::RouteSpecifierCase::kRouteConfig:
     route_config_provider_ = route_config_provider_manager_.createStaticRouteConfigProvider(
-        config.route_config(), context_.getServerFactoryContext(),
+        config.route_config(), context_.serverFactoryContext(),
         context_.messageValidationVisitor());
     break;
   default:
@@ -121,20 +121,20 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
     Envoy::Tracing::OperationName tracing_operation_name;
 
     // Listener level traffic direction overrides the operation name
-    switch (context.direction()) {
-    case envoy::config::core::v3::UNSPECIFIED: {
-      // Continuing legacy behavior; if unspecified, we treat this as ingress.
-      tracing_operation_name = Envoy::Tracing::OperationName::Ingress;
-      break;
-    }
-    case envoy::config::core::v3::INBOUND:
-      tracing_operation_name = Envoy::Tracing::OperationName::Ingress;
-      break;
-    case envoy::config::core::v3::OUTBOUND:
-      tracing_operation_name = Envoy::Tracing::OperationName::Egress;
-      break;
-    default:
-      PANIC("invalid direction");
+    switch (context.listenerInfo().direction()) {
+      case envoy::config::core::v3::UNSPECIFIED: {
+        // Continuing legacy behavior; if unspecified, we treat this as ingress.
+        tracing_operation_name = Envoy::Tracing::OperationName::Ingress;
+        break;
+      }
+      case envoy::config::core::v3::INBOUND:
+        tracing_operation_name = Envoy::Tracing::OperationName::Ingress;
+        break;
+      case envoy::config::core::v3::OUTBOUND:
+        tracing_operation_name = Envoy::Tracing::OperationName::Egress;
+        break;
+      default:
+        PANIC("invalid direction");
     }
 
     envoy::type::v3::FractionalPercent client_sampling;
@@ -160,7 +160,7 @@ ConfigImpl::ConfigImpl(const MetaProtocolProxyConfig& config,
         tracing_operation_name, client_sampling, random_sampling, overall_sampling,
         tracing_config.verbose(), max_tag_length);
   }
-  request_id_extension_ = std::make_shared<UUIDRequestIDExtension>(context.api().randomGenerator());
+  request_id_extension_ = std::make_shared<UUIDRequestIDExtension>(context.serverFactoryContext().api().randomGenerator());
 
   for (const envoy::config::accesslog::v3::AccessLog& log_config : config.access_log()) {
     access_logs_.emplace_back(AccessLog::AccessLogFactory::fromProto(log_config, context));
@@ -180,8 +180,8 @@ ConfigImpl::getPerFilterTracerConfig(const MetaProtocolProxyConfig& config) {
   }
   // Otherwise, for the sake of backwards compatibility, fall back to using tracing provider
   // configuration defined in the bootstrap config.
-  if (context_.httpContext().defaultTracingConfig().has_http()) {
-    return &context_.httpContext().defaultTracingConfig().http();
+  if (context_.serverFactoryContext().httpContext().defaultTracingConfig().has_http()) {
+    return &context_.serverFactoryContext().httpContext().defaultTracingConfig().http();
   }
   return nullptr;
 }
