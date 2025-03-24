@@ -13,6 +13,9 @@ build:remote --remote_timeout=7200
 # Istio specific Bazel build/test options.
 # ========================================
 
+# Enable libc++ and C++20 by default.
+build:linux --config=libc++20
+
 # Need for CI image to pickup docker-credential-gcloud, PATH is fixed in rbe-toolchain-* configs.
 build:remote-ci --action_env=PATH=/usr/local/google-cloud-sdk/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/llvm/bin
 
@@ -22,7 +25,8 @@ build --define path_normalization_by_default=true
 
 # Heap profiler is supported only with gperf tcmalloc, not google tcmalloc.
 # See: https://github.com/istio/istio/issues/28233
-build --define tcmalloc=gperftools
+build:linux --define tcmalloc=gperftools
+build:macos --define tcmalloc=disabled
 
 # Build with embedded V8-based WebAssembly runtime.
 build --define wasm=v8
@@ -49,7 +53,24 @@ build --cxxopt -Wformat-security
 # Link pthread for flatbuffers
 build --host_linkopt=-pthread
 
-# TODO(lambdai): Revert below centos proxy build mitigation.
-build --action_env=CXXFLAGS=-Wno-unused-variable
-build:libc++ --action_env=CXXFLAGS=-stdlib="libc++ -Wno-unused-variable"
-build:rbe-toolchain-clang-libc++ --action_env=CXXFLAGS="-stdlib=libc++ -Wno-unused-variable"
+# CI sanitizer configuration
+#
+build:clang-asan-ci --config=clang-asan
+build:clang-asan-ci --action_env=ENVOY_UBSAN_VPTR=1
+build:clang-asan-ci --copt=-fsanitize=vptr,function
+build:clang-asan-ci --linkopt=-fsanitize=vptr,function
+build:clang-asan-ci --linkopt='-L/usr/lib/llvm/lib/x86_64-unknown-linux-gnu'
+build:clang-asan-ci --linkopt='-Wl,-rpath,/usr/lib/llvm/lib/x86_64-unknown-linux-gnu'
+build:clang-asan-ci --linkopt='-L/usr/lib/llvm/lib/clang/14.0.0/lib/x86_64-unknown-linux-gnu'
+build:clang-asan-ci --linkopt=-l:libclang_rt.ubsan_standalone.a
+build:clang-asan-ci --linkopt=-l:libclang_rt.ubsan_standalone_cxx.a
+
+build:clang-tsan-ci --config=clang-tsan
+build:clang-tsan-ci --linkopt=-L/opt/libcxx_tsan/lib
+build:clang-tsan-ci --linkopt=-Wl,-rpath,/opt/libcxx_tsan/lib
+
+# get from https://github.com/Homebrew/homebrew-core/blob/master/Formula/e/envoy.rb
+build:macos --cxxopt=-Wno-range-loop-analysis
+build:macos --host_cxxopt=-Wno-range-loop-analysis
+build:macos --cxxopt=-Wno-deprecated-declarations
+build:macos --host_cxxopt=-Wno-deprecated-declarations
