@@ -1,3 +1,10 @@
+# MetaProtocolProxy CI
+
+MetaProtocolProxy uses the Envoybuilder image for CI.
+
+ci_api.sh is used to build the API proto files.
+ci_dev.sh is used to build the MetaProtocolProxy binary.
+
 # Developer use of CI Docker images
 
 There are two available flavors of Envoy Docker images for Linux, based on Ubuntu and Alpine Linux
