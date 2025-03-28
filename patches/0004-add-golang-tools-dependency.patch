@@ -1,0 +1,23 @@
+diff --git WORKSPACE WORKSPACE
+index 27f6fd0bfc..056784eeef 100644
+--- WORKSPACE
++++ WORKSPACE
+@@ -158,6 +158,15 @@ container_pull(
+     tag = "bionic",
+ )
+
++# Add golang.org/x/tools dependency
++http_archive(
++    name = "org_golang_x_tools",
++    sha256 = "c2d93b963b82fe9aedb533fd269ba13baebee0d96df1327a7ee1c0c6414d1333",
++    strip_prefix = "tools-0.12.0",
++    urls = ["https://github.com/golang/tools/archive/refs/tags/v0.12.0.tar.gz"],
++)
++
++load("@org_golang_x_tools//go:def.bzl", "go_register_toolchains", "go_rules_dependencies")
++
++go_rules_dependencies()
++
+ # End of docker dependencies
+
+ load("//bazel:wasm.bzl", "wasm_dependencies")

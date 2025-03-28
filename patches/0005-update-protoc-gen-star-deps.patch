@@ -1,0 +1,26 @@
+diff --git bazel/external/com_github_lyft_protoc_gen_star/lang/go/BUILD.bazel bazel/external/com_github_lyft_protoc_gen_star/lang/go/BUILD.bazel
+index 27f6fd0bfc..056784eeef 100644
+--- bazel/external/com_github_lyft_protoc_gen_star/lang/go/BUILD.bazel
++++ bazel/external/com_github_lyft_protoc_gen_star/lang/go/BUILD.bazel
+@@ -3,6 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+ go_library(
+     name = "go",
++    importpath = "github.com/lyft/protoc-gen-star/v2/lang/go",
+     srcs = [
+         "camel.go",
+         "context.go",
+         "docs.go",
+         "gofmt.go",
+         "goimports.go",
+         "name.go",
+         "package.go",
+         "parameters.go",
+         "type_name.go",
+     ],
+     deps = [
+         "@com_github_lyft_protoc_gen_star//:go_default_library",
++        "@org_golang_x_tools//go/imports:go_default_library",
+     ],
+     visibility = ["//visibility:public"],
+ )
