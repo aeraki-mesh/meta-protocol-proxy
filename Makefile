@@ -12,19 +12,11 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-SHELL := /bin/bash
-CC := clang-10
-CXX := clang++-10
-PATH := /home/ubuntu/clang+llvm-10.0.0-linux-gnu/bin:$(PATH)
 
-BAZEL_CONFIG = -s --sandbox_debug --verbose_failures --verbose_explanations --explain=build.log --host_force_python=PY3
-BAZEL_CONFIG_DEV  = $(BAZEL_CONFIG) --config=libc++
-BAZEL_CONFIG_REL  = $(BAZEL_CONFIG_DEV) --config=release
 BAZEL_TARGETS = envoy
 
 build:
-	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && \
-	bazel build $(BAZEL_CONFIG_DEV) $(BAZEL_TARGETS)
+	bazel build $(BAZEL_TARGETS)
 
 release:
 	export PATH=$(PATH) CC=$(CC) CXX=$(CXX) && \
