@@ -140,12 +140,12 @@ function bazel_binary_build() {
   fi
 
   # Validation tools for the tools image.
-  bazel build "${BAZEL_BUILD_OPTIONS[@]}" --remote_download_toplevel -c "${COMPILE_TYPE}" \
-    //test/tools/schema_validator:schema_validator_tool ${CONFIG_ARGS}
+  # bazel build "${BAZEL_BUILD_OPTIONS[@]}" --remote_download_toplevel -c "${COMPILE_TYPE}" \
+  #  //test/tools/schema_validator:schema_validator_tool ${CONFIG_ARGS}
 
   # Build su-exec utility
-  bazel build "${BAZEL_BUILD_OPTIONS[@]}" --remote_download_toplevel -c "${COMPILE_TYPE}" external:su-exec
-  cp_binary_for_image_build "${BINARY_TYPE}" "${COMPILE_TYPE}" "${EXE_NAME}"
+  # bazel build "${BAZEL_BUILD_OPTIONS[@]}" --remote_download_toplevel -c "${COMPILE_TYPE}" external:su-exec
+  # cp_binary_for_image_build "${BINARY_TYPE}" "${COMPILE_TYPE}" "${EXE_NAME}"
 }
 
 function bazel_envoy_binary_build() {
@@ -435,7 +435,7 @@ case $CI_TARGET in
 
     dev)
         setup_clang_toolchain
-        bazel_envoy_binary_build fastbuild	
+        bazel_envoy_binary_build fastbuild
         ;;
 
     dev.contrib)
