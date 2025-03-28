@@ -25,9 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1440 # 12 hours
     name: Build MetaProtocolProxy
-    env:
-      LOG_DIR: /tmp/test_logs
-      LOG_PATH: /tmp/test_logs/${{ matrix.protocal }}.log
     steps:
       - name: Checkout
         uses: actions/checkout@v4
