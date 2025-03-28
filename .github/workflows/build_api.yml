@@ -22,7 +22,7 @@ on:
 
 jobs:
   BuildMetaProtocolBinary:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 1440 # 12 hours
     name: Build API
     env:
