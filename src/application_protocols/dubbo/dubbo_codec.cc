@@ -241,47 +241,47 @@ void DubboCodec::toMetadata(const MessageMetadata& msgMetadata, Context& context
 void DubboCodec::toMsgMetadata(const MetaProtocolProxy::Metadata& metadata,
                                MessageMetadata& msgMetadata) {
   msgMetadata.setRequestId(metadata.getRequestId());
-  auto ref = metadata.get("InvocationInfo");
+  auto ref = metadata.getByKey("InvocationInfo");
   if (ref.has_value()) {
     const auto& invo = ref.value();
     msgMetadata.setInvocationInfo(std::any_cast<RpcInvocationSharedPtr>(invo));
   }
 
-  ref = metadata.get("RpcResultInfo");
+  ref = metadata.getByKey("RpcResultInfo");
   if (ref.has_value()) {
     const auto& result = ref.value();
     msgMetadata.setRpcResultInfo(std::any_cast<RpcResultSharedPtr>(result));
   }
 
-  ref = metadata.get("ProtocolType");
+  ref = metadata.getByKey("ProtocolType");
   assert(ref.has_value());
   const auto& proto_type = ref.value();
   msgMetadata.setProtocolType(std::any_cast<ProtocolType>(proto_type));
 
-  ref = metadata.get("ProtocolVersion");
+  ref = metadata.getByKey("ProtocolVersion");
   assert(ref.has_value());
   const auto& version = ref.value();
   msgMetadata.setProtocolVersion(std::any_cast<uint8_t>(version));
 
-  ref = metadata.get("MessageType");
+  ref = metadata.getByKey("MessageType");
   assert(ref.has_value());
   const auto& msg_type = ref.value();
   msgMetadata.setMessageType(std::any_cast<MessageType>(msg_type));
 
-  ref = metadata.get("Timeout");
+  ref = metadata.getByKey("Timeout");
   if (ref.has_value()) {
     const auto& timeout = ref.value();
     msgMetadata.setTimeout(std::any_cast<uint32_t>(timeout));
   }
-  ref = metadata.get("TwoWay");
+  ref = metadata.getByKey("TwoWay");
   assert(ref.has_value());
   msgMetadata.setTwoWayFlag(metadata.getBool("TwoWay"));
 
-  ref = metadata.get("SerializationType");
+  ref = metadata.getByKey("SerializationType");
   assert(ref.has_value());
   const auto& serial_type = ref.value();
   msgMetadata.setSerializationType(std::any_cast<SerializationType>(serial_type));
-  ref = metadata.get("ResponseStatus");
+  ref = metadata.getByKey("ResponseStatus");
   if (ref.has_value()) {
     const auto& res_status = ref.value();
     msgMetadata.setResponseStatus(std::any_cast<ResponseStatus>(res_status));

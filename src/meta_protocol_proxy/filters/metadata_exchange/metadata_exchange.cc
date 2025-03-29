@@ -10,8 +10,8 @@ namespace MetadataExchange {
 MetadataExchangeFilter::MetadataExchangeFilter(
     const aeraki::meta_protocol_proxy::filters::metadata_exchange::v1alpha::MetadataExchange&,
     const Server::Configuration::FactoryContext& context) {
-  loadMetadataFromNodeInfo(context.localInfo());
-  traffic_direction_ = context.direction();
+  loadMetadataFromNodeInfo(context.serverFactoryContext().localInfo());
+  traffic_direction_ = context.listenerInfo().direction();
 }
 
 FilterStatus MetadataExchangeFilter::onMessageDecoded(MetadataSharedPtr,

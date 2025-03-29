@@ -16,15 +16,14 @@ FilterFactoryCb RouterFilterConfig::createFilterFactoryFromProtoTyped(
     Server::Configuration::FactoryContext& context) {
 
   auto shadow_writer = std::make_shared<ShadowWriterImpl>(
-      context.clusterManager(), context.mainThreadDispatcher(), context.threadLocal());
-
+      context.serverFactoryContext().clusterManager(), context.serverFactoryContext().mainThreadDispatcher(), context.serverFactoryContext().threadLocal());
   // This lambda captures the shadow_writer created above, thus shadowed requests won't be
   // destructed after the main request is finished.
   // The life span of shadow_writer is as long as the MetaProtocol ConfigImpl, see filter_factories_
   // member of the MetaProtocol ConfigImpl
   return [&context, shadow_writer](FilterChainFactoryCallbacks& callbacks) -> void {
     callbacks.addFilter(
-        std::make_shared<Router>(context.clusterManager(), context.runtime(), *shadow_writer));
+        std::make_shared<Router>(context.serverFactoryContext().clusterManager(), context.serverFactoryContext().runtime(), *shadow_writer));
   };
 }
 
