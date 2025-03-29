@@ -1,0 +1,33 @@
+---
+name: build-metaprotocol
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - "main"
+    - "master"
+    - "release/v*"
+    paths-ignore:
+    - "**/*.md"
+    - "**/*.png"
+  pull_request:
+    branches:
+    - "main"
+    - "master"
+    - "release/v*"
+    paths-ignore:
+    - "**/*.md"
+    - "**/*.png"
+
+jobs:
+  BuildMetaProtocolBinary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1440 # 12 hours
+    name: Build MetaProtocolProxy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          bash ${GITHUB_WORKSPACE}/ci/ci_dev.sh

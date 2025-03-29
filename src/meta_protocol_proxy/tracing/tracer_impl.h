@@ -135,6 +135,7 @@ public:
     custom_tags_ = std::make_unique<Envoy::Tracing::CustomTagMap>();
   }
   Envoy::Tracing::OperationName operationName() const override { return operation_name_; };
+  bool spawnUpstreamSpan() const override { return true; };
   const Envoy::Tracing::CustomTagMap* customTags() const override { return custom_tags_.get(); };
   bool verbose() const override { return verbose_; };
   uint32_t maxPathTagLength() const override { return max_tag_length_; };

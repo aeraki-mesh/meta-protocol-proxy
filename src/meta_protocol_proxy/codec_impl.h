@@ -27,8 +27,9 @@ public:
   ~MetadataImpl() = default;
 
   void put(std::string key, std::any value) override;
-  AnyOptConstRef get(std::string key) const override;
+  AnyOptConstRef getByKey(std::string key) const override;
   void putString(std::string key, std::string value) override;
+  void removeString(std::string key) override;
   std::string getString(std::string key) const override;
   bool getBool(std::string key) const override;
   uint32_t getUint32(std::string key) const override;
@@ -61,14 +62,13 @@ public:
 
   // Tracing::TraceContext
   absl::string_view protocol() const override { return "meta-protocol"; };
-  absl::string_view authority() const override { return operation_name_; };
+  absl::string_view host() const override { return operation_name_; };
   absl::string_view path() const override { return ""; };   // not applicable for MetaProtocol
   absl::string_view method() const override { return ""; }; // not applicable for MetaProtocol
   void forEach(Envoy::Tracing::TraceContext::IterateCallback) const override;
-  absl::optional<absl::string_view> getByKey(absl::string_view) const override;
-  void setByKey(absl::string_view key, absl::string_view val) override;
-  void setByReferenceKey(absl::string_view key, absl::string_view val) override;
-  void setByReference(absl::string_view key, absl::string_view val) override;
+  absl::optional<absl::string_view> get(absl::string_view) const override;
+  void set(absl::string_view key, absl::string_view val) override;
+  void remove(absl::string_view key) override;
 
 private:
   const std::string* getStringPointer(std::string key) const;

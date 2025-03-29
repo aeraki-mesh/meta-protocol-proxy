@@ -5,7 +5,7 @@
 
 #include "envoy/config/core/v3/base.pb.h"
 #include "envoy/network/address.h"
-#include "envoy/tracing/http_tracer.h"
+//#include "envoy/tracing/http_tracer.h"
 #include "envoy/type/metadata/v3/metadata.pb.h"
 #include "envoy/type/tracing/v3/custom_tag.pb.h"
 
@@ -183,7 +183,7 @@ MetaProtocolTracerImpl::startSpan(const Envoy::Tracing::Config& config, Metadata
   }
 
   Envoy::Tracing::SpanPtr active_span = driver_->startSpan(
-      config, request_metadata, span_name, stream_info.startTime(), tracing_decision);
+      config, request_metadata, stream_info, span_name, tracing_decision);
 
   // inject tracing context to metadata
   active_span->injectContext(request_metadata, nullptr);

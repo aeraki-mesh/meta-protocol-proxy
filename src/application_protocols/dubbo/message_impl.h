@@ -133,8 +133,14 @@ public:
   bool hasException() const override { return has_exception_; }
   void setException(bool has_exception) { has_exception_ = has_exception; }
 
+  std::string getRspBody() { return bodyrsp; }
+  void setRspBody(std::string body) { bodyrsp = body; }
+
+  mutable std::unique_ptr<RpcInvocationImpl::Attachment> attachment_{};
+
 private:
   bool has_exception_{false};
+  std::string bodyrsp;
 };
 
 } // namespace Dubbo

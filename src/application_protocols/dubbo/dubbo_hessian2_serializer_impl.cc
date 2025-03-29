@@ -102,17 +102,36 @@ DubboHessian2SerializerImpl::deserializeRpcResult(Buffer::Instance& buffer,
 
   RpcResponseType type = static_cast<RpcResponseType>(*type_value);
 
+  bool has_attachment = false;
+  bool has_value = false;
   switch (type) {
   case RpcResponseType::ResponseWithException:
-  case RpcResponseType::ResponseWithExceptionWithAttachments:
+    has_value_or_attachment = false;
     result->setException(true);
+    break;
+  case RpcResponseType::ResponseWithExceptionWithAttachments:
+    has_value_or_attachment = false;
+    result->setException(true);
+    has_attachment = true;
     break;
   case RpcResponseType::ResponseWithNullValue:
     has_value_or_attachment = false;
+    has_value = false;
+    has_attachment = false;
     FALLTHRU;
   case RpcResponseType::ResponseNullValueWithAttachments:
+    has_value = false;
+    has_attachment = true;
+    result->setException(false);
+    break;
   case RpcResponseType::ResponseWithValue:
+    has_value = true;
+    has_attachment = false;
+    result->setException(false);
+    break;
   case RpcResponseType::ResponseValueWithAttachments:
+    has_value = true;
+    has_attachment = true;
     result->setException(false);
     break;
   default:
@@ -120,6 +139,25 @@ DubboHessian2SerializerImpl::deserializeRpcResult(Buffer::Instance& buffer,
   }
 
   size_t total_size = decoder.offset();
+  // decode  response body
+  if (has_value) {
+    auto responesebody = decoder.decode<std::string>();
+    result->setRspBody(*responesebody);
+  }
+
+  if (has_attachment) {
+    size_t offset = context->headerSize() + decoder.offset();
+    auto attachResult = decoder.decode<Hessian2::Object>();
+    if (attachResult != nullptr && attachResult->type() == Hessian2::Object::Type::UntypedMap) {
+      result->attachment_ = std::make_unique<RpcInvocationImpl::Attachment>(
+          RpcInvocationImpl::Attachment::MapPtr{
+              dynamic_cast<RpcInvocationImpl::Attachment::Map*>(attachResult.release())},
+          offset);
+    } else {
+      result->attachment_ = std::make_unique<RpcInvocationImpl::Attachment>(
+          std::make_unique<RpcInvocationImpl::Attachment::Map>(), offset);
+    }
+  }
 
   if (context->bodySize() < total_size) {
     throw EnvoyException(fmt::format("RpcResult size({}) large than body size({})", total_size,

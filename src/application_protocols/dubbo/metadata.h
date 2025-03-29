@@ -26,6 +26,11 @@ public:
   const RpcInvocation& invocationInfo() const { return *invocation_info_; }
   const RpcInvocationSharedPtr invocationInfoPtr() const { return invocation_info_; }
 
+  void setRpcResultInfo(RpcResultSharedPtr result_info) { result_info_ = result_info; }
+  bool hasRpcResultInfo() const { return result_info_ != nullptr; }
+  const RpcResult& rpcResultInfo() const { return *result_info_; }
+  const RpcResultSharedPtr rpcResultInfoPtr() const { return result_info_; }
+
   void setProtocolType(ProtocolType type) { proto_type_ = type; }
   ProtocolType protocolType() const { return proto_type_; }
 
@@ -73,6 +78,8 @@ private:
   absl::optional<uint32_t> timeout_;
 
   RpcInvocationSharedPtr invocation_info_;
+
+  RpcResultSharedPtr result_info_;
 
   uint8_t serialization_type_{static_cast<uint8_t>(SerializationType::Hessian2)};
   uint8_t protocol_version_{1};
