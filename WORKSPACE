@@ -45,7 +45,10 @@ http_archive(
     sha256 = ENVOY_SHA256,
     strip_prefix = ENVOY_REPO + "-" + ENVOY_SHA,
     url = "https://github.com/" + ENVOY_ORG + "/" + ENVOY_REPO + "/archive/" + ENVOY_SHA + ".tar.gz",
-    patches = ["//:patches/0001-expose-some-build-file-as-public.patch"],
+    patches = [
+        "//:patches/0001-expose-some-build-file-as-public.patch",
+        "//:patches/0002-envoy-bazel-repo-location.patch",
+        "//:patches/0003-envoy-bazel-repo-location.patch"],
 )
 
 load("@envoy//bazel:api_binding.bzl", "envoy_api_binding")
@@ -81,3 +84,13 @@ install_deps()
 load("@envoy//bazel:dependency_imports.bzl", "envoy_dependency_imports")
 
 envoy_dependency_imports()
+
+load("@bazel_gazelle//:deps.bzl", "go_repository")
+
+go_repository(
+    name = "org_golang_x_tools",
+    importpath = "golang.org/x/tools",
+    sum = "h1:po9/4sTYwOU9QPo1XTU8+YLNBPyXgS4nSdIjxNBXtxg=",
+    version = "v0.1.12",
+    build_external = "external",
+)
